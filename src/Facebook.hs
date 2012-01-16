@@ -13,6 +13,8 @@ module Facebook
     , Permission
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
+      -- * Exceptions
+    , FacebookException(..)
     ) where
 
 import Facebook.Base

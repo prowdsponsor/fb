@@ -8,16 +8,19 @@ module Facebook.Auth
 
 import Control.Applicative
 import Control.Monad.IO.Class (liftIO)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime)
 import Data.String (IsString(..))
 
+import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Char8 as A
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Encoding.Error as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as H
 
@@ -86,8 +89,12 @@ getUserAccessTokenStep2 creds redirectUrl query manager =
                                   <*  A.string "&expires="
                                   <*> (toExpire <$> A.decimal)
                                   <*  A.endOfInput)
-    _ -> -- FIXME: Better error handling
-         fail $ "getUserAccessTokenStep2: " ++ show query
+    _ -> let [errorType, errorReason, errorDescr] =
+                 map (fromMaybe "" . flip lookup query)
+                     ["error", "error_reason", "error_description"]
+             errorType = T.concat [t errorType, " (", t errorReason, ")"]
+             t = TE.decodeUtf8With TE.lenientDecode
+         in E.throw $ FacebookException errorType (t errorDescr)
 
 
 -- | URL where the user is redirected to after Facebook
