@@ -3,16 +3,19 @@ module Facebook.Auth
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
     , RedirectUrl
+    , Permission
     ) where
 
 import Control.Applicative
 import Control.Monad.IO.Class (liftIO)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime)
+import Data.String (IsString(..))
 
 import qualified Data.Attoparsec.Char8 as A
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
+import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Conduit as H
@@ -41,13 +44,19 @@ getAppAccessToken creds manager = do
 -- Facebook URL you should redirect you user to.  Facebook will
 -- authenticate the user, authorize your app and then redirect
 -- the user back into the provider 'RedirectUrl'.
-getUserAccessTokenStep1 :: Credentials -> RedirectUrl -> Text
-getUserAccessTokenStep1 creds redirectUrl =
-  T.concat [ "https://www.facebook.com/dialog/oauth?client_id="
-           , TE.decodeUtf8 (clientId creds)
-           , "&redirect_uri="
-           , redirectUrl
-           ]
+getUserAccessTokenStep1 :: Credentials
+                        -> RedirectUrl
+                        -> [Permission]
+                        -> Text
+getUserAccessTokenStep1 creds redirectUrl perms =
+  T.concat $ "https://www.facebook.com/dialog/oauth?client_id="
+           : TE.decodeUtf8 (clientId creds)
+           : "&redirect_uri="
+           : redirectUrl
+           : (case perms of
+                [] -> []
+                _  -> "&scope=" : L.intersperse "," (map unPermission perms)
+             )
 
 
 -- | The second step to get an user access token.  If the user is
@@ -86,3 +95,25 @@ getUserAccessTokenStep2 creds redirectUrl query manager =
 -- should be inside the domain registered for your Facebook
 -- application.
 type RedirectUrl = Text
+
+
+-- | A permission that is asked for the user when he authorizes
+-- your app.  Please refer to Facebook's documentation at
+-- <https://developers.facebook.com/docs/reference/api/permissions/>
+-- to see which permissions are available.
+--
+-- This is a @newtype@ of 'Text' that supports only 'IsString'.
+-- This means that to create a 'Permission' you should use the
+-- @OverloadedStrings@ language extension.  For example,
+--
+-- > {-# LANGUAGE OverloadedStrings #-}
+-- >
+-- > perms :: [Permission]
+-- > perms = ["user_about_me", "email", "offline_access"]
+newtype Permission = Permission { unPermission :: Text }
+
+instance Show Permission where
+    show = show . unPermission
+
+instance IsString Permission where
+    fromString = Permission . fromString

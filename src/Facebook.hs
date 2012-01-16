@@ -9,9 +9,10 @@ module Facebook
     , getAppAccessToken
       -- ** User access token
     , User
+    , RedirectUrl
+    , Permission
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
-    , RedirectUrl
     ) where
 
 import Facebook.Base
