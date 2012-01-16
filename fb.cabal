@@ -1,0 +1,43 @@
+name:              fb
+version:           0.1
+license:           BSD3
+license-file:      LICENSE
+author:            Felipe Lessa
+maintainer:        Felipe Lessa <felipe.lessa@gmail.com>
+synopsis:          Bindings for Facebook's API.
+category:          Web
+stability:         Experimental
+cabal-version:     >= 1.8
+build-type:        Simple
+homepage:          https://github.com/meteficha/facebook
+description:
+    Bindings for Facebook's API.
+
+
+library
+  hs-source-dirs: src
+  exposed-modules:
+    Facebook
+    Facebook.Base
+  build-depends:
+      base               >= 4    && < 5
+    , bytestring         >= 0.9  && < 0.10
+    , text               >= 0.11 && < 0.12
+    , transformers       >= 0.2  && < 0.3
+    , conduit            >= 0.0  && < 0.2
+    , http-types
+    , http-conduit       >= 1.1  && < 1.2
+    , attoparsec         >= 0.10 && < 0.11
+    , attoparsec-conduit >= 0.0  && < 0.1
+    , time               >= 1.2  && < 1.5
+  extensions:
+    DeriveDataTypeable
+    EmptyDataDecls
+    OverloadedStrings
+
+
+-- test-suite runtests
+--     type: exitcode-stdio-1.0
+--     ghc-options:    -Wall -O0
+--     hs-source-dirs: tests
+--     main-is:        runtests.hs
