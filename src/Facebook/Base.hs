@@ -98,15 +98,18 @@ instance ToSimpleQuery (AccessToken kind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- response with a JSON value.
-asJson :: (C.ResourceThrow m, C.BufferSource bsrc) =>
+asJson :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
           H.Response (bsrc m ByteString)
-       -> C.ResourceT m (H.Response A.Value)
-asJson (H.Response status headers body) =
-  H.Response status headers <$> (body C.$$ C.sinkParser A.json')
+       -> C.ResourceT m (H.Response a)
+asJson (H.Response status headers body) = do
+  val <- body C.$$ C.sinkParser A.json'
+  case A.fromJson val of
+    Error str -> fail "Facebook.Base.asJson: " ++ str
+    Success r -> return (H.Response status headers r)
 
 
 -- | Same as 'asJson', but returns only the JSON value.
-asJson' :: (C.ResourceThrow m, C.BufferSource bsrc) =>
+asJson' :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
            H.Response (bsrc m ByteString)
-        -> C.ResourceT m A.Value
+        -> C.ResourceT m a
 asJson' = fmap H.responseBody . asJson
