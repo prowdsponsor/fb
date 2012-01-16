@@ -15,3 +15,4 @@ module Facebook
     ) where
 
 import Facebook.Base
+import Facebook.Auth

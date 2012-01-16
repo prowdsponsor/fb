@@ -16,9 +16,12 @@ description:
 
 library
   hs-source-dirs: src
+  ghc-options: -Wall
   exposed-modules:
     Facebook
+  other-modules:
     Facebook.Base
+    Facebook.Auth
   build-depends:
       base               >= 4    && < 5
     , bytestring         >= 0.9  && < 0.10
@@ -29,6 +32,7 @@ library
     , http-conduit       >= 1.1  && < 1.2
     , attoparsec         >= 0.10 && < 0.11
     , attoparsec-conduit >= 0.0  && < 0.1
+    , aeson              >= 0.5  && < 0.6
     , time               >= 1.2  && < 1.5
   extensions:
     DeriveDataTypeable

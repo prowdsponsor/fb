@@ -4,28 +4,20 @@ module Facebook.Base
     , User
     , App
     , fbreq
-    , rsq
     , ToSimpleQuery(..)
-    , getAppAccessToken
-    , getUserAccessTokenStep1
-    , getUserAccessTokenStep2
-    , RedirectUrl
+    , asJson
+    , asJson'
     ) where
 
 import Control.Applicative
-import Control.Monad.IO.Class (liftIO)
 import Data.ByteString.Char8 (ByteString)
 import Data.Typeable (Typeable)
-import Data.Text (Text)
-import Data.Time (UTCTime, getCurrentTime, addUTCTime)
+import Data.Time (UTCTime)
 import Network.HTTP.Types (Ascii)
 
-import qualified Data.Attoparsec.Char8 as A
-import qualified Data.ByteString.Char8 as B
+import qualified Data.Aeson as A
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as H
 
@@ -75,18 +67,17 @@ data App
 
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of
 -- 'H.def' when creating new 'H.Request'@s@ for Facebook.
-fbreq :: H.Request m
-fbreq =
+fbreq :: H.Ascii -> Maybe (AccessToken kind) -> H.SimpleQuery -> H.Request m
+fbreq path mtoken query =
     H.def { H.secure        = True
           , H.host          = "graph.facebook.com"
           , H.port          = 443
+          , H.path          = path
           , H.redirectCount = 3
+          , H.queryString   =
+              H.renderSimpleQuery False $
+              maybe id tsq mtoken query
           }
-
-
--- | Same as @'H.renderSimpleQuery' False@, but easier to type.
-rsq :: H.SimpleQuery -> H.Ascii
-rsq = H.renderSimpleQuery False
 
 
 -- | Class for types that may be passed on queries to Facebook's
@@ -105,72 +96,17 @@ instance ToSimpleQuery (AccessToken kind) where
     tsq token = (:) ("access_token", accessTokenData token)
 
 
--- | Get an app access token from Facebook using your
--- credentials.
-getAppAccessToken :: C.ResourceIO m =>
-                     Credentials
-                  -> H.Manager
-                  -> C.ResourceT m (AccessToken App)
-getAppAccessToken creds manager = do
-  let req = fbreq { H.path        = "/oauth/access_token"
-                  , H.queryString = rsq $ tsq creds [("grant_type", "client_credentials")]
-                  }
-  response <- H.http req manager
-  H.responseBody response C.$$
-    C.sinkParser (AccessToken <$  A.string "access_token="
-                              <*> A.takeByteString
-                              <*> pure Nothing)
+-- | Converts a plain 'H.Response' coming from 'H.http' into a
+-- response with a JSON value.
+asJson :: (C.ResourceThrow m, C.BufferSource bsrc) =>
+          H.Response (bsrc m ByteString)
+       -> C.ResourceT m (H.Response A.Value)
+asJson (H.Response status headers body) =
+  H.Response status headers <$> (body C.$$ C.sinkParser A.json')
 
 
--- | The first step to get an user access token.  Returns the
--- Facebook URL you should redirect you user to.  Facebook will
--- authenticate the user, authorize your app and then redirect
--- the user back into the provider 'RedirectUrl'.
-getUserAccessTokenStep1 :: Credentials -> RedirectUrl -> Text
-getUserAccessTokenStep1 creds redirectUrl =
-  T.concat [ "https://www.facebook.com/dialog/oauth?client_id="
-           , TE.decodeUtf8 (clientId creds)
-           , "&redirect_uri="
-           , redirectUrl
-           ]
-
-
--- | The second step to get an user access token.  If the user is
--- successfully authenticate and they authorize your application,
--- then they'll be redirected back to the 'RedirectUrl' you've
--- passed to 'getUserAccessTokenStep1'.  You should take the
--- request query parameters passed to your 'RedirectUrl' and give
--- to this function that will complete the user authentication
--- flow and give you an @'AccessToken' 'User'@.
-getUserAccessTokenStep2 :: C.ResourceIO m =>
-                           Credentials
-                        -> RedirectUrl -- ^ Exactly the same as in 'getUserAccessTokenStep1'.
-                        -> H.SimpleQuery
-                        -> H.Manager
-                        -> C.ResourceT m (AccessToken User)
-getUserAccessTokenStep2 creds redirectUrl query manager =
-  case query of
-    [code@("code", _)] -> do
-      now <- liftIO getCurrentTime
-      let req = fbreq { H.path        = "/oauth/access_token"
-                      , H.queryString =
-                          rsq $ tsq creds
-                          [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
-                      }
-      let toExpire i = Just (addUTCTime (fromIntegral (i :: Int)) now)
-      response <- H.http req manager
-      H.responseBody response C.$$
-        C.sinkParser (AccessToken <$  A.string "access_token="
-                                  <*> A.takeWhile (/= '?')
-                                  <*  A.string "&expires="
-                                  <*> (toExpire <$> A.decimal)
-                                  <*  A.endOfInput)
-    _ -> -- FIXME: Better error handling
-         fail $ "getUserAccessTokenStep2: " ++ show query
-
-
--- | URL where the user is redirected to after Facebook
--- authenticates the user authorizes your application.  This URL
--- should be inside the domain registered for your Facebook
--- application.
-type RedirectUrl = Text
+-- | Same as 'asJson', but returns only the JSON value.
+asJson' :: (C.ResourceThrow m, C.BufferSource bsrc) =>
+           H.Response (bsrc m ByteString)
+        -> C.ResourceT m A.Value
+asJson' = fmap H.responseBody . asJson
