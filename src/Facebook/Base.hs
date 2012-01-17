@@ -22,8 +22,10 @@ import Network.HTTP.Types (Ascii)
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
+import qualified Data.Attoparsec.Char8 as AT
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
+import qualified Data.Text as T
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
 
@@ -153,8 +155,25 @@ fbhttp req manager = do
       let statusexc = H.StatusCodeException status headers
       val <- E.try $ asJson' response
       case val :: Either E.SomeException FacebookException of
-        Left  _     -> E.throw statusexc
         Right fbexc -> E.throw fbexc
+        Left _ -> do
+          case AT.parse wwwAuthenticateParser <$>
+               lookup "WWW-Authenticate" headers of
+            Just (AT.Done _ fbexc) -> E.throw fbexc
+            _                      -> E.throw statusexc
+
+
+-- | Try to parse the @WWW-Authenticate@ header of a Facebook
+-- response.
+wwwAuthenticateParser :: AT.Parser FacebookException
+wwwAuthenticateParser =
+    FacebookException <$  AT.string "OAuth \"Facebook Platform\" "
+                      <*> text
+                      <*  AT.char ' '
+                      <*> text
+    where
+      text  = T.pack <$ AT.char '"' <*> many tchar <* AT.char '"'
+      tchar = (AT.char '\\' *> AT.anyChar) <|> AT.notChar '"'
 
 
 -- | Send a @HEAD@ request just to see if the resposne status
