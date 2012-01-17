@@ -25,6 +25,9 @@ description:
   request or file an issue on GitHub
   (<https://github.com/meteficha/fb/issues>).
 
+extra-source-files:
+  tests/runtests.hs
+
 
 source-repository head
   type:     git
