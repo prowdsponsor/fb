@@ -43,7 +43,7 @@ library
 
 test-suite runtests
   type: exitcode-stdio-1.0
-  ghc-options:    -Wall
+  ghc-options:    -Wall -fno-warn-orphans
   hs-source-dirs: tests
   main-is:        runtests.hs
   build-depends:
