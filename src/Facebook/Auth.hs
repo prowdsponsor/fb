@@ -89,10 +89,10 @@ getUserAccessTokenStep2 creds redirectUrl query manager =
                                   <*  A.string "&expires="
                                   <*> (toExpire <$> A.decimal)
                                   <*  A.endOfInput)
-    _ -> let [errorType, errorReason, errorDescr] =
+    _ -> let [error_, errorReason, errorDescr] =
                  map (fromMaybe "" . flip lookup query)
                      ["error", "error_reason", "error_description"]
-             errorType = T.concat [t errorType, " (", t errorReason, ")"]
+             errorType = T.concat [t error_, " (", t errorReason, ")"]
              t = TE.decodeUtf8With TE.lenientDecode
          in E.throw $ FacebookException errorType (t errorDescr)
 
