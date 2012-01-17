@@ -49,6 +49,10 @@ getCredentials = tryToGet `E.catch` showHelp
         exitFailure
 
 
+invalidCredentials :: FB.Credentials
+invalidCredentials = FB.Credentials "not" "valid"
+
+
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
@@ -59,8 +63,7 @@ main = H.withManager $ \manager -> liftIO $ do
         valid <- FB.isValid token manager
         liftIO (valid @?= True)
       it "throws a FacebookException on invalid credentials" $ do
-        let credsI = FB.Credentials "not" "valid"
-        ret <- E.try $ FB.getAppAccessToken credsI manager
+        ret <- E.try $ FB.getAppAccessToken invalidCredentials manager
         case ret of
           Right token                    -> fail $ show token
           Left (FB.FacebookException {}) -> return ()
