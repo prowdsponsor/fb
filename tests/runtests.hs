@@ -54,11 +54,11 @@ main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
   hspecX $ do
     describe "getAppAccessToken" $ do
-      it "works and returns a valid appaccess token" $ do
+      it "works and returns a valid app access token" $ do
         token <- FB.getAppAccessToken creds manager
         valid <- FB.isValid token manager
         liftIO (valid @?= True)
-      it "throws a Facebook exception on invalid credentials" $ do
+      it "throws a FacebookException on invalid credentials" $ do
         let credsI = FB.Credentials "not" "valid"
         ret <- E.try $ FB.getAppAccessToken credsI manager
         case ret of
