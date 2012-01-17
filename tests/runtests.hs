@@ -53,11 +53,16 @@ main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
   hspecX $ do
-    describe "getAppAccessToken" $
+    describe "getAppAccessToken" $ do
       it "works and returns a valid appaccess token" $ do
         token <- FB.getAppAccessToken creds manager
         valid <- FB.isValid token manager
         liftIO (valid @?= True)
+    describe "isValid" $ do
+      it "returns False on a clearly invalid access token" $ do
+        let token = FB.AccessToken "not valid" Nothing
+        valid <- FB.isValid token manager
+        liftIO (valid @?= False)
 
 
 -- | Sad, orphan instance.
