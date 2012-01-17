@@ -4,6 +4,8 @@ module Facebook
       Credentials(..)
       -- ** Access token
     , AccessToken(..)
+    , hasExpired
+    , isValid
       -- ** App access token
     , App
     , getAppAccessToken

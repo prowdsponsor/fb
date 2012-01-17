@@ -4,10 +4,12 @@ module Facebook.Auth
     , getUserAccessTokenStep2
     , RedirectUrl
     , Permission
+    , hasExpired
+    , isValid
     ) where
 
 import Control.Applicative
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime)
@@ -22,7 +24,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TE
 import qualified Network.HTTP.Conduit as H
-import qualified Network.HTTP.Types as H
+import qualified Network.HTTP.Types as HT
 
 import Facebook.Base
 
@@ -72,7 +74,7 @@ getUserAccessTokenStep1 creds redirectUrl perms =
 getUserAccessTokenStep2 :: C.ResourceIO m =>
                            Credentials
                         -> RedirectUrl -- ^ Exactly the same as in 'getUserAccessTokenStep1'.
-                        -> H.SimpleQuery
+                        -> HT.SimpleQuery
                         -> H.Manager
                         -> C.ResourceT m (AccessToken User)
 getUserAccessTokenStep2 creds redirectUrl query manager =
@@ -124,3 +126,36 @@ instance Show Permission where
 
 instance IsString Permission where
     fromString = Permission . fromString
+
+
+-- | @True@ if the access token has expired, otherwise @False@.
+hasExpired :: (Functor m, MonadIO m) => AccessToken kind -> m Bool
+hasExpired token =
+  case accessTokenExpires token of
+    Nothing      -> return False
+    Just expTime -> (>= expTime) <$> liftIO getCurrentTime
+
+
+-- | @True@ if the user access token is valid.  An expired access
+-- token is not valid (see 'hasExpired').  However, a non-expired
+-- user access token may not be valid as well.  The user may have
+-- changed his password, logged out from Facebook or blocked your
+-- app.
+isValid :: C.ResourceIO m =>
+           AccessToken User
+        -> H.Manager
+        -> C.ResourceT m Bool
+isValid token manager = do
+  expired <- hasExpired token
+  if expired
+    then return False
+    else do
+     let req = (fbreq "/me" (Just token) [])
+                 { H.method      = HT.methodHead
+                 , H.checkStatus = \_ _ -> Nothing }
+     response <- H.httpLbs req manager
+     return $! H.statusCode response == HT.status200
+     -- Yes, we use httpLbs above so that we don't have to worry
+     -- about consuming the responseBody.  Note that the
+     -- responseBody should be empty since we're using HEAD, but
+     -- I don't know if this is guaranteed.
