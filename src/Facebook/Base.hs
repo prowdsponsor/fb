@@ -9,6 +9,7 @@ module Facebook.Base
     , asJson'
     , FacebookException(..)
     , fbhttp
+    , httpCheck
     ) where
 
 import Control.Applicative
@@ -146,8 +147,7 @@ fbhttp :: C.ResourceIO m =>
 fbhttp req manager = do
   let req' = req { H.checkStatus = \_ _ -> Nothing }
   response@(H.Response status headers _) <- H.http req' manager
-  let sc = HT.statusCode status
-  if 200 <= sc && sc < 300
+  if isOkay status
     then return response
     else do
       let statusexc = H.StatusCodeException status headers
@@ -155,3 +155,27 @@ fbhttp req manager = do
       case val :: Either E.SomeException FacebookException of
         Left  _     -> E.throw statusexc
         Right fbexc -> E.throw fbexc
+
+
+-- | Send a @HEAD@ request just to see if the resposne status
+-- code is 2XX (returns @True@) or not (returns @False@).
+httpCheck :: C.ResourceIO m =>
+             H.Request m
+          -> H.Manager
+          -> C.ResourceT m Bool
+httpCheck req manager = do
+  let req' = req { H.method      = HT.methodHead
+                 , H.checkStatus = \_ _ -> Nothing }
+  H.Response status _ _ <- H.httpLbs req' manager
+  return $! isOkay status
+  -- Yes, we use httpLbs above so that we don't have to worry
+  -- about consuming the responseBody.  Note that the
+  -- responseBody should be empty since we're using HEAD, but
+  -- I don't know if this is guaranteed.
+
+
+-- | @True@ if the the 'Status' is ok (i.e. @2XX@).
+isOkay :: HT.Status -> Bool
+isOkay status =
+  let sc = HT.statusCode status
+  in 200 <= sc && sc < 300

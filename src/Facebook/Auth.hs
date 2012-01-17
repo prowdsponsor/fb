@@ -136,26 +136,21 @@ hasExpired token =
     Just expTime -> (>= expTime) <$> liftIO getCurrentTime
 
 
--- | @True@ if the user access token is valid.  An expired access
+-- | @True@ if the access token is valid.  An expired access
 -- token is not valid (see 'hasExpired').  However, a non-expired
--- user access token may not be valid as well.  The user may have
--- changed his password, logged out from Facebook or blocked your
--- app.
+-- access token may not be valid as well.  For example, in the
+-- case of an user access token, they may have changed their
+-- password, logged out from Facebook or blocked your app.
 isValid :: C.ResourceIO m =>
-           AccessToken User
+           AccessToken kind
         -> H.Manager
         -> C.ResourceT m Bool
 isValid token manager = do
   expired <- hasExpired token
   if expired
     then return False
-    else do
-     let req = (fbreq "/me" (Just token) [])
-                 { H.method      = HT.methodHead
-                 , H.checkStatus = \_ _ -> Nothing }
-     response <- H.httpLbs req manager
-     return $! H.statusCode response == HT.status200
-     -- Yes, we use httpLbs above so that we don't have to worry
-     -- about consuming the responseBody.  Note that the
-     -- responseBody should be empty since we're using HEAD, but
-     -- I don't know if this is guaranteed.
+    else httpCheck (fbreq "/19292868552" (Just token) []) manager
+    -- This is Facebook's own page.  While using an access token
+    -- to access it shouldn't do much difference on most cases,
+    -- when the access token is invalid a "400 Bad Request"
+    -- status code is returned regardless.
