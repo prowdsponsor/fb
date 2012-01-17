@@ -38,7 +38,7 @@ getAppAccessToken :: C.ResourceIO m =>
 getAppAccessToken creds manager = do
   let req = fbreq "/oauth/access_token" Nothing $
             tsq creds [("grant_type", "client_credentials")]
-  response <- H.http req manager
+  response <- fbhttp req manager
   H.responseBody response C.$$
     C.sinkParser (AccessToken <$  A.string "access_token="
                               <*> A.takeByteString
@@ -84,7 +84,7 @@ getUserAccessTokenStep2 creds redirectUrl query manager =
       let req = fbreq "/oauth/access_token" Nothing $
                 tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
       let toExpire i = Just (addUTCTime (fromIntegral (i :: Int)) now)
-      response <- H.http req manager
+      response <- fbhttp req manager
       H.responseBody response C.$$
         C.sinkParser (AccessToken <$  A.string "access_token="
                                   <*> A.takeWhile (/= '?')
