@@ -73,7 +73,8 @@ getUserAccessTokenStep1 creds redirectUrl perms =
 -- flow and give you an @'AccessToken' 'User'@.
 getUserAccessTokenStep2 :: C.ResourceIO m =>
                            Credentials
-                        -> RedirectUrl -- ^ Exactly the same as in 'getUserAccessTokenStep1'.
+                        -> RedirectUrl -- ^ Should be exactly the same
+                                       -- as in 'getUserAccessTokenStep1'.
                         -> HT.SimpleQuery
                         -> H.Manager
                         -> C.ResourceT m (AccessToken User)

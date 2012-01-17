@@ -4,14 +4,19 @@ license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
 maintainer:        Felipe Lessa <felipe.lessa@gmail.com>
-synopsis:          Bindings for Facebook's API.
+synopsis:          Bindings to Facebook's API.
 category:          Web
 stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
 homepage:          https://github.com/meteficha/facebook
 description:
-    Bindings for Facebook's API.
+  This package exports bindings to Facebook's APIs (see
+  <http://developers.facebook.com/>).  Does not have any external
+  dependencies and tries to use as little resources (such as
+  memory, sockets and CPU) as possible by using packages such as
+  @aeson@, @attoparsec@, @bytestring@, @conduit@, @http-conduit@,
+  @text@ and others.
 
 
 library

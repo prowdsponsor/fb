@@ -60,7 +60,8 @@ data AccessToken kind =
                   -- ^ The access token itself.
                 , accessTokenExpires :: Maybe UTCTime
                   -- ^ Expire time of the access token.  It may
-                  -- never expire, in case it will be @Nothing@.
+                  -- never expire, in which case it will be
+                  -- @Nothing@.
                 }
     deriving (Eq, Ord, Show, Typeable)
 
@@ -123,8 +124,8 @@ asJson' :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
 asJson' = fmap H.responseBody . asJson
 
 
--- | An exception that may be thrown by functions on this module.
--- Includes any information provided by Facebook.
+-- | An exception that may be thrown by functions on this
+-- package.  Includes any information provided by Facebook.
 data FacebookException =
     FacebookException { fbeType    :: Text
                       , fbeMessage :: Text
