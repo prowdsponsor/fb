@@ -10,6 +10,7 @@ stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
 homepage:          https://github.com/meteficha/facebook
+
 description:
   This package exports bindings to Facebook's APIs (see
   <http://developers.facebook.com/>).  Does not have any external
@@ -17,6 +18,17 @@ description:
   memory, sockets and CPU) as possible by using packages such as
   @aeson@, @attoparsec@, @bytestring@, @conduit@, @http-conduit@,
   @text@ and others.
+  .
+  While we would like to have a complete binding to Facebook's
+  API, this package is being developed on demand.  If you need
+  something that has not been implemented yet, please send a pull
+  request or file an issue on GitHub
+  (<https://github.com/meteficha/fb/issues>).
+
+
+source-repository head
+  type:     git
+  location: git://github.com/meteficha/fb.git
 
 
 library
