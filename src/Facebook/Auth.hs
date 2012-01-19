@@ -205,7 +205,7 @@ extendUserAccessToken creds token@(UserAccessToken data_ _) manager
       hasExpiredExc =
           mkExc [ "the user access token has already expired, "
                 , "so I'll not try to extend it." ]
-      couldn'tParseExc (exc :: FacebookException) =
+      couldn'tParseExc (exc :: C.ParseError) =
           mkExc [ "could not parse Facebook's response ("
                 , T.pack (show exc), ")" ]
       mkExc = FbLibraryException . T.concat . ("extendUserAccessToken: ":)
