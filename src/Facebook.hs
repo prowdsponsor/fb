@@ -16,6 +16,7 @@ module Facebook
     , Permission
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
+    , extendUserAccessToken
       -- * Exceptions
     , FacebookException(..)
     ) where

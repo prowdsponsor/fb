@@ -1,0 +1,9 @@
+Implement tests for the following functions:
+
+ - Anything that depends on valid user access tokens:
+
+   * getUserAccessTokenStep1
+
+   * getUserAccessTokenStep2
+
+   * extendUserAccessToken
