@@ -69,7 +69,7 @@ main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
   hspecX $ do
-    describe "getAppAccessToken" $ do
+    describe "Facebook.getAppAccessToken" $ do
       it "works and returns a valid app access token" $ do
         token <- FB.getAppAccessToken creds manager
         valid <- FB.isValid token manager
@@ -79,7 +79,7 @@ main = H.withManager $ \manager -> liftIO $ do
         case ret  of
           Right token                      -> fail $ show token
           Left (_ :: FB.FacebookException) -> return ()
-    describe "isValid" $ do
+    describe "Facebook.isValid" $ do
       it "returns False on a clearly invalid user access token" $ do
         valid <- FB.isValid invalidUserAccessToken manager
         liftIO (valid @?= False)
