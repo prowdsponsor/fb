@@ -1,15 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Text (Text)
 import Data.Time (parseTime)
 import System.Environment (getEnv)
 import System.Exit (exitFailure)
 import System.IO.Error (isDoesNotExistError)
 
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
 import qualified Control.Exception.Lifted as E
 import qualified Data.Conduit as C
 import qualified Facebook as FB
+import qualified Facebook.OpenGraph as FBOG
 import qualified Network.HTTP.Conduit as H
 
 import Test.HUnit
@@ -79,6 +84,7 @@ main = H.withManager $ \manager -> liftIO $ do
         case ret  of
           Right token                      -> fail $ show token
           Left (_ :: FB.FacebookException) -> return ()
+
     describe "Facebook.isValid" $ do
       it "returns False on a clearly invalid user access token" $ do
         valid <- FB.isValid invalidUserAccessToken manager
@@ -86,6 +92,18 @@ main = H.withManager $ \manager -> liftIO $ do
       it "returns False on a clearly invalid app access token" $ do
         valid <- FB.isValid invalidAppAccessToken manager
         liftIO (valid @?= False)
+
+    describe "Facebook.OpenGraph.getObject" $ do
+      it "is able to fetch Facebook's own page" $ do
+        A.Object obj <- FBOG.getObject "/19292868552" [] Nothing manager
+        let Just r = flip A.parseMaybe () $ const $
+                     (,,) <$> obj A..:? "id"
+                          <*> obj A..:? "website"
+                          <*> obj A..:? "name"
+            just x = Just (x :: Text)
+        liftIO $ r @?= ( just "19292868552"
+                       , just "http://developers.facebook.com"
+                       , just "Facebook Platform" )
 
 
 -- | Sad, orphan instance.

@@ -39,9 +39,11 @@ library
   ghc-options: -Wall
   exposed-modules:
     Facebook
+    Facebook.OpenGraph
   other-modules:
     Facebook.Base
     Facebook.Auth
+    Facebook.OpenGraph.Base
   build-depends:
       base               >= 4       && < 5
     , lifted-base        >= 0.1     && < 0.2
@@ -73,7 +75,7 @@ test-suite runtests
       -- Library dependencies used on the tests.  No need to
       -- specify versions since they'll use the same as above.
       base, lifted-base, transformers, bytestring, conduit,
-      http-conduit, time
+      http-conduit, text, time, aeson
 
       -- Test-only dependencies
     , HUnit
