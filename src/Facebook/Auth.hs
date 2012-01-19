@@ -40,9 +40,8 @@ getAppAccessToken creds manager = do
             tsq creds [("grant_type", "client_credentials")]
   response <- fbhttp req manager
   H.responseBody response C.$$
-    C.sinkParser (AccessToken <$  A.string "access_token="
-                              <*> A.takeByteString
-                              <*> pure Nothing)
+    C.sinkParser (AppAccessToken <$  A.string "access_token="
+                                 <*> A.takeByteString)
 
 
 -- | The first step to get an user access token.  Returns the
@@ -84,14 +83,14 @@ getUserAccessTokenStep2 creds redirectUrl query manager =
       now <- liftIO getCurrentTime
       let req = fbreq "/oauth/access_token" Nothing $
                 tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
-      let toExpire i = Just (addUTCTime (fromIntegral (i :: Int)) now)
+      let toExpire i = addUTCTime (fromIntegral (i :: Int)) now
       response <- fbhttp req manager
       H.responseBody response C.$$
-        C.sinkParser (AccessToken <$  A.string "access_token="
-                                  <*> A.takeWhile (/= '?')
-                                  <*  A.string "&expires="
-                                  <*> (toExpire <$> A.decimal)
-                                  <*  A.endOfInput)
+        C.sinkParser (UserAccessToken <$  A.string "access_token="
+                                      <*> A.takeWhile (/= '?')
+                                      <*  A.string "&expires="
+                                      <*> (toExpire <$> A.decimal)
+                                      <*  A.endOfInput)
     _ -> let [error_, errorReason, errorDescr] =
                  map (fromMaybe "" . flip lookup query)
                      ["error", "error_reason", "error_description"]
@@ -150,8 +149,17 @@ isValid token manager = do
   expired <- hasExpired token
   if expired
     then return False
-    else httpCheck (fbreq "/19292868552" (Just token) []) manager
-    -- This is Facebook's own page.  While using an access token
-    -- to access it shouldn't do much difference on most cases,
-    -- when the access token is invalid a "400 Bad Request"
-    -- status code is returned regardless.
+    else
+      let page = case token of
+                   UserAccessToken _ _ -> "/me"
+                   -- Documented way of checking if the token is valid,
+                   -- see <https://developers.facebook.com/blog/post/500/>.
+                   AppAccessToken _ -> "/19292868552"
+                   -- This is Facebook's page on Facebook.  While
+                   -- this behaviour is undocumented, it will
+                   -- return a "400 Bad Request" status code
+                   -- whenever the access token is invalid.  It
+                   -- will actually work with user access tokens,
+                   -- too, but they have another, better way of
+                   -- being checked.
+      in httpCheck (fbreq page (Just token) []) manager

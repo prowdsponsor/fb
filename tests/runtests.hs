@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Time (parseTime)
 import System.Environment (getEnv)
 import System.Exit (exitFailure)
 import System.IO.Error (isDoesNotExistError)
@@ -52,6 +53,17 @@ getCredentials = tryToGet `E.catch` showHelp
 invalidCredentials :: FB.Credentials
 invalidCredentials = FB.Credentials "not" "valid"
 
+invalidUserAccessToken :: FB.AccessToken FB.User
+invalidUserAccessToken = FB.UserAccessToken "invalid" farInTheFuture
+    where
+      Just farInTheFuture = parseTime (error "farInTheFuture") "%Y" "3000"
+      -- It's actually important to use 'farInTheFuture' since we
+      -- don't want any tests rejecting this invalid user access
+      -- token before even giving it to Facebook.
+
+invalidAppAccessToken :: FB.AccessToken FB.App
+invalidAppAccessToken = FB.AppAccessToken "invalid"
+
 
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
@@ -68,9 +80,11 @@ main = H.withManager $ \manager -> liftIO $ do
           Right token                    -> fail $ show token
           Left (FB.FacebookException {}) -> return ()
     describe "isValid" $ do
-      it "returns False on a clearly invalid access token" $ do
-        let token = FB.AccessToken "not valid" Nothing
-        valid <- FB.isValid token manager
+      it "returns False on a clearly invalid user access token" $ do
+        valid <- FB.isValid invalidUserAccessToken manager
+        liftIO (valid @?= False)
+      it "returns False on a clearly invalid app access token" $ do
+        valid <- FB.isValid invalidAppAccessToken manager
         liftIO (valid @?= False)
 
 

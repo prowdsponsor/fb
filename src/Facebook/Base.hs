@@ -1,6 +1,9 @@
 module Facebook.Base
     ( Credentials(..)
     , AccessToken(..)
+    , AccessTokenData
+    , accessTokenData
+    , accessTokenExpires
     , User
     , App
     , fbreq
@@ -17,7 +20,7 @@ import Control.Monad (mzero)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Time (UTCTime)
-import Data.Typeable (Typeable)
+import Data.Typeable (Typeable, Typeable1)
 import Network.HTTP.Types (Ascii)
 
 import qualified Control.Exception.Lifted as E
@@ -55,23 +58,37 @@ data Credentials =
 --
 -- These access tokens are distinguished by the phantom type on
 -- 'AccessToken', which can be 'User' or 'App'.
-data AccessToken kind =
-    AccessToken { accessTokenData    :: Ascii
-                  -- ^ The access token itself.
-                , accessTokenExpires :: Maybe UTCTime
-                  -- ^ Expire time of the access token.  It may
-                  -- never expire, in which case it will be
-                  -- @Nothing@.
-                }
-    deriving (Eq, Ord, Show, Typeable)
+data AccessToken kind where
+    UserAccessToken :: AccessTokenData -> UTCTime -> AccessToken User
+    AppAccessToken  :: AccessTokenData -> AccessToken App
+
+deriving instance Eq   (AccessToken kind)
+deriving instance Ord  (AccessToken kind)
+deriving instance Show (AccessToken kind)
+deriving instance Typeable1 AccessToken
+
+-- | The access token data that is passed to Facebook's API
+-- calls.
+type AccessTokenData = Ascii
+
+-- | Get the access token data.
+accessTokenData :: AccessToken kind -> AccessTokenData
+accessTokenData (UserAccessToken d _) = d
+accessTokenData (AppAccessToken d)    = d
+
+-- | Expire time of an access token.  It may never expire, in
+-- which case it will be @Nothing@.
+accessTokenExpires :: AccessToken kind -> Maybe UTCTime
+accessTokenExpires (UserAccessToken _ expt) = Just expt
+accessTokenExpires (AppAccessToken _)       = Nothing
 
 -- | Phantom type used mark an 'AccessToken' as an user access
 -- token.
-data User
+data User deriving (Typeable)
 
 -- | Phantom type used mark an 'AccessToken' as an app access
 -- token.
-data App
+data App deriving (Typeable)
 
 
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of

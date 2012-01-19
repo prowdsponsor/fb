@@ -59,6 +59,8 @@ library
     DeriveDataTypeable
     EmptyDataDecls
     OverloadedStrings
+    GADTs
+    StandaloneDeriving
 
 
 test-suite runtests
@@ -70,7 +72,7 @@ test-suite runtests
       -- Library dependencies used on the tests.  No need to
       -- specify versions since they'll use the same as above.
       base, lifted-base, transformers, bytestring, conduit,
-      http-conduit
+      http-conduit, time
 
       -- Test-only dependencies
     , HUnit
