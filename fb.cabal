@@ -61,6 +61,7 @@ library
     OverloadedStrings
     GADTs
     StandaloneDeriving
+    ScopedTypeVariables
 
 
 test-suite runtests
@@ -80,3 +81,4 @@ test-suite runtests
     , fb
   extensions:
     TypeFamilies
+    ScopedTypeVariables

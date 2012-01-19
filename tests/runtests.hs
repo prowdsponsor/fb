@@ -76,9 +76,9 @@ main = H.withManager $ \manager -> liftIO $ do
         liftIO (valid @?= True)
       it "throws a FacebookException on invalid credentials" $ do
         ret <- E.try $ FB.getAppAccessToken invalidCredentials manager
-        case ret of
-          Right token                    -> fail $ show token
-          Left (FB.FacebookException {}) -> return ()
+        case ret  of
+          Right token                      -> fail $ show token
+          Left (_ :: FB.FacebookException) -> return ()
     describe "isValid" $ do
       it "returns False on a clearly invalid user access token" $ do
         valid <- FB.isValid invalidUserAccessToken manager

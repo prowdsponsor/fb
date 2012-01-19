@@ -144,9 +144,12 @@ asJson' = fmap H.responseBody . asJson
 -- | An exception that may be thrown by functions on this
 -- package.  Includes any information provided by Facebook.
 data FacebookException =
+    -- | An exception coming from Facebook.
     FacebookException { fbeType    :: Text
                       , fbeMessage :: Text
                       }
+    -- | An exception coming from the @fb@ package's code.
+  | FbLibraryException { fbeMessage :: Text }
     deriving (Eq, Ord, Show, Typeable)
 
 instance A.FromJSON FacebookException where
