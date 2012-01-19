@@ -130,8 +130,12 @@ asJson :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
 asJson (H.Response status headers body) = do
   val <- body C.$$ C.sinkParser A.json'
   case A.fromJSON val of
-    A.Error str -> fail $ "Facebook.Base.asJson: " ++ str
     A.Success r -> return (H.Response status headers r)
+    A.Error str ->
+        E.throw $ FbLibraryException $ T.concat
+             [ "Facebook.Base.asJson: could not parse "
+             , " Facebook's response as a JSON value ("
+             , T.pack str, ")" ]
 
 
 -- | Same as 'asJson', but returns only the JSON value.
