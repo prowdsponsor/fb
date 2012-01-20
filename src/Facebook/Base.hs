@@ -2,7 +2,6 @@ module Facebook.Base
     ( fbreq
     , ToSimpleQuery(..)
     , asJson
-    , asJson'
     , FacebookException(..)
     , fbhttp
     , httpCheck
@@ -60,26 +59,19 @@ instance ToSimpleQuery (AccessToken kind) where
 
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
--- response with a JSON value.
+-- JSON value.
 asJson :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
           H.Response (bsrc m ByteString)
-       -> FacebookT anyAuth (C.ResourceT m) (H.Response a)
-asJson (H.Response status headers body) = do
-  val <- lift $ body C.$$ C.sinkParser A.json'
+       -> FacebookT anyAuth (C.ResourceT m) a
+asJson response = do
+  val <- lift $ H.responseBody response C.$$ C.sinkParser A.json'
   case A.fromJSON val of
-    A.Success r -> return (H.Response status headers r)
+    A.Success r -> return r
     A.Error str ->
         E.throw $ FbLibraryException $ T.concat
              [ "Facebook.Base.asJson: could not parse "
              , " Facebook's response as a JSON value ("
              , T.pack str, ")" ]
-
-
--- | Same as 'asJson', but returns only the JSON value.
-asJson' :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
-           H.Response (bsrc m ByteString)
-        -> FacebookT anyAuth (C.ResourceT m) a
-asJson' = fmap H.responseBody . asJson
 
 
 -- | An exception that may be thrown by functions on this
@@ -115,7 +107,7 @@ fbhttp req = do
     then return response
     else do
       let statusexc = H.StatusCodeException status headers
-      val <- E.try $ asJson' response
+      val <- E.try $ asJson response
       case val :: Either E.SomeException FacebookException of
         Right fbexc -> E.throw fbexc
         Left _ -> do
