@@ -17,9 +17,12 @@ module Facebook
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
     , extendUserAccessToken
+      -- * Raw access to the Graph API
+    , getObject
       -- * Exceptions
     , FacebookException(..)
     ) where
 
 import Facebook.Base
 import Facebook.Auth
+import Facebook.Graph

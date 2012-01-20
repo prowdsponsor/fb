@@ -1,4 +1,4 @@
-module Facebook.OpenGraph.Base
+module Facebook.Graph
     ( getObject
     ) where
 
@@ -21,7 +21,7 @@ import qualified Network.HTTP.Types as HT
 import Facebook.Base
 
 
--- | Make a raw request to Facebook's Open Graph API.  Returns a
+-- | Make a raw @GET@ request to Facebook's Graph API.  Returns a
 -- raw JSON 'A.Value'.
 getObject :: C.ResourceIO m =>
              Ascii          -- ^ Path (should begin with a slash @\/@)

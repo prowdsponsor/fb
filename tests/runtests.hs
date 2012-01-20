@@ -14,7 +14,6 @@ import qualified Data.ByteString.Char8 as B
 import qualified Control.Exception.Lifted as E
 import qualified Data.Conduit as C
 import qualified Facebook as FB
-import qualified Facebook.OpenGraph as FBOG
 import qualified Network.HTTP.Conduit as H
 
 import Test.HUnit
@@ -95,7 +94,7 @@ main = H.withManager $ \manager -> liftIO $ do
 
     describe "Facebook.OpenGraph.getObject" $ do
       it "is able to fetch Facebook's own page" $ do
-        A.Object obj <- FBOG.getObject "/19292868552" [] Nothing manager
+        A.Object obj <- FB.getObject "/19292868552" [] Nothing manager
         let Just r = flip A.parseMaybe () $ const $
                      (,,) <$> obj A..:? "id"
                           <*> obj A..:? "website"
