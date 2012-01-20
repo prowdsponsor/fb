@@ -41,8 +41,8 @@ library
     Facebook
   other-modules:
     Facebook.Types
-    Facebook.Base
     Facebook.Monad
+    Facebook.Base
     Facebook.Auth
     Facebook.Graph
   build-depends:
@@ -81,7 +81,7 @@ test-suite runtests
   build-depends:
       -- Library dependencies used on the tests.  No need to
       -- specify versions since they'll use the same as above.
-      base, lifted-base, transformers, bytestring, conduit,
+      base, lifted-base, transformers, bytestring,
       http-conduit, text, time, aeson
 
       -- Test-only dependencies

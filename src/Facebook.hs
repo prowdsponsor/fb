@@ -1,7 +1,14 @@
 module Facebook
-    ( -- * Authorization and Authentication
+    ( -- * @FacebookT@ monad transformer
+      FacebookT
+    , runFacebookT
+    , runNoAuthFacebookT
+    , Auth
+    , NoAuth
+
+      -- * Authorization and Authentication
       -- ** Credentials
-      Credentials(..)
+    , Credentials(..)
       -- ** Access token
     , AccessToken(..)
     , AccessTokenData
@@ -17,14 +24,17 @@ module Facebook
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
     , extendUserAccessToken
+
       -- * Raw access to the Graph API
     , getObject
     , postObject
+
       -- * Exceptions
     , FacebookException(..)
     ) where
 
 import Facebook.Types
+import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph

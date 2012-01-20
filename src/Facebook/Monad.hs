@@ -7,6 +7,10 @@ module Facebook.Monad
     , runNoAuthFacebookT
     , getCreds
     , getManager
+    , runResourceInFb
+
+      -- * Re-export
+    , lift
     ) where
 
 import Control.Applicative (Applicative, Alternative)
@@ -21,6 +25,7 @@ import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
 import Control.Monad.Trans.Reader (ReaderT(..), ask)
 import Data.Typeable (Typeable)
 
+import qualified Data.Conduit as C
 import qualified Network.HTTP.Conduit as H
 
 import Facebook.Types
@@ -85,3 +90,10 @@ getCreds = fbdCreds `liftM` F ask
 -- | Get the 'H.Manager'.
 getManager :: Monad m => FacebookT anyAuth m H.Manager
 getManager = fbdManager `liftM` F ask
+
+
+-- | Run a 'ResourceT' inside a 'FacebookT'.
+runResourceInFb :: C.Resource m =>
+                   FacebookT anyAuth (C.ResourceT m) a
+                -> FacebookT anyAuth m a
+runResourceInFb (F inner) = F $ ask >>= lift . C.runResourceT . runReaderT inner

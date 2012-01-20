@@ -25,6 +25,7 @@ import qualified Network.HTTP.Types as HT
 
 
 import Facebook.Types
+import Facebook.Monad
 
 
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of
@@ -62,9 +63,9 @@ instance ToSimpleQuery (AccessToken kind) where
 -- response with a JSON value.
 asJson :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
           H.Response (bsrc m ByteString)
-       -> C.ResourceT m (H.Response a)
+       -> FacebookT anyAuth (C.ResourceT m) (H.Response a)
 asJson (H.Response status headers body) = do
-  val <- body C.$$ C.sinkParser A.json'
+  val <- lift $ body C.$$ C.sinkParser A.json'
   case A.fromJSON val of
     A.Success r -> return (H.Response status headers r)
     A.Error str ->
@@ -77,7 +78,7 @@ asJson (H.Response status headers body) = do
 -- | Same as 'asJson', but returns only the JSON value.
 asJson' :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
            H.Response (bsrc m ByteString)
-        -> C.ResourceT m a
+        -> FacebookT anyAuth (C.ResourceT m) a
 asJson' = fmap H.responseBody . asJson
 
 
@@ -105,11 +106,11 @@ instance E.Exception FacebookException where
 -- meaningful 'FacebookException'@s@.
 fbhttp :: C.ResourceIO m =>
           H.Request m
-       -> H.Manager
-       -> C.ResourceT m (H.Response (C.Source m ByteString))
-fbhttp req manager = do
+       -> FacebookT anyAuth (C.ResourceT m) (H.Response (C.Source m ByteString))
+fbhttp req = do
+  manager <- getManager
   let req' = req { H.checkStatus = \_ _ -> Nothing }
-  response@(H.Response status headers _) <- H.http req' manager
+  response@(H.Response status headers _) <- lift (H.http req' manager)
   if isOkay status
     then return response
     else do
@@ -141,12 +142,12 @@ wwwAuthenticateParser =
 -- code is 2XX (returns @True@) or not (returns @False@).
 httpCheck :: C.ResourceIO m =>
              H.Request m
-          -> H.Manager
-          -> C.ResourceT m Bool
-httpCheck req manager = do
+          -> FacebookT anyAuth m Bool
+httpCheck req = runResourceInFb $ do
+  manager <- getManager
   let req' = req { H.method      = HT.methodHead
                  , H.checkStatus = \_ _ -> Nothing }
-  H.Response status _ _ <- H.httpLbs req' manager
+  H.Response status _ _ <- lift (H.httpLbs req' manager)
   return $! isOkay status
   -- Yes, we use httpLbs above so that we don't have to worry
   -- about consuming the responseBody.  Note that the

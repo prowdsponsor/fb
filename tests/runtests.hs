@@ -2,6 +2,7 @@
 
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import Control.Monad.Trans.Class (lift)
 import Data.Text (Text)
 import Data.Time (parseTime)
 import System.Environment (getEnv)
@@ -12,12 +13,10 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
 import qualified Control.Exception.Lifted as E
-import qualified Data.Conduit as C
 import qualified Facebook as FB
 import qualified Network.HTTP.Conduit as H
 
-import Test.HUnit
-import Test.Hspec.Core (Example(..))
+import qualified Test.HUnit as HU
 import Test.Hspec.Monadic
 -- import Test.Hspec.QuickCheck
 import Test.Hspec.HUnit ()
@@ -73,39 +72,47 @@ invalidAppAccessToken = FB.AppAccessToken "invalid"
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
+  let runAuth   :: FB.FacebookT FB.Auth   IO a -> IO a
+      runAuth   = FB.runFacebookT creds manager
+      runNoAuth :: FB.FacebookT FB.NoAuth IO a -> IO a
+      runNoAuth = FB.runNoAuthFacebookT manager
   hspecX $ do
     describe "Facebook.getAppAccessToken" $ do
-      it "works and returns a valid app access token" $ do
-        token <- FB.getAppAccessToken creds manager
-        valid <- FB.isValid token manager
-        liftIO (valid @?= True)
-      it "throws a FacebookException on invalid credentials" $ do
-        ret <- E.try $ FB.getAppAccessToken invalidCredentials manager
-        case ret  of
-          Right token                      -> fail $ show token
-          Left (_ :: FB.FacebookException) -> return ()
+      it "works and returns a valid app access token" $
+        runAuth $ do
+          token <- FB.getAppAccessToken
+          FB.isValid token #?= True
+      it "throws a FacebookException on invalid credentials" $
+        FB.runFacebookT invalidCredentials manager $ do
+          ret <- E.try $ FB.getAppAccessToken
+          case ret  of
+            Right token                      -> fail $ show token
+            Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
 
     describe "Facebook.isValid" $ do
-      it "returns False on a clearly invalid user access token" $ do
-        valid <- FB.isValid invalidUserAccessToken manager
-        liftIO (valid @?= False)
-      it "returns False on a clearly invalid app access token" $ do
-        valid <- FB.isValid invalidAppAccessToken manager
-        liftIO (valid @?= False)
+      it "returns False on a clearly invalid user access token" $
+        runNoAuth $ FB.isValid invalidUserAccessToken #?= False
+      it "returns False on a clearly invalid app access token" $
+        runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
 
     describe "Facebook.OpenGraph.getObject" $ do
-      it "is able to fetch Facebook's own page" $ do
-        A.Object obj <- FB.getObject "/19292868552" [] Nothing manager
-        let Just r = flip A.parseMaybe () $ const $
-                     (,,) <$> obj A..:? "id"
-                          <*> obj A..:? "website"
-                          <*> obj A..:? "name"
-            just x = Just (x :: Text)
-        liftIO $ r @?= ( just "19292868552"
-                       , just "http://developers.facebook.com"
-                       , just "Facebook Platform" )
+      it "is able to fetch Facebook's own page" $
+        runNoAuth $ do
+          A.Object obj <- FB.getObject "/19292868552" [] Nothing
+          let Just r = flip A.parseMaybe () $ const $
+                       (,,) <$> obj A..:? "id"
+                            <*> obj A..:? "website"
+                            <*> obj A..:? "name"
+              just x = Just (x :: Text)
+          r @?= ( just "19292868552"
+                , just "http://developers.facebook.com"
+                , just "Facebook Platform" )
 
 
--- | Sad, orphan instance.
-instance (m ~ IO, r ~ ()) => Example (C.ResourceT m r) where
-    evaluateExample = evaluateExample . C.runResourceT
+-- Wrappers for HUnit operators using MonadIO
+
+(@?=) :: (Eq a, Show a, MonadIO m) => a -> a -> m ()
+v @?= e = liftIO (v HU.@?= e)
+
+(#?=) :: (Eq a, Show a, MonadIO m) => m a -> a -> m ()
+m #?= e = m >>= (@?= e)

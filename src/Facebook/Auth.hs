@@ -30,21 +30,23 @@ import qualified Network.HTTP.Types as HT
 
 import Facebook.Types
 import Facebook.Base
+import Facebook.Monad
 
 
 -- | Get an app access token from Facebook using your
 -- credentials.
 getAppAccessToken :: C.ResourceIO m =>
-                     Credentials
-                  -> H.Manager
-                  -> C.ResourceT m (AccessToken App)
-getAppAccessToken creds manager = do
-  let req = fbreq "/oauth/access_token" Nothing $
-            tsq creds [("grant_type", "client_credentials")]
-  response <- fbhttp req manager
-  H.responseBody response C.$$
-    C.sinkParser (AppAccessToken <$  A.string "access_token="
-                                 <*> A.takeByteString)
+                     FacebookT Auth m (AccessToken App)
+getAppAccessToken =
+  runResourceInFb $ do
+    creds <- getCreds
+    let req = fbreq "/oauth/access_token" Nothing $
+              tsq creds [("grant_type", "client_credentials")]
+    response <- fbhttp req
+    lift $
+      H.responseBody response C.$$
+      C.sinkParser (AppAccessToken <$  A.string "access_token="
+                                   <*> A.takeByteString)
 
 
 -- | The first step to get an user access token.  Returns the
@@ -74,20 +76,19 @@ getUserAccessTokenStep1 creds redirectUrl perms =
 -- to this function that will complete the user authentication
 -- flow and give you an @'AccessToken' 'User'@.
 getUserAccessTokenStep2 :: C.ResourceIO m =>
-                           Credentials
-                        -> RedirectUrl -- ^ Should be exactly the same
+                           RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
                         -> HT.SimpleQuery
-                        -> H.Manager
-                        -> C.ResourceT m (AccessToken User)
-getUserAccessTokenStep2 creds redirectUrl query manager =
+                        -> FacebookT Auth m (AccessToken User)
+getUserAccessTokenStep2 redirectUrl query =
   case query of
-    [code@("code", _)] -> do
-      now <- liftIO getCurrentTime
+    [code@("code", _)] -> runResourceInFb $ do
+      now   <- liftIO getCurrentTime
+      creds <- getCreds
       let req = fbreq "/oauth/access_token" Nothing $
                 tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
-      response <- fbhttp req manager
-      H.responseBody response C.$$ C.sinkParser (userAccessTokenParser now)
+      response <- fbhttp req
+      lift $ H.responseBody response C.$$ C.sinkParser (userAccessTokenParser now)
     _ -> let [error_, errorReason, errorDescr] =
                  map (fromMaybe "" . flip lookup query)
                      ["error", "error_reason", "error_description"]
@@ -153,9 +154,8 @@ hasExpired token =
 -- password, logged out from Facebook or blocked your app.
 isValid :: C.ResourceIO m =>
            AccessToken kind
-        -> H.Manager
-        -> C.ResourceT m Bool
-isValid token manager = do
+        -> FacebookT anyAuth m Bool
+isValid token = do
   expired <- hasExpired token
   if expired
     then return False
@@ -172,7 +172,7 @@ isValid token manager = do
                    -- will actually work with user access tokens,
                    -- too, but they have another, better way of
                    -- being checked.
-      in httpCheck (fbreq page (Just token) []) manager
+      in httpCheck (fbreq page (Just token) [])
 
 
 -- | Extend the expiration time of an user access token (see
@@ -182,26 +182,26 @@ isValid token manager = do
 -- the same data and expiration time as before, but you can't
 -- assume this).  Note that expired access tokens can't be
 -- extended, only valid tokens.
-extendUserAccessToken :: C.ResourceIO m =>
-                         Credentials
-                      -> AccessToken User
-                      -> H.Manager
-                      -> C.ResourceT m (Either FacebookException (AccessToken User))
-extendUserAccessToken creds token@(UserAccessToken data_ _) manager
+extendUserAccessToken ::
+    C.ResourceIO m =>
+    AccessToken User
+ -> FacebookT Auth m (Either FacebookException (AccessToken User))
+extendUserAccessToken token@(UserAccessToken data_ _)
     = do expired <- hasExpired token
          if expired then return (Left hasExpiredExc) else tryToExtend
     where
-      tryToExtend = do
+      tryToExtend = runResourceInFb $ do
+        creds <- getCreds
         let req = fbreq "/oauth/access_token" Nothing $
                   tsq creds [ ("grant_type", "fb_exchange_token")
                             , ("fb_exchange_token", data_) ]
-        eresponse <- E.try (fbhttp req manager)
+        eresponse <- E.try (fbhttp req)
         case eresponse of
           Right response -> do
             now <- liftIO getCurrentTime
             either (Left . couldn'tParseExc) Right <$>
-              E.try (H.responseBody response C.$$
-                     C.sinkParser (userAccessTokenParser now))
+              E.try (lift $ H.responseBody response C.$$
+                            C.sinkParser (userAccessTokenParser now))
           Left exc -> return (Left exc)
 
       hasExpiredExc =
