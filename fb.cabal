@@ -9,7 +9,7 @@ category:          Web
 stability:         Experimental
 cabal-version:     >= 1.8
 build-type:        Simple
-homepage:          https://github.com/meteficha/facebook
+homepage:          https://github.com/meteficha/fb
 
 description:
   This package exports bindings to Facebook's APIs (see
