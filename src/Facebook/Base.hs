@@ -124,7 +124,7 @@ instance ToSimpleQuery (AccessToken kind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- response with a JSON value.
-asJson :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
+asJson :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
           H.Response (bsrc m ByteString)
        -> C.ResourceT m (H.Response a)
 asJson (H.Response status headers body) = do
@@ -139,7 +139,7 @@ asJson (H.Response status headers body) = do
 
 
 -- | Same as 'asJson', but returns only the JSON value.
-asJson' :: (C.ResourceThrow m, C.BufferSource bsrc, A.FromJSON a) =>
+asJson' :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
            H.Response (bsrc m ByteString)
         -> C.ResourceT m a
 asJson' = fmap H.responseBody . asJson
@@ -170,7 +170,7 @@ instance E.Exception FacebookException where
 fbhttp :: C.ResourceIO m =>
           H.Request m
        -> H.Manager
-       -> C.ResourceT m (H.Response (C.BufferedSource m ByteString))
+       -> C.ResourceT m (H.Response (C.Source m ByteString))
 fbhttp req manager = do
   let req' = req { H.checkStatus = \_ _ -> Nothing }
   response@(H.Response status headers _) <- H.http req' manager
