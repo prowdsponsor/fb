@@ -1,14 +1,15 @@
 module Facebook.Graph
     ( getObject
     , postObject
+    , Id(..)
     ) where
 
 
--- import Control.Applicative
+import Control.Applicative
 -- import Control.Monad (mzero)
 -- import Data.ByteString.Char8 (ByteString)
 -- import Data.Text (Text)
--- import Data.Typeable (Typeable, Typeable1)
+import Data.Typeable (Typeable)
 import Network.HTTP.Types (Ascii)
 
 -- import qualified Control.Exception.Lifted as E
@@ -46,3 +47,12 @@ postObject :: (C.ResourceIO m, A.FromJSON a) =>
 postObject path query token =
   runResourceInFb $
     asJson' =<< fbhttp (fbreq path (Just token) query) { H.method = HT.methodPost }
+
+
+-- | The identification code of an object.
+newtype Id = Id { idCode :: Ascii }
+    deriving (Eq, Ord, Show, Typeable)
+
+instance A.FromJSON Id where
+    parseJSON (A.Object v) = Id <$> v A..: "id"
+    parseJSON other        = Id <$> A.parseJSON other

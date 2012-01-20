@@ -25,6 +25,10 @@ module Facebook
     , getUserAccessTokenStep2
     , extendUserAccessToken
 
+      -- * Facebook's Open Graph API
+    , createAction
+    , Action
+
       -- * Raw access to the Graph API
     , getObject
     , postObject
@@ -38,3 +42,4 @@ import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph
+import Facebook.OpenGraph

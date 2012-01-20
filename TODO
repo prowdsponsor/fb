@@ -6,6 +6,8 @@ Implement tests for the following functions:
 
    * postObject
 
+   * createAction
+
  - Anything that depends on a real browser:
 
    * getUserAccessTokenStep1
