@@ -28,6 +28,8 @@ module Facebook
       -- * Facebook's Open Graph API
     , createAction
     , Action
+    , (#=)
+    , SimpleType(..)
 
       -- * Raw access to the Graph API
     , getObject

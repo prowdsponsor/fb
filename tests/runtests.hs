@@ -3,8 +3,10 @@
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
+import Data.Int (Int8, Int16, Int32)
 import Data.Text (Text)
 import Data.Time (parseTime)
+import Data.Word (Word8, Word16, Word32, Word)
 import System.Environment (getEnv)
 import System.Exit (exitFailure)
 import System.IO.Error (isDoesNotExistError)
@@ -12,14 +14,17 @@ import System.IO.Error (isDoesNotExistError)
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
+import qualified Data.Text as T
+import qualified Data.Time as TI
 import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
 import qualified Network.HTTP.Conduit as H
 
-import qualified Test.HUnit as HU
+import Test.HUnit ((@?=))
 import Test.Hspec.Monadic
--- import Test.Hspec.QuickCheck
+import Test.Hspec.QuickCheck
 import Test.Hspec.HUnit ()
+import qualified Test.QuickCheck as QC
 
 
 -- | Grab the Facebook credentials from the environment.
@@ -104,15 +109,49 @@ main = H.withManager $ \manager -> liftIO $ do
                             <*> obj A..:? "website"
                             <*> obj A..:? "name"
               just x = Just (x :: Text)
-          r @?= ( just "19292868552"
+          r &?= ( just "19292868552"
                 , just "http://developers.facebook.com"
                 , just "Facebook Platform" )
+
+    describe "SimpleType" $ do
+      it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
+
+      let day       = TI.fromGregorian 2012 12 21
+          time      = TI.TimeOfDay 11 37 22
+          diffTime  = TI.secondsToDiffTime (11*3600 + 37*60)
+          utcTime   = TI.UTCTime day diffTime
+          localTime = TI.LocalTime day time
+          zonedTime = TI.ZonedTime localTime (TI.minutesToTimeZone 30)
+      it "works for Day"       $ FB.encodeFbParam day       @?= "2012-12-21"
+      it "works for UTCTime"   $ FB.encodeFbParam utcTime   @?= "20121221T1137Z"
+      it "works for ZonedTime" $ FB.encodeFbParam zonedTime @?= "20121221T1107Z"
+
+      let propShowRead :: (Show a, Read a, Eq a, FB.SimpleType a) => a -> Bool
+          propShowRead x = read (T.unpack $ FB.encodeFbParam x) == x
+      prop "works for Float"  (propShowRead :: Float  -> Bool)
+      prop "works for Double" (propShowRead :: Double -> Bool)
+      prop "works for Int"    (propShowRead :: Int    -> Bool)
+      prop "works for Int8"   (propShowRead :: Int8   -> Bool)
+      prop "works for Int16"  (propShowRead :: Int16  -> Bool)
+      prop "works for Int32"  (propShowRead :: Int32  -> Bool)
+      prop "works for Word"   (propShowRead :: Word   -> Bool)
+      prop "works for Word8"  (propShowRead :: Word8  -> Bool)
+      prop "works for Word16" (propShowRead :: Word16 -> Bool)
+      prop "works for Word32" (propShowRead :: Word32 -> Bool)
+
+      prop "works for Text" (\t -> FB.encodeFbParam t == t)
 
 
 -- Wrappers for HUnit operators using MonadIO
 
-(@?=) :: (Eq a, Show a, MonadIO m) => a -> a -> m ()
-v @?= e = liftIO (v HU.@?= e)
+(&?=) :: (Eq a, Show a, MonadIO m) => a -> a -> m ()
+v &?= e = liftIO (v @?= e)
 
 (#?=) :: (Eq a, Show a, MonadIO m) => m a -> a -> m ()
-m #?= e = m >>= (@?= e)
+m #?= e = m >>= (&?= e)
+
+
+-- | Sad, orphan instance.
+instance QC.Arbitrary Text where
+    arbitrary = T.pack <$> QC.arbitrary
+    shrink    = map T.pack . QC.shrink . T.unpack
