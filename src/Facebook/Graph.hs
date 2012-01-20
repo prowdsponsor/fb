@@ -1,5 +1,6 @@
 module Facebook.Graph
     ( getObject
+    , postObject
     ) where
 
 
@@ -31,3 +32,15 @@ getObject :: C.ResourceIO m =>
           -> C.ResourceT m A.Value
 getObject path query mtoken manager =
   asJson' =<< fbhttp (fbreq path mtoken query) manager
+
+
+-- | Make a raw @POST@ request to Facebook's Graph API.  Returns
+-- a raw JSON 'A.Value'.
+postObject :: C.ResourceIO m =>
+              Ascii          -- ^ Path (should begin with a slash @\/@)
+           -> HT.SimpleQuery -- ^ Arguments to be passed to Facebook
+           -> Maybe (AccessToken kind) -- ^ Optional access token
+           -> H.Manager      -- ^ HTTP connection manager.
+           -> C.ResourceT m A.Value
+postObject path query mtoken manager =
+  asJson' =<< fbhttp (fbreq path mtoken query) { H.method = HT.methodPost } manager

@@ -19,6 +19,7 @@ module Facebook
     , extendUserAccessToken
       -- * Raw access to the Graph API
     , getObject
+    , postObject
       -- * Exceptions
     , FacebookException(..)
     ) where
