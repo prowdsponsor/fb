@@ -6,8 +6,10 @@ module Facebook.Types
     , accessTokenExpires
     , User
     , App
+    , (<>)
     ) where
 
+import Data.Monoid (Monoid, mappend)
 import Data.Time (UTCTime)
 import Data.Typeable (Typeable, Typeable1)
 import Network.HTTP.Types (Ascii)
@@ -70,3 +72,8 @@ data User deriving (Typeable)
 -- | Phantom type used mark an 'AccessToken' as an app access
 -- token.
 data App deriving (Typeable)
+
+
+-- | Synonym for 'mappend'.
+(<>) :: Monoid a => a -> a -> a
+(<>) = mappend
