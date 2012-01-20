@@ -26,11 +26,11 @@ import Facebook.Base
 
 -- | Make a raw @GET@ request to Facebook's Graph API.  Returns a
 -- raw JSON 'A.Value'.
-getObject :: C.ResourceIO m =>
+getObject :: (C.ResourceIO m, A.FromJSON a) =>
              Ascii          -- ^ Path (should begin with a slash @\/@)
           -> HT.SimpleQuery -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken kind) -- ^ Optional access token
-          -> FacebookT anyAuth m A.Value
+          -> FacebookT anyAuth m a
 getObject path query mtoken =
   runResourceInFb $
     asJson' =<< fbhttp (fbreq path mtoken query)
@@ -38,11 +38,11 @@ getObject path query mtoken =
 
 -- | Make a raw @POST@ request to Facebook's Graph API.  Returns
 -- a raw JSON 'A.Value'.
-postObject :: C.ResourceIO m =>
+postObject :: (C.ResourceIO m, A.FromJSON a) =>
               Ascii            -- ^ Path (should begin with a slash @\/@)
            -> HT.SimpleQuery   -- ^ Arguments to be passed to Facebook
            -> AccessToken kind -- ^ Access token
-           -> FacebookT Auth m A.Value
+           -> FacebookT Auth m a
 postObject path query token =
   runResourceInFb $
     asJson' =<< fbhttp (fbreq path (Just token) query) { H.method = HT.methodPost }
