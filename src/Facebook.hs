@@ -35,6 +35,7 @@ module Facebook
     , getObject
     , postObject
     , Id(..)
+    , Argument
 
       -- * Exceptions
     , FacebookException(..)
