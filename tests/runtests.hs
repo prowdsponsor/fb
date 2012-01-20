@@ -77,7 +77,7 @@ main = H.withManager $ \manager -> liftIO $ do
       runNoAuth :: FB.FacebookT FB.NoAuth IO a -> IO a
       runNoAuth = FB.runNoAuthFacebookT manager
   hspecX $ do
-    describe "Facebook.getAppAccessToken" $ do
+    describe "getAppAccessToken" $ do
       it "works and returns a valid app access token" $
         runAuth $ do
           token <- FB.getAppAccessToken
@@ -89,13 +89,13 @@ main = H.withManager $ \manager -> liftIO $ do
             Right token                      -> fail $ show token
             Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
 
-    describe "Facebook.isValid" $ do
+    describe "isValid" $ do
       it "returns False on a clearly invalid user access token" $
         runNoAuth $ FB.isValid invalidUserAccessToken #?= False
       it "returns False on a clearly invalid app access token" $
         runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
 
-    describe "Facebook.OpenGraph.getObject" $ do
+    describe "getObject" $ do
       it "is able to fetch Facebook's own page" $
         runNoAuth $ do
           A.Object obj <- FB.getObject "/19292868552" [] Nothing
