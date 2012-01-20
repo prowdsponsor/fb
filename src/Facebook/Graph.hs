@@ -29,7 +29,7 @@ import Facebook.Base
 -- raw JSON 'A.Value'.
 getObject :: (C.ResourceIO m, A.FromJSON a) =>
              Ascii          -- ^ Path (should begin with a slash @\/@)
-          -> HT.SimpleQuery -- ^ Arguments to be passed to Facebook
+          -> [Argument]     -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken kind) -- ^ Optional access token
           -> FacebookT anyAuth m a
 getObject path query mtoken =
@@ -41,7 +41,7 @@ getObject path query mtoken =
 -- a raw JSON 'A.Value'.
 postObject :: (C.ResourceIO m, A.FromJSON a) =>
               Ascii            -- ^ Path (should begin with a slash @\/@)
-           -> HT.SimpleQuery   -- ^ Arguments to be passed to Facebook
+           -> [Argument]       -- ^ Arguments to be passed to Facebook
            -> AccessToken kind -- ^ Access token
            -> FacebookT Auth m a
 postObject path query token =

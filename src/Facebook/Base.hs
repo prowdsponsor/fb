@@ -42,8 +42,8 @@ fbreq path mtoken query =
           }
 
 
--- | Class for types that may be passed on queries to Facebook's
--- API.
+-- | Internal class for types that may be passed on queries to
+-- Facebook's API.
 class ToSimpleQuery a where
     -- | Prepend to the given query the parameters necessary to
     -- pass this data type to Facebook.

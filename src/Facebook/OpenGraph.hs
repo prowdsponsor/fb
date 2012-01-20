@@ -15,7 +15,7 @@ import Network.HTTP.Types (Ascii)
 -- import qualified Data.Aeson as A
 import qualified Data.Conduit as C
 -- import qualified Data.Text as T
-import qualified Network.HTTP.Types as HT
+-- import qualified Network.HTTP.Types as HT
 
 
 import Facebook.Types
@@ -27,8 +27,8 @@ import Facebook.Graph
 -- | Creates an Open Graph action on the user's timeline. Returns
 -- the 'Id' of the newly created action.
 createAction :: C.ResourceIO m =>
-                Action               -- ^ Action kind to be created.
-             -> HT.SimpleQuery       -- ^ Arguments of the action.
+                Action     -- ^ Action kind to be created.
+             -> [Argument] -- ^ Arguments of the action.
              -> AccessToken User
              -> FacebookT Auth m Id
 createAction (Action action) query token = do

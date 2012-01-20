@@ -25,7 +25,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TE
 import qualified Network.HTTP.Conduit as H
-import qualified Network.HTTP.Types as HT
+-- import qualified Network.HTTP.Types as HT
 
 
 import Facebook.Types
@@ -78,7 +78,7 @@ getUserAccessTokenStep1 creds redirectUrl perms =
 getUserAccessTokenStep2 :: C.ResourceIO m =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
-                        -> HT.SimpleQuery
+                        -> [Argument]
                         -> FacebookT Auth m (AccessToken User)
 getUserAccessTokenStep2 redirectUrl query =
   case query of

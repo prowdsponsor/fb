@@ -6,9 +6,11 @@ module Facebook.Types
     , accessTokenExpires
     , User
     , App
+    , Argument
     , (<>)
     ) where
 
+import Data.ByteString (ByteString)
 import Data.Monoid (Monoid, mappend)
 import Data.Time (UTCTime)
 import Data.Typeable (Typeable, Typeable1)
@@ -72,6 +74,10 @@ data User deriving (Typeable)
 -- | Phantom type used mark an 'AccessToken' as an app access
 -- token.
 data App deriving (Typeable)
+
+
+-- | An argument given to an API call.
+type Argument = (ByteString, ByteString)
 
 
 -- | Synonym for 'mappend'.
