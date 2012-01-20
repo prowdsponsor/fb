@@ -40,6 +40,7 @@ library
   exposed-modules:
     Facebook
   other-modules:
+    Facebook.Types
     Facebook.Base
     Facebook.Monad
     Facebook.Auth

@@ -24,6 +24,7 @@ module Facebook
     , FacebookException(..)
     ) where
 
+import Facebook.Types
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph

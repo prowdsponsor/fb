@@ -27,6 +27,8 @@ import qualified Data.Text.Encoding.Error as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
 
+
+import Facebook.Types
 import Facebook.Base
 
 

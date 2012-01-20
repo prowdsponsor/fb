@@ -23,7 +23,7 @@ import Data.Typeable (Typeable)
 
 import qualified Network.HTTP.Conduit as H
 
-import Facebook.Base
+import Facebook.Types
 
 
 -- | @FacebookT auth m a@ is this library's monad transformer.
