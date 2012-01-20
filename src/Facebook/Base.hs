@@ -36,8 +36,9 @@ import qualified Network.HTTP.Types as HT
 -- | Credentials that you get for your app when you register on
 -- Facebook.
 data Credentials =
-    Credentials { clientId     :: Ascii -- ^ Your application ID.
-                , clientSecret :: Ascii -- ^ Your application secret key.
+    Credentials { appName   :: Ascii -- ^ Your application name (e.g. for OpenGraph calls).
+                , appId     :: Ascii -- ^ Your application ID.
+                , appSecret :: Ascii -- ^ Your application secret key.
                 }
     deriving (Eq, Ord, Show, Typeable)
 
@@ -115,8 +116,8 @@ class ToSimpleQuery a where
     tsq _ = id
 
 instance ToSimpleQuery Credentials where
-    tsq creds = (:) ("client_id",     clientId     creds) .
-                (:) ("client_secret", clientSecret creds)
+    tsq creds = (:) ("client_id",     appId     creds) .
+                (:) ("client_secret", appSecret creds)
 
 instance ToSimpleQuery (AccessToken kind) where
     tsq token = (:) ("access_token", accessTokenData token)

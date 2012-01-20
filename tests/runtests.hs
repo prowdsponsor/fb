@@ -28,8 +28,8 @@ getCredentials :: IO FB.Credentials
 getCredentials = tryToGet `E.catch` showHelp
     where
       tryToGet = do
-        [appId, appSecret] <- mapM getEnv ["APP_ID", "APP_SECRET"]
-        return $ FB.Credentials (B.pack appId) (B.pack appSecret)
+        [appName, appId, appSecret] <- mapM getEnv ["APP_NAME", "APP_ID", "APP_SECRET"]
+        return $ FB.Credentials (B.pack appName) (B.pack appId) (B.pack appSecret)
 
       showHelp exc | not (isDoesNotExistError exc) = E.throw exc
       showHelp _ = do
@@ -40,14 +40,15 @@ getCredentials = tryToGet `E.catch` showHelp
           , "create a Facebook app for this purpose and then distribute"
           , "its secret keys in the open."
           , ""
-          , "Please give your app id and app secret on the enviroment"
-          , "variables APP_ID and APP_SECRET, respectively.  For example,"
-          , "before running the test you could run in the shell:"
+          , "Please give your app's name, id and secret on the enviroment"
+          , "variables APP_NAME, APP_ID and APP_SECRET, respectively.  "
+          , "For example, before running the test you could run in the shell:"
           , ""
+          , "  $ export APP_NAME=\"example\""
           , "  $ export APP_ID=\"458798571203498\""
           , "  $ export APP_SECRET=\"28a9d0fa4272a14a9287f423f90a48f2304\""
           , ""
-          , "Of course, the values above aren't valid and you need to"
+          , "Of course, these values above aren't valid and you need to"
           , "replace them with your own."
           , ""
           , "(Exiting now with a failure code.)"]
@@ -55,7 +56,7 @@ getCredentials = tryToGet `E.catch` showHelp
 
 
 invalidCredentials :: FB.Credentials
-invalidCredentials = FB.Credentials "not" "valid"
+invalidCredentials = FB.Credentials "this" "isn't" "valid"
 
 invalidUserAccessToken :: FB.AccessToken FB.User
 invalidUserAccessToken = FB.UserAccessToken "invalid" farInTheFuture

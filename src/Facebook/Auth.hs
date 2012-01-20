@@ -55,7 +55,7 @@ getUserAccessTokenStep1 :: Credentials
                         -> Text
 getUserAccessTokenStep1 creds redirectUrl perms =
   T.concat $ "https://www.facebook.com/dialog/oauth?client_id="
-           : TE.decodeUtf8 (clientId creds)
+           : TE.decodeUtf8 (appId creds)
            : "&redirect_uri="
            : redirectUrl
            : (case perms of
