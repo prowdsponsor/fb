@@ -32,6 +32,7 @@ module Facebook
       -- * Raw access to the Graph API
     , getObject
     , postObject
+    , Id(..)
 
       -- * Exceptions
     , FacebookException(..)
