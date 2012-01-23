@@ -141,6 +141,17 @@ main = H.withManager $ \manager -> liftIO $ do
 
       prop "works for Text" (\t -> FB.encodeFbParam t == t)
 
+    describe "getUser" $ do
+      it "works for Zuckerberg" $ do
+        runNoAuth $ do
+          user <- FB.getUser "zuck" [] Nothing
+          FB.userId user         &?= "4"
+          FB.userName user       &?= Just "Mark Zuckerberg"
+          FB.userFirstName user  &?= Just "Mark"
+          FB.userMiddleName user &?= Nothing
+          FB.userLastName user   &?= Just "Zuckerberg"
+          FB.userGender user     &?= Just FB.Male
+
 
 -- Wrappers for HUnit operators using MonadIO
 

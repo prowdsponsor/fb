@@ -28,6 +28,12 @@ module Facebook
     , getUserLogoutUrl
     , extendUserAccessToken
 
+      -- * Facebook's Graph API Objects
+      -- ** User
+    , User(..)
+    , Gender(..)
+    , getUser
+
       -- * Facebook's Open Graph API
     , createAction
     , Action
@@ -49,4 +55,5 @@ import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph
+import Facebook.Object.User
 import Facebook.OpenGraph
