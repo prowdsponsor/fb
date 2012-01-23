@@ -62,7 +62,7 @@ getCredentials = tryToGet `E.catch` showHelp
 invalidCredentials :: FB.Credentials
 invalidCredentials = FB.Credentials "this" "isn't" "valid"
 
-invalidUserAccessToken :: FB.AccessToken FB.User
+invalidUserAccessToken :: FB.UserAccessToken
 invalidUserAccessToken = FB.UserAccessToken "invalid" "user" farInTheFuture
     where
       Just farInTheFuture = parseTime (error "farInTheFuture") "%Y" "3000"
@@ -70,7 +70,7 @@ invalidUserAccessToken = FB.UserAccessToken "invalid" "user" farInTheFuture
       -- don't want any tests rejecting this invalid user access
       -- token before even giving it to Facebook.
 
-invalidAppAccessToken :: FB.AccessToken FB.App
+invalidAppAccessToken :: FB.AppAccessToken
 invalidAppAccessToken = FB.AppAccessToken "invalid"
 
 
