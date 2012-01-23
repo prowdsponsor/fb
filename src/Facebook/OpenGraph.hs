@@ -43,11 +43,21 @@ import Facebook.Graph
 createAction :: C.ResourceIO m =>
                 Action     -- ^ Action kind to be created.
              -> [Argument] -- ^ Arguments of the action.
-             -> AccessToken User
+             -> Maybe (AccessToken App)
+                -- ^ Optional app access token (optional with
+                -- respect to this library, since you can't make
+                -- this mandatory by changing the settings of
+                -- your action on Facebook).
+             -> AccessToken User -- ^ User access token.
              -> FacebookT Auth m Id
-createAction (Action action) query token = do
+createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  postObject ("/me/" <> appName creds <> ":" <> action) query token
+  let post :: C.ResourceIO m => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
+      post prepath = postObject (prepath <> appName creds <> ":" <> action) query
+  case mapptoken of
+    Nothing       -> post "/me/" usertoken
+    Just apptoken -> post ("/" <> accessTokenUserId usertoken <> "/") apptoken
+
 
 
 -- | An action of your app.  Please refer to Facebook's
