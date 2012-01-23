@@ -11,6 +11,7 @@ module Facebook.Auth
     ) where
 
 import Control.Applicative
+import Control.Monad (join)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Aeson ((.:))
 import Data.Aeson.Types (parseEither)
@@ -21,6 +22,8 @@ import Data.String (IsString(..))
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Char8 as A
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Char8 as B8
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.List as L
@@ -91,9 +94,7 @@ getUserAccessTokenStep2 redirectUrl query =
       creds <- getCreds
       let req = fbreq "/oauth/access_token" Nothing $
                 tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
-      response <- fbhttp req
-      preToken <- lift $ H.responseBody response C.$$
-                         C.sinkParser (userAccessTokenParser now)
+      preToken <- fmap (userAccessTokenParser now) . asBS =<< fbhttp req
 
       -- Get user's ID throught Facebook's graph.
       userInfo <- asJson =<< fbhttp (fbreq "/me" (Just preToken) [("fields", "id")])
@@ -117,16 +118,16 @@ getUserAccessTokenStep2 redirectUrl query =
 -- Facebook as a query string.  Returns an user access token with
 -- a broken 'UserId'.
 userAccessTokenParser :: UTCTime -- ^ 'getCurrentTime'
-                      -> A.Parser UserAccessToken
-userAccessTokenParser now =
-    UserAccessToken userId
-      <$  A.string "access_token="
-      <*> A.takeWhile (/= '?')
-      <*  A.string "&expires="
-      <*> (toExpire <$> A.decimal)
-      <*  A.endOfInput
-    where toExpire i = addUTCTime (fromIntegral (i :: Int)) now
-          userId = error "userAccessTokenParser: never here"
+                      -> B.ByteString
+                      -> UserAccessToken
+userAccessTokenParser now bs =
+    let q = HT.parseQuery bs; lookup' a = join (lookup a q)
+    in case (,) <$> lookup' "access_token" <*> lookup' "expires" of
+         (Just (tok, expt)) -> UserAccessToken userId tok (toExpire expt)
+         _ -> error $ "userAccessTokenParser: failed to parse " ++ show bs
+       where toExpire expt = let i = read (B8.unpack expt) :: Int
+                             in addUTCTime (fromIntegral i) now
+             userId = error "userAccessTokenParser: never here"
 
 
 -- | The URL an user should be redirected to in order to log them
@@ -236,19 +237,14 @@ extendUserAccessToken token@(UserAccessToken _ data_ _)
         let req = fbreq "/oauth/access_token" Nothing $
                   tsq creds [ ("grant_type", "fb_exchange_token")
                             , ("fb_exchange_token", data_) ]
-        eresponse <- E.try (fbhttp req)
+        eresponse <- E.try (asBS =<< fbhttp req)
         case eresponse of
           Right response -> do
             now <- liftIO getCurrentTime
-            either (Left . couldn'tParseExc) Right <$>
-              E.try (lift $ H.responseBody response C.$$
-                            C.sinkParser (userAccessTokenParser now))
+            return (Right $ userAccessTokenParser now response)
           Left exc -> return (Left exc)
 
       hasExpiredExc =
           mkExc [ "the user access token has already expired, "
                 , "so I'll not try to extend it." ]
-      couldn'tParseExc (exc :: C.ParseError) =
-          mkExc [ "could not parse Facebook's response ("
-                , T.pack (show exc), ")" ]
       mkExc = FbLibraryException . T.concat . ("extendUserAccessToken: ":)

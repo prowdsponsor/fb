@@ -2,6 +2,7 @@ module Facebook.Base
     ( fbreq
     , ToSimpleQuery(..)
     , asJson
+    , asBS
     , FacebookException(..)
     , fbhttp
     , httpCheck
@@ -16,8 +17,10 @@ import Data.Typeable (Typeable)
 import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
+import qualified Data.ByteString as B
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
+import qualified Data.Conduit.List as CL
 import qualified Data.Text as T
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
@@ -72,6 +75,13 @@ asJson response = do
              [ "Facebook.Base.asJson: could not parse "
              , " Facebook's response as a JSON value ("
              , T.pack str, ")" ]
+
+-- | Converts a plain 'H.Response' into a string 'ByteString'.
+asBS :: (C.ResourceThrow m, C.IsSource bsrc) =>
+        H.Response (bsrc m ByteString)
+     -> FacebookT anyAuth (C.ResourceT m) ByteString
+asBS response = lift $ H.responseBody response C.$$ fmap B.concat CL.consume
+
 
 
 -- | An exception that may be thrown by functions on this
