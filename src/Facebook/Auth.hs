@@ -2,6 +2,7 @@ module Facebook.Auth
     ( getAppAccessToken
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
+    , getUserLogoutUrl
     , extendUserAccessToken
     , RedirectUrl
     , Permission
@@ -27,7 +28,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TE
 import qualified Network.HTTP.Conduit as H
--- import qualified Network.HTTP.Types as HT
+import qualified Network.HTTP.Types as HT
 
 
 import Facebook.Types
@@ -126,6 +127,28 @@ userAccessTokenParser now =
       <*  A.endOfInput
     where toExpire i = addUTCTime (fromIntegral (i :: Int)) now
           userId = error "userAccessTokenParser: never here"
+
+
+-- | The URL an user should be redirected to in order to log them
+-- out of their Facebook session.  Facebook will then redirect
+-- the user to the provided URL after logging them out.  Note
+-- that, at the time of this writing, Facebook's policies require
+-- you to log the user out of Facebook when they ask to log out
+-- of your site.
+--
+-- Note also that Facebook may refuse to redirect the user to the
+-- provided URL if their user access token is invalid.  In order
+-- to prevent this bug, we suggest that you use 'isValid' before
+-- redirecting the user to the URL provided by 'getUserLogoutUrl'
+-- since this function doesn't do any validity checks.
+getUserLogoutUrl :: AccessToken User -- ^ The user's access token.
+                 -> RedirectUrl      -- ^ URL the user should be directed to in your site domain.
+                 -> Text             -- ^ Logout URL in @https:\/\/www.facebook.com\/@.
+getUserLogoutUrl (UserAccessToken _ data_ _) next =
+    TE.decodeUtf8 $
+      "https://www.facebook.com/logout.php?" <>
+      HT.renderQuery False [ ("next", Just (TE.encodeUtf8 next))
+                           , ("access_token", Just data_) ]
 
 
 -- | URL where the user is redirected to after Facebook

@@ -23,6 +23,7 @@ module Facebook
     , Permission
     , getUserAccessTokenStep1
     , getUserAccessTokenStep2
+    , getUserLogoutUrl
     , extendUserAccessToken
 
       -- * Facebook's Open Graph API

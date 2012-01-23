@@ -13,3 +13,5 @@ Implement tests for the following functions:
    * getUserAccessTokenStep1
 
    * getUserAccessTokenStep2
+
+   * getUserLogoutUrl
