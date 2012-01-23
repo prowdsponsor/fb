@@ -63,7 +63,7 @@ invalidCredentials :: FB.Credentials
 invalidCredentials = FB.Credentials "this" "isn't" "valid"
 
 invalidUserAccessToken :: FB.AccessToken FB.User
-invalidUserAccessToken = FB.UserAccessToken "invalid" farInTheFuture
+invalidUserAccessToken = FB.UserAccessToken "invalid" "user" farInTheFuture
     where
       Just farInTheFuture = parseTime (error "farInTheFuture") "%Y" "3000"
       -- It's actually important to use 'farInTheFuture' since we

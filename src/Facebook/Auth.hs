@@ -11,6 +11,8 @@ module Facebook.Auth
 
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import Data.Aeson ((.:))
+import Data.Aeson.Types (parseEither)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime, UTCTime)
@@ -83,12 +85,25 @@ getUserAccessTokenStep2 :: C.ResourceIO m =>
 getUserAccessTokenStep2 redirectUrl query =
   case query of
     [code@("code", _)] -> runResourceInFb $ do
+      -- Get the access token data through Facebook's OAuth.
       now   <- liftIO getCurrentTime
       creds <- getCreds
       let req = fbreq "/oauth/access_token" Nothing $
                 tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
       response <- fbhttp req
-      lift $ H.responseBody response C.$$ C.sinkParser (userAccessTokenParser now)
+      preToken <- lift $ H.responseBody response C.$$
+                         C.sinkParser (userAccessTokenParser now)
+
+      -- Get user's ID throught Facebook's graph.
+      userInfo <- asJson =<< fbhttp (fbreq "/me" (Just preToken) [("fields", "id")])
+      case (parseEither (.: "id") userInfo, preToken) of
+        (Left str, _) ->
+            E.throw $ FbLibraryException $ T.concat
+                 [ "getUserAccessTokenStep2: failed to get the UserId ("
+                 , T.pack str, ")" ]
+        (Right (userId :: UserId), UserAccessToken _ d e) ->
+            return (UserAccessToken userId d e)
+
     _ -> let [error_, errorReason, errorDescr] =
                  map (fromMaybe "" . flip lookup query)
                      ["error", "error_reason", "error_description"]
@@ -98,16 +113,19 @@ getUserAccessTokenStep2 redirectUrl query =
 
 
 -- | Attoparsec parser for user access tokens returned by
--- Facebook as a query string.
-userAccessTokenParser :: UTCTime -- 'getCurrentTime'
+-- Facebook as a query string.  Returns an user access token with
+-- a broken 'UserId'.
+userAccessTokenParser :: UTCTime -- ^ 'getCurrentTime'
                       -> A.Parser (AccessToken User)
 userAccessTokenParser now =
-    UserAccessToken <$  A.string "access_token="
-                    <*> A.takeWhile (/= '?')
-                    <*  A.string "&expires="
-                    <*> (toExpire <$> A.decimal)
-                    <*  A.endOfInput
+    UserAccessToken userId
+      <$  A.string "access_token="
+      <*> A.takeWhile (/= '?')
+      <*  A.string "&expires="
+      <*> (toExpire <$> A.decimal)
+      <*  A.endOfInput
     where toExpire i = addUTCTime (fromIntegral (i :: Int)) now
+          userId = error "userAccessTokenParser: never here"
 
 
 -- | URL where the user is redirected to after Facebook
@@ -161,7 +179,7 @@ isValid token = do
     then return False
     else
       let page = case token of
-                   UserAccessToken _ _ -> "/me"
+                   UserAccessToken _ _ _ -> "/me"
                    -- Documented way of checking if the token is valid,
                    -- see <https://developers.facebook.com/blog/post/500/>.
                    AppAccessToken _ -> "/19292868552"
@@ -186,7 +204,7 @@ extendUserAccessToken ::
     C.ResourceIO m =>
     AccessToken User
  -> FacebookT Auth m (Either FacebookException (AccessToken User))
-extendUserAccessToken token@(UserAccessToken data_ _)
+extendUserAccessToken token@(UserAccessToken _ data_ _)
     = do expired <- hasExpired token
          if expired then return (Left hasExpiredExc) else tryToExtend
     where

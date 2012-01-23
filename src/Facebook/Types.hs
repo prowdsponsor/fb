@@ -2,8 +2,10 @@ module Facebook.Types
     ( Credentials(..)
     , AccessToken(..)
     , AccessTokenData
+    , UserId
     , accessTokenData
     , accessTokenExpires
+    , accessTokenUserId
     , User
     , App
     , Argument
@@ -44,7 +46,7 @@ data Credentials =
 -- These access tokens are distinguished by the phantom type on
 -- 'AccessToken', which can be 'User' or 'App'.
 data AccessToken kind where
-    UserAccessToken :: AccessTokenData -> UTCTime -> AccessToken User
+    UserAccessToken :: UserId -> AccessTokenData -> UTCTime -> AccessToken User
     AppAccessToken  :: AccessTokenData -> AccessToken App
 
 deriving instance Eq   (AccessToken kind)
@@ -56,16 +58,23 @@ deriving instance Typeable1 AccessToken
 -- calls.
 type AccessTokenData = Ascii
 
+-- | A Facebook user id such as @1008905713901@.
+type UserId = Ascii
+
 -- | Get the access token data.
 accessTokenData :: AccessToken kind -> AccessTokenData
-accessTokenData (UserAccessToken d _) = d
-accessTokenData (AppAccessToken d)    = d
+accessTokenData (UserAccessToken _ d _) = d
+accessTokenData (AppAccessToken d)      = d
 
 -- | Expire time of an access token.  It may never expire, in
 -- which case it will be @Nothing@.
 accessTokenExpires :: AccessToken kind -> Maybe UTCTime
-accessTokenExpires (UserAccessToken _ expt) = Just expt
-accessTokenExpires (AppAccessToken _)       = Nothing
+accessTokenExpires (UserAccessToken _ _ expt) = Just expt
+accessTokenExpires (AppAccessToken _)         = Nothing
+
+-- | Get the user ID of an user access token.
+accessTokenUserId :: AccessToken User -> UserId
+accessTokenUserId (UserAccessToken uid _ _) = uid
 
 -- | Phantom type used mark an 'AccessToken' as an user access
 -- token.
