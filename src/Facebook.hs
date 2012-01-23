@@ -11,14 +11,16 @@ module Facebook
     , Credentials(..)
       -- ** Access token
     , AccessToken(..)
+    , UserAccessToken
+    , AppAccessToken
     , AccessTokenData
     , hasExpired
     , isValid
       -- ** App access token
-    , App
+    , AppKind
     , getAppAccessToken
       -- ** User access token
-    , User
+    , UserKind
     , RedirectUrl
     , Permission
     , getUserAccessTokenStep1

@@ -29,7 +29,7 @@ import Facebook.Monad
 
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of
 -- 'H.def' when creating new 'H.Request'@s@ for Facebook.
-fbreq :: HT.Ascii -> Maybe (AccessToken kind) -> HT.SimpleQuery -> H.Request m
+fbreq :: HT.Ascii -> Maybe (AccessToken anyKind) -> HT.SimpleQuery -> H.Request m
 fbreq path mtoken query =
     H.def { H.secure        = True
           , H.host          = "graph.facebook.com"
@@ -54,7 +54,7 @@ instance ToSimpleQuery Credentials where
     tsq creds = (:) ("client_id",     appId     creds) .
                 (:) ("client_secret", appSecret creds)
 
-instance ToSimpleQuery (AccessToken kind) where
+instance ToSimpleQuery (AccessToken anyKind) where
     tsq token = (:) ("access_token", accessTokenData token)
 
 

@@ -1,13 +1,15 @@
 module Facebook.Types
     ( Credentials(..)
     , AccessToken(..)
+    , UserAccessToken
+    , AppAccessToken
     , AccessTokenData
     , UserId
     , accessTokenData
     , accessTokenExpires
     , accessTokenUserId
-    , User
-    , App
+    , UserKind
+    , AppKind
     , Argument
     , (<>)
     ) where
@@ -43,11 +45,19 @@ data Credentials =
 -- [App access token] An access token that allows you to take
 -- administrative actions for your application.
 --
--- These access tokens are distinguished by the phantom type on
--- 'AccessToken', which can be 'User' or 'App'.
+-- These two kinds of access tokens are distinguished by the
+-- phantom type on 'AccessToken', which can be 'UserKind' or
+-- 'AppKind'.
 data AccessToken kind where
-    UserAccessToken :: UserId -> AccessTokenData -> UTCTime -> AccessToken User
-    AppAccessToken  :: AccessTokenData -> AccessToken App
+    UserAccessToken :: UserId -> AccessTokenData -> UTCTime -> AccessToken UserKind
+    AppAccessToken  :: AccessTokenData -> AccessToken AppKind
+
+-- | Type synonym for @'AccessToken' 'UserKind'@
+type UserAccessToken = AccessToken UserKind
+
+-- | Type synonym for @'AccessToken' 'AppKind'@
+type AppAccessToken = AccessToken AppKind
+
 
 deriving instance Eq   (AccessToken kind)
 deriving instance Ord  (AccessToken kind)
@@ -62,27 +72,27 @@ type AccessTokenData = Ascii
 type UserId = Ascii
 
 -- | Get the access token data.
-accessTokenData :: AccessToken kind -> AccessTokenData
+accessTokenData :: AccessToken anyKind -> AccessTokenData
 accessTokenData (UserAccessToken _ d _) = d
 accessTokenData (AppAccessToken d)      = d
 
 -- | Expire time of an access token.  It may never expire, in
 -- which case it will be @Nothing@.
-accessTokenExpires :: AccessToken kind -> Maybe UTCTime
+accessTokenExpires :: AccessToken anyKind -> Maybe UTCTime
 accessTokenExpires (UserAccessToken _ _ expt) = Just expt
 accessTokenExpires (AppAccessToken _)         = Nothing
 
 -- | Get the user ID of an user access token.
-accessTokenUserId :: AccessToken User -> UserId
+accessTokenUserId :: UserAccessToken -> UserId
 accessTokenUserId (UserAccessToken uid _ _) = uid
 
 -- | Phantom type used mark an 'AccessToken' as an user access
 -- token.
-data User deriving (Typeable)
+data UserKind deriving (Typeable)
 
 -- | Phantom type used mark an 'AccessToken' as an app access
 -- token.
-data App deriving (Typeable)
+data AppKind deriving (Typeable)
 
 
 -- | An argument given to an API call.

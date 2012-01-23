@@ -39,7 +39,7 @@ import Facebook.Monad
 -- | Get an app access token from Facebook using your
 -- credentials.
 getAppAccessToken :: C.ResourceIO m =>
-                     FacebookT Auth m (AccessToken App)
+                     FacebookT Auth m AppAccessToken
 getAppAccessToken =
   runResourceInFb $ do
     creds <- getCreds
@@ -82,7 +82,7 @@ getUserAccessTokenStep2 :: C.ResourceIO m =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
                         -> [Argument]
-                        -> FacebookT Auth m (AccessToken User)
+                        -> FacebookT Auth m UserAccessToken
 getUserAccessTokenStep2 redirectUrl query =
   case query of
     [code@("code", _)] -> runResourceInFb $ do
@@ -117,7 +117,7 @@ getUserAccessTokenStep2 redirectUrl query =
 -- Facebook as a query string.  Returns an user access token with
 -- a broken 'UserId'.
 userAccessTokenParser :: UTCTime -- ^ 'getCurrentTime'
-                      -> A.Parser (AccessToken User)
+                      -> A.Parser UserAccessToken
 userAccessTokenParser now =
     UserAccessToken userId
       <$  A.string "access_token="
@@ -141,7 +141,7 @@ userAccessTokenParser now =
 -- to prevent this bug, we suggest that you use 'isValid' before
 -- redirecting the user to the URL provided by 'getUserLogoutUrl'
 -- since this function doesn't do any validity checks.
-getUserLogoutUrl :: AccessToken User -- ^ The user's access token.
+getUserLogoutUrl :: UserAccessToken  -- ^ The user's access token.
                  -> RedirectUrl      -- ^ URL the user should be directed to in your site domain.
                  -> Text             -- ^ Logout URL in @https:\/\/www.facebook.com\/@.
 getUserLogoutUrl (UserAccessToken _ data_ _) next =
@@ -181,7 +181,7 @@ instance IsString Permission where
 
 
 -- | @True@ if the access token has expired, otherwise @False@.
-hasExpired :: (Functor m, MonadIO m) => AccessToken kind -> m Bool
+hasExpired :: (Functor m, MonadIO m) => AccessToken anyKind -> m Bool
 hasExpired token =
   case accessTokenExpires token of
     Nothing      -> return False
@@ -194,7 +194,7 @@ hasExpired token =
 -- case of an user access token, they may have changed their
 -- password, logged out from Facebook or blocked your app.
 isValid :: C.ResourceIO m =>
-           AccessToken kind
+           AccessToken anyKind
         -> FacebookT anyAuth m Bool
 isValid token = do
   expired <- hasExpired token
@@ -225,8 +225,8 @@ isValid token = do
 -- extended, only valid tokens.
 extendUserAccessToken ::
     C.ResourceIO m =>
-    AccessToken User
- -> FacebookT Auth m (Either FacebookException (AccessToken User))
+    UserAccessToken
+ -> FacebookT Auth m (Either FacebookException UserAccessToken)
 extendUserAccessToken token@(UserAccessToken _ data_ _)
     = do expired <- hasExpired token
          if expired then return (Left hasExpiredExc) else tryToExtend

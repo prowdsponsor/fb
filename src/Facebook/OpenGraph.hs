@@ -43,12 +43,12 @@ import Facebook.Graph
 createAction :: C.ResourceIO m =>
                 Action     -- ^ Action kind to be created.
              -> [Argument] -- ^ Arguments of the action.
-             -> Maybe (AccessToken App)
+             -> Maybe AppAccessToken
                 -- ^ Optional app access token (optional with
                 -- respect to this library, since you can't make
                 -- this mandatory by changing the settings of
                 -- your action on Facebook).
-             -> AccessToken User -- ^ User access token.
+             -> UserAccessToken -- ^ Required user access token.
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
