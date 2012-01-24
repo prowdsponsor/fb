@@ -31,6 +31,7 @@ module Facebook
       -- * Facebook's Graph API Objects
       -- ** User
     , User(..)
+    , UserId
     , Gender(..)
     , getUser
 
