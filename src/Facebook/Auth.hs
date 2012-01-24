@@ -80,11 +80,11 @@ getUserAccessTokenStep1 creds redirectUrl perms =
 -- passed to 'getUserAccessTokenStep1'.  You should take the
 -- request query parameters passed to your 'RedirectUrl' and give
 -- to this function that will complete the user authentication
--- flow and give you an @'AccessToken' 'User'@.
+-- flow and give you an @'UserAccessToken'@.
 getUserAccessTokenStep2 :: C.ResourceIO m =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
-                        -> [Argument]
+                        -> [Argument]  -- ^ Query parameters.
                         -> FacebookT Auth m UserAccessToken
 getUserAccessTokenStep2 redirectUrl query =
   case query of
