@@ -52,10 +52,10 @@ data AccessToken kind where
     UserAccessToken :: UserId -> AccessTokenData -> UTCTime -> AccessToken UserKind
     AppAccessToken  :: AccessTokenData -> AccessToken AppKind
 
--- | Type synonym for @'AccessToken' 'UserKind'@
+-- | Type synonym for @'AccessToken' 'UserKind'@.
 type UserAccessToken = AccessToken UserKind
 
--- | Type synonym for @'AccessToken' 'AppKind'@
+-- | Type synonym for @'AccessToken' 'AppKind'@.
 type AppAccessToken = AccessToken AppKind
 
 
