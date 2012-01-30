@@ -80,15 +80,17 @@ main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
   hspecX $ do
     -- Run the tests twice, once in Facebook's production tier...
-    allTests manager (FB.runFacebookT creds manager) (FB.runNoAuthFacebookT manager)
+    facebookTests manager (FB.runFacebookT creds manager) (FB.runNoAuthFacebookT manager)
     -- ...and the other in Facebook's beta tier.
-    allTests manager (FB.beta_runFacebookT creds manager) (FB.beta_runNoAuthFacebookT manager)
+    facebookTests manager (FB.beta_runFacebookT creds manager) (FB.beta_runNoAuthFacebookT manager)
 
-allTests :: H.Manager
-         -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
-         -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
-         -> Writer [Spec] ()
-allTests manager runAuth runNoAuth = do
+    libraryTests
+
+facebookTests :: H.Manager
+              -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
+              -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
+              -> Writer [Spec] ()
+facebookTests manager runAuth runNoAuth = do
   describe "getAppAccessToken" $ do
     it "works and returns a valid app access token" $
       runAuth $ do
@@ -120,6 +122,20 @@ allTests manager runAuth runNoAuth = do
               , just "http://developers.facebook.com"
               , just "Facebook Platform" )
 
+  describe "getUser" $ do
+    it "works for Zuckerberg" $ do
+      runNoAuth $ do
+        user <- FB.getUser "zuck" [] Nothing
+        FB.userId user         &?= "4"
+        FB.userName user       &?= Just "Mark Zuckerberg"
+        FB.userFirstName user  &?= Just "Mark"
+        FB.userMiddleName user &?= Nothing
+        FB.userLastName user   &?= Just "Zuckerberg"
+        FB.userGender user     &?= Just FB.Male
+
+
+libraryTests :: Writer [Spec] ()
+libraryTests = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
 
@@ -147,17 +163,6 @@ allTests manager runAuth runNoAuth = do
     prop "works for Word32" (propShowRead :: Word32 -> Bool)
 
     prop "works for Text" (\t -> FB.encodeFbParam t == t)
-
-  describe "getUser" $ do
-    it "works for Zuckerberg" $ do
-      runNoAuth $ do
-        user <- FB.getUser "zuck" [] Nothing
-        FB.userId user         &?= "4"
-        FB.userName user       &?= Just "Mark Zuckerberg"
-        FB.userFirstName user  &?= Just "Mark"
-        FB.userMiddleName user &?= Nothing
-        FB.userLastName user   &?= Just "Zuckerberg"
-        FB.userGender user     &?= Just FB.Male
 
 
 -- Wrappers for HUnit operators using MonadIO
