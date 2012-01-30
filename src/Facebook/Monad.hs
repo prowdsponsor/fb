@@ -3,10 +3,15 @@ module Facebook.Monad
     ( FacebookT
     , Auth
     , NoAuth
+    , FbTier(..)
     , runFacebookT
     , runNoAuthFacebookT
+    , beta_runFacebookT
+    , beta_runNoAuthFacebookT
     , getCreds
     , getManager
+    , getTier
+    , withTier
     , runResourceInFb
 
       -- * Re-export
@@ -64,8 +69,14 @@ data NoAuth deriving (Typeable)
 
 -- | Internal data kept inside 'FacebookT'.
 data FbData = FbData { fbdCreds   :: Credentials -- ^ Can be 'undefined'!
-                     , fbdManager :: !H.Manager }
+                     , fbdManager :: !H.Manager
+                     , fbdTier    :: !FbTier
+                     }
               deriving (Typeable)
+
+-- | Which Facebook tier should be used (see
+-- <https://developers.facebook.com/support/beta-tier/>).
+data FbTier = Production | Beta deriving (Eq, Ord, Show, Read, Enum, Typeable)
 
 
 -- | Run a computation in the 'FacebookT' monad transformer with
@@ -74,13 +85,28 @@ runFacebookT :: Credentials         -- ^ Your app's credentials.
              -> H.Manager           -- ^ Connection manager (see 'H.withManager').
              -> FacebookT Auth m a
              -> m a
-runFacebookT creds manager (F act) = runReaderT act (FbData creds manager)
+runFacebookT creds manager (F act) =
+    runReaderT act (FbData creds manager Production)
 
 -- | Run a computation in the 'FacebookT' monad without
 -- credentials.
 runNoAuthFacebookT :: H.Manager -> FacebookT NoAuth m a -> m a
-runNoAuthFacebookT manager (F act) = runReaderT act (FbData creds manager)
-    where creds = error "runNoAuthFacebookT: never here, serious bug"
+runNoAuthFacebookT manager (F act) =
+    let creds = error "runNoAuthFacebookT: never here, serious bug"
+    in runReaderT act (FbData creds manager Production)
+
+-- | Same as 'runFacebookT', but uses Facebook's beta tier (see
+-- <https://developers.facebook.com/support/beta-tier/>).
+beta_runFacebookT :: Credentials -> H.Manager -> FacebookT Auth m a -> m a
+beta_runFacebookT creds manager (F act) =
+    runReaderT act (FbData creds manager Beta)
+
+-- | Same as 'runNoAuthFacebookT', but uses Facebook's beta tier
+-- (see <https://developers.facebook.com/support/beta-tier/>).
+beta_runNoAuthFacebookT :: H.Manager -> FacebookT NoAuth m a -> m a
+beta_runNoAuthFacebookT manager (F act) =
+    let creds = error "beta_runNoAuthFacebookT: never here, serious bug"
+    in runReaderT act (FbData creds manager Beta)
 
 
 -- | Get the user's credentials.
@@ -90,6 +116,14 @@ getCreds = fbdCreds `liftM` F ask
 -- | Get the 'H.Manager'.
 getManager :: Monad m => FacebookT anyAuth m H.Manager
 getManager = fbdManager `liftM` F ask
+
+-- | Get the 'FbTier'.
+getTier :: Monad m => FacebookT anyAuth m FbTier
+getTier = fbdTier `liftM` F ask
+
+-- | Run a pure function that depends on the 'FbTier' being used.
+withTier :: Monad m => (FbTier -> a) -> FacebookT anyAuth m a
+withTier = flip liftM getTier
 
 
 -- | Run a 'ResourceT' inside a 'FacebookT'.

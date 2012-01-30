@@ -3,6 +3,8 @@ module Facebook
       FacebookT
     , runFacebookT
     , runNoAuthFacebookT
+    , beta_runFacebookT
+    , beta_runNoAuthFacebookT
     , Auth
     , NoAuth
 

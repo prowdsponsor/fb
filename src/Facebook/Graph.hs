@@ -34,7 +34,7 @@ getObject :: (C.ResourceIO m, A.FromJSON a) =>
           -> FacebookT anyAuth m a
 getObject path query mtoken =
   runResourceInFb $
-    asJson =<< fbhttp (fbreq path mtoken query)
+    asJson =<< fbhttp =<< fbreq path mtoken query
 
 
 -- | Make a raw @POST@ request to Facebook's Graph API.  Returns
@@ -45,8 +45,9 @@ postObject :: (C.ResourceIO m, A.FromJSON a) =>
            -> AccessToken anyKind -- ^ Access token
            -> FacebookT Auth m a
 postObject path query token =
-  runResourceInFb $
-    asJson =<< fbhttp (fbreq path (Just token) query) { H.method = HT.methodPost }
+  runResourceInFb $ do
+    req <- fbreq path (Just token) query
+    asJson =<< fbhttp req { H.method = HT.methodPost }
 
 
 -- | The identification code of an object.

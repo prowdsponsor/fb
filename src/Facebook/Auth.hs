@@ -46,8 +46,8 @@ getAppAccessToken :: C.ResourceIO m =>
 getAppAccessToken =
   runResourceInFb $ do
     creds <- getCreds
-    let req = fbreq "/oauth/access_token" Nothing $
-              tsq creds [("grant_type", "client_credentials")]
+    req   <- fbreq "/oauth/access_token" Nothing $
+             tsq creds [("grant_type", "client_credentials")]
     response <- fbhttp req
     lift $
       H.responseBody response C.$$
@@ -59,19 +59,24 @@ getAppAccessToken =
 -- Facebook URL you should redirect you user to.  Facebook will
 -- authenticate the user, authorize your app and then redirect
 -- the user back into the provider 'RedirectUrl'.
-getUserAccessTokenStep1 :: Credentials
-                        -> RedirectUrl
+getUserAccessTokenStep1 :: Monad m =>
+                           RedirectUrl
                         -> [Permission]
-                        -> Text
-getUserAccessTokenStep1 creds redirectUrl perms =
-  T.concat $ "https://www.facebook.com/dialog/oauth?client_id="
-           : TE.decodeUtf8 (appId creds)
-           : "&redirect_uri="
-           : redirectUrl
-           : (case perms of
-                [] -> []
-                _  -> "&scope=" : L.intersperse "," (map unPermission perms)
-             )
+                        -> FacebookT Auth m Text
+getUserAccessTokenStep1 redirectUrl perms = do
+  creds <- getCreds
+  withTier $ \tier ->
+    let urlBase = case tier of
+                    Production -> "https://www.facebook.com/dialog/oauth?client_id="
+                    Beta ->  "https://www.beta.facebook.com/dialog/oauth?client_id="
+    in T.concat $ urlBase
+                : TE.decodeUtf8 (appId creds)
+                : "&redirect_uri="
+                : redirectUrl
+                : (case perms of
+                     [] -> []
+                     _  -> "&scope=" : L.intersperse "," (map unPermission perms)
+                  )
 
 
 -- | The second step to get an user access token.  If the user is
@@ -92,12 +97,12 @@ getUserAccessTokenStep2 redirectUrl query =
       -- Get the access token data through Facebook's OAuth.
       now   <- liftIO getCurrentTime
       creds <- getCreds
-      let req = fbreq "/oauth/access_token" Nothing $
-                tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
+      req   <- fbreq "/oauth/access_token" Nothing $
+               tsq creds [code, ("redirect_uri", TE.encodeUtf8 redirectUrl)]
       preToken <- fmap (userAccessTokenParser now) . asBS =<< fbhttp req
 
       -- Get user's ID throught Facebook's graph.
-      userInfo <- asJson =<< fbhttp (fbreq "/me" (Just preToken) [("fields", "id")])
+      userInfo <- asJson =<< fbhttp =<< fbreq "/me" (Just preToken) [("fields", "id")]
       case (parseEither (.: "id") userInfo, preToken) of
         (Left str, _) ->
             E.throw $ FbLibraryException $ T.concat
@@ -142,14 +147,26 @@ userAccessTokenParser now bs =
 -- to prevent this bug, we suggest that you use 'isValid' before
 -- redirecting the user to the URL provided by 'getUserLogoutUrl'
 -- since this function doesn't do any validity checks.
-getUserLogoutUrl :: UserAccessToken  -- ^ The user's access token.
-                 -> RedirectUrl      -- ^ URL the user should be directed to in your site domain.
-                 -> Text             -- ^ Logout URL in @https:\/\/www.facebook.com\/@.
-getUserLogoutUrl (UserAccessToken _ data_ _) next =
-    TE.decodeUtf8 $
-      "https://www.facebook.com/logout.php?" <>
-      HT.renderQuery False [ ("next", Just (TE.encodeUtf8 next))
-                           , ("access_token", Just data_) ]
+getUserLogoutUrl :: Monad m =>
+                    UserAccessToken
+                    -- ^ The user's access token.
+                 -> RedirectUrl
+                    -- ^ URL the user should be directed to in
+                    -- your site domain.
+                 -> FacebookT Auth m Text
+                    -- ^ Logout URL in
+                    -- @https:\/\/www.facebook.com\/@ (or on
+                    -- @https:\/\/www.beta.facebook.com\/@ when
+                    -- using the beta tier).
+getUserLogoutUrl (UserAccessToken _ data_ _) next = do
+  withTier $ \tier ->
+    let urlBase = case tier of
+                    Production -> "https://www.facebook.com/logout.php?"
+                    Beta ->  "https://www.beta.facebook.com/logout.php?"
+    in TE.decodeUtf8 $
+         urlBase <>
+         HT.renderQuery False [ ("next", Just (TE.encodeUtf8 next))
+                              , ("access_token", Just data_) ]
 
 
 -- | URL where the user is redirected to after Facebook
@@ -214,7 +231,7 @@ isValid token = do
                    -- will actually work with user access tokens,
                    -- too, but they have another, better way of
                    -- being checked.
-      in httpCheck (fbreq page (Just token) [])
+      in httpCheck =<< fbreq page (Just token) []
 
 
 -- | Extend the expiration time of an user access token (see
@@ -234,9 +251,9 @@ extendUserAccessToken token@(UserAccessToken _ data_ _)
     where
       tryToExtend = runResourceInFb $ do
         creds <- getCreds
-        let req = fbreq "/oauth/access_token" Nothing $
-                  tsq creds [ ("grant_type", "fb_exchange_token")
-                            , ("fb_exchange_token", data_) ]
+        req   <- fbreq "/oauth/access_token" Nothing $
+                 tsq creds [ ("grant_type", "fb_exchange_token")
+                           , ("fb_exchange_token", data_) ]
         eresponse <- E.try (asBS =<< fbhttp req)
         case eresponse of
           Right response -> do

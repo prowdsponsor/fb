@@ -1,8 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, Rank2Types #-}
 
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Writer (Writer)
 import Data.Int (Int8, Int16, Int32)
 import Data.Text (Text)
 import Data.Time (parseTime)
@@ -77,80 +78,86 @@ invalidAppAccessToken = FB.AppAccessToken "invalid"
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
-  let runAuth   :: FB.FacebookT FB.Auth   IO a -> IO a
-      runAuth   = FB.runFacebookT creds manager
-      runNoAuth :: FB.FacebookT FB.NoAuth IO a -> IO a
-      runNoAuth = FB.runNoAuthFacebookT manager
   hspecX $ do
-    describe "getAppAccessToken" $ do
-      it "works and returns a valid app access token" $
-        runAuth $ do
-          token <- FB.getAppAccessToken
-          FB.isValid token #?= True
-      it "throws a FacebookException on invalid credentials" $
-        FB.runFacebookT invalidCredentials manager $ do
-          ret <- E.try $ FB.getAppAccessToken
-          case ret  of
-            Right token                      -> fail $ show token
-            Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
+    -- Run the tests twice, once in Facebook's production tier...
+    allTests manager (FB.runFacebookT creds manager) (FB.runNoAuthFacebookT manager)
+    -- ...and the other in Facebook's beta tier.
+    allTests manager (FB.beta_runFacebookT creds manager) (FB.beta_runNoAuthFacebookT manager)
 
-    describe "isValid" $ do
-      it "returns False on a clearly invalid user access token" $
-        runNoAuth $ FB.isValid invalidUserAccessToken #?= False
-      it "returns False on a clearly invalid app access token" $
-        runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
+allTests :: H.Manager
+         -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
+         -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
+         -> Writer [Spec] ()
+allTests manager runAuth runNoAuth = do
+  describe "getAppAccessToken" $ do
+    it "works and returns a valid app access token" $
+      runAuth $ do
+        token <- FB.getAppAccessToken
+        FB.isValid token #?= True
+    it "throws a FacebookException on invalid credentials" $
+      FB.runFacebookT invalidCredentials manager $ do
+        ret <- E.try $ FB.getAppAccessToken
+        case ret  of
+          Right token                      -> fail $ show token
+          Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
 
-    describe "getObject" $ do
-      it "is able to fetch Facebook's own page" $
-        runNoAuth $ do
-          A.Object obj <- FB.getObject "/19292868552" [] Nothing
-          let Just r = flip A.parseMaybe () $ const $
-                       (,,) <$> obj A..:? "id"
-                            <*> obj A..:? "website"
-                            <*> obj A..:? "name"
-              just x = Just (x :: Text)
-          r &?= ( just "19292868552"
-                , just "http://developers.facebook.com"
-                , just "Facebook Platform" )
+  describe "isValid" $ do
+    it "returns False on a clearly invalid user access token" $
+      runNoAuth $ FB.isValid invalidUserAccessToken #?= False
+    it "returns False on a clearly invalid app access token" $
+      runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
 
-    describe "SimpleType" $ do
-      it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
+  describe "getObject" $ do
+    it "is able to fetch Facebook's own page" $
+      runNoAuth $ do
+        A.Object obj <- FB.getObject "/19292868552" [] Nothing
+        let Just r = flip A.parseMaybe () $ const $
+                     (,,) <$> obj A..:? "id"
+                          <*> obj A..:? "website"
+                          <*> obj A..:? "name"
+            just x = Just (x :: Text)
+        r &?= ( just "19292868552"
+              , just "http://developers.facebook.com"
+              , just "Facebook Platform" )
 
-      let day       = TI.fromGregorian 2012 12 21
-          time      = TI.TimeOfDay 11 37 22
-          diffTime  = TI.secondsToDiffTime (11*3600 + 37*60)
-          utcTime   = TI.UTCTime day diffTime
-          localTime = TI.LocalTime day time
-          zonedTime = TI.ZonedTime localTime (TI.minutesToTimeZone 30)
-      it "works for Day"       $ FB.encodeFbParam day       @?= "2012-12-21"
-      it "works for UTCTime"   $ FB.encodeFbParam utcTime   @?= "20121221T1137Z"
-      it "works for ZonedTime" $ FB.encodeFbParam zonedTime @?= "20121221T1107Z"
+  describe "SimpleType" $ do
+    it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
 
-      let propShowRead :: (Show a, Read a, Eq a, FB.SimpleType a) => a -> Bool
-          propShowRead x = read (T.unpack $ FB.encodeFbParam x) == x
-      prop "works for Float"  (propShowRead :: Float  -> Bool)
-      prop "works for Double" (propShowRead :: Double -> Bool)
-      prop "works for Int"    (propShowRead :: Int    -> Bool)
-      prop "works for Int8"   (propShowRead :: Int8   -> Bool)
-      prop "works for Int16"  (propShowRead :: Int16  -> Bool)
-      prop "works for Int32"  (propShowRead :: Int32  -> Bool)
-      prop "works for Word"   (propShowRead :: Word   -> Bool)
-      prop "works for Word8"  (propShowRead :: Word8  -> Bool)
-      prop "works for Word16" (propShowRead :: Word16 -> Bool)
-      prop "works for Word32" (propShowRead :: Word32 -> Bool)
+    let day       = TI.fromGregorian 2012 12 21
+        time      = TI.TimeOfDay 11 37 22
+        diffTime  = TI.secondsToDiffTime (11*3600 + 37*60)
+        utcTime   = TI.UTCTime day diffTime
+        localTime = TI.LocalTime day time
+        zonedTime = TI.ZonedTime localTime (TI.minutesToTimeZone 30)
+    it "works for Day"       $ FB.encodeFbParam day       @?= "2012-12-21"
+    it "works for UTCTime"   $ FB.encodeFbParam utcTime   @?= "20121221T1137Z"
+    it "works for ZonedTime" $ FB.encodeFbParam zonedTime @?= "20121221T1107Z"
 
-      prop "works for Text" (\t -> FB.encodeFbParam t == t)
+    let propShowRead :: (Show a, Read a, Eq a, FB.SimpleType a) => a -> Bool
+        propShowRead x = read (T.unpack $ FB.encodeFbParam x) == x
+    prop "works for Float"  (propShowRead :: Float  -> Bool)
+    prop "works for Double" (propShowRead :: Double -> Bool)
+    prop "works for Int"    (propShowRead :: Int    -> Bool)
+    prop "works for Int8"   (propShowRead :: Int8   -> Bool)
+    prop "works for Int16"  (propShowRead :: Int16  -> Bool)
+    prop "works for Int32"  (propShowRead :: Int32  -> Bool)
+    prop "works for Word"   (propShowRead :: Word   -> Bool)
+    prop "works for Word8"  (propShowRead :: Word8  -> Bool)
+    prop "works for Word16" (propShowRead :: Word16 -> Bool)
+    prop "works for Word32" (propShowRead :: Word32 -> Bool)
 
-    describe "getUser" $ do
-      it "works for Zuckerberg" $ do
-        runNoAuth $ do
-          user <- FB.getUser "zuck" [] Nothing
-          FB.userId user         &?= "4"
-          FB.userName user       &?= Just "Mark Zuckerberg"
-          FB.userFirstName user  &?= Just "Mark"
-          FB.userMiddleName user &?= Nothing
-          FB.userLastName user   &?= Just "Zuckerberg"
-          FB.userGender user     &?= Just FB.Male
+    prop "works for Text" (\t -> FB.encodeFbParam t == t)
+
+  describe "getUser" $ do
+    it "works for Zuckerberg" $ do
+      runNoAuth $ do
+        user <- FB.getUser "zuck" [] Nothing
+        FB.userId user         &?= "4"
+        FB.userName user       &?= Just "Mark Zuckerberg"
+        FB.userFirstName user  &?= Just "Mark"
+        FB.userMiddleName user &?= Nothing
+        FB.userLastName user   &?= Just "Zuckerberg"
+        FB.userGender user     &?= Just FB.Male
 
 
 -- Wrappers for HUnit operators using MonadIO
