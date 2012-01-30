@@ -80,18 +80,27 @@ main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
   hspecX $ do
     -- Run the tests twice, once in Facebook's production tier...
-    facebookTests manager (FB.runFacebookT creds manager) (FB.runNoAuthFacebookT manager)
+    facebookTests "Production tier: "
+                  manager
+                  (FB.runFacebookT creds manager)
+                  (FB.runNoAuthFacebookT manager)
     -- ...and the other in Facebook's beta tier.
-    facebookTests manager (FB.beta_runFacebookT creds manager) (FB.beta_runNoAuthFacebookT manager)
+    facebookTests "Beta tier: "
+                  manager
+                  (FB.beta_runFacebookT creds manager)
+                  (FB.beta_runNoAuthFacebookT manager)
 
+    -- Tests that don't depend on which tier is chosen.
     libraryTests
 
-facebookTests :: H.Manager
+facebookTests :: String
+              -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
               -> Writer [Spec] ()
-facebookTests manager runAuth runNoAuth = do
-  describe "getAppAccessToken" $ do
+facebookTests pretitle manager runAuth runNoAuth = do
+  let describe' = describe . (pretitle ++)
+  describe' "getAppAccessToken" $ do
     it "works and returns a valid app access token" $
       runAuth $ do
         token <- FB.getAppAccessToken
@@ -103,13 +112,13 @@ facebookTests manager runAuth runNoAuth = do
           Right token                      -> fail $ show token
           Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
 
-  describe "isValid" $ do
+  describe' "isValid" $ do
     it "returns False on a clearly invalid user access token" $
       runNoAuth $ FB.isValid invalidUserAccessToken #?= False
     it "returns False on a clearly invalid app access token" $
       runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
 
-  describe "getObject" $ do
+  describe' "getObject" $ do
     it "is able to fetch Facebook's own page" $
       runNoAuth $ do
         A.Object obj <- FB.getObject "/19292868552" [] Nothing
@@ -122,7 +131,7 @@ facebookTests manager runAuth runNoAuth = do
               , just "http://developers.facebook.com"
               , just "Facebook Platform" )
 
-  describe "getUser" $ do
+  describe' "getUser" $ do
     it "works for Zuckerberg" $ do
       runNoAuth $ do
         user <- FB.getUser "zuck" [] Nothing
