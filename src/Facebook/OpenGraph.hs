@@ -6,8 +6,10 @@ module Facebook.OpenGraph
     ) where
 
 -- import Control.Applicative
+import Control.Arrow (first)
 -- import Control.Monad (mzero)
 -- import Data.ByteString.Char8 (ByteString)
+import Data.Function (on)
 import Data.Text (Text)
 -- import Data.Typeable (Typeable, Typeable1)
 import Data.Int (Int8, Int16, Int32)
@@ -78,6 +80,23 @@ newtype Action = Action { unAction :: Ascii }
 
 instance Show Action where
     show = show . unAction
+
+-- | Since 0.7.1
+instance Eq Action where
+    (==) = (==) `on` unAction
+    (/=) = (/=) `on` unAction
+
+-- | Since 0.7.1
+instance Ord Action where
+    compare = compare `on` unAction
+    (<=) = (<=) `on` unAction
+    (<)  = (<)  `on` unAction
+    (>=) = (>=) `on` unAction
+    (>)  = (>)  `on` unAction
+
+-- | Since 0.7.1
+instance Read Action where
+    readsPrec = (fmap (first Action) .) . readsPrec
 
 instance IsString Action where
     fromString = Action . fromString
