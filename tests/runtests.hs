@@ -170,6 +170,19 @@ libraryTests = do
     prop "works for Word16" (propShowRead :: Word16 -> Bool)
     prop "works for Word32" (propShowRead :: Word32 -> Bool)
 
+    let propShowReadL :: (Show a, Read a, Eq a, FB.SimpleType a) => [a] -> Bool
+        propShowReadL x = read ('[' : T.unpack (FB.encodeFbParam x) ++ "]") == x
+    prop "works for [Float]"  (propShowReadL :: [Float]  -> Bool)
+    prop "works for [Double]" (propShowReadL :: [Double] -> Bool)
+    prop "works for [Int]"    (propShowReadL :: [Int]    -> Bool)
+    prop "works for [Int8]"   (propShowReadL :: [Int8]   -> Bool)
+    prop "works for [Int16]"  (propShowReadL :: [Int16]  -> Bool)
+    prop "works for [Int32]"  (propShowReadL :: [Int32]  -> Bool)
+    prop "works for [Word]"   (propShowReadL :: [Word]   -> Bool)
+    prop "works for [Word8]"  (propShowReadL :: [Word8]  -> Bool)
+    prop "works for [Word16]" (propShowReadL :: [Word16] -> Bool)
+    prop "works for [Word32]" (propShowReadL :: [Word32] -> Bool)
+
     prop "works for Text" (\t -> FB.encodeFbParam t == t)
 
 

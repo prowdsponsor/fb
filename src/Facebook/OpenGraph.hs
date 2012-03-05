@@ -10,6 +10,7 @@ import Control.Arrow (first)
 -- import Control.Monad (mzero)
 -- import Data.ByteString.Char8 (ByteString)
 import Data.Function (on)
+import Data.List (intersperse)
 import Data.Text (Text)
 -- import Data.Typeable (Typeable, Typeable1)
 import Data.Int (Int8, Int16, Int32)
@@ -166,6 +167,15 @@ instance SimpleType Word32 where
 -- | Facebook's simple type @String@.
 instance SimpleType Text where
     encodeFbParam = id
+
+-- | A comma-separated list of simple types.  This definition
+-- doesn't work everywhere, just for a few combinations that
+-- Facebook uses (e.g. @[Int]@).  Also, encoding a list of lists
+-- is the same as encoding the concatenation of all lists.  In
+-- other words, this instance is here more for your convenience
+-- than to make sure your code is correct.
+instance SimpleType a => SimpleType [a] where
+    encodeFbParam = T.concat . intersperse "," . map encodeFbParam
 
 showT :: Show a => a -> Text
 showT = T.pack . show
