@@ -3,7 +3,6 @@
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Writer (Writer)
 import Data.Int (Int8, Int16, Int32)
 import Data.Text (Text)
 import Data.Time (parseTime)
@@ -97,7 +96,7 @@ facebookTests :: String
               -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
-              -> Writer [Spec] ()
+              -> Specs
 facebookTests pretitle manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
   describe' "getAppAccessToken" $ do
@@ -143,7 +142,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.userGender user     &?= Just FB.Male
 
 
-libraryTests :: Writer [Spec] ()
+libraryTests :: Specs
 libraryTests = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]

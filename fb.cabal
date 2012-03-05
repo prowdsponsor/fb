@@ -90,7 +90,7 @@ test-suite runtests
       -- Test-only dependencies
     , HUnit
     , QuickCheck
-    , hspec == 0.9.*
+    , hspec >= 0.9.1 && < 0.10
     , fb
   extensions:
     TypeFamilies
