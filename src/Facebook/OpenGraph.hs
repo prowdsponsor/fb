@@ -168,6 +168,10 @@ instance SimpleType Word32 where
 instance SimpleType Text where
     encodeFbParam = id
 
+-- | An object's 'Id' code.
+instance SimpleType Id where
+    encodeFbParam = TE.decodeUtf8 . idCode
+
 -- | A comma-separated list of simple types.  This definition
 -- doesn't work everywhere, just for a few combinations that
 -- Facebook uses (e.g. @[Int]@).  Also, encoding a list of lists
