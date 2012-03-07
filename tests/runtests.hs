@@ -7,11 +7,9 @@ import Data.Int (Int8, Int16, Int32)
 import Data.Text (Text)
 import Data.Time (parseTime)
 import Data.Word (Word8, Word16, Word32, Word)
-import Network.HTTP.Types (Ascii)
 import System.Environment (getEnv)
 import System.Exit (exitFailure)
 import System.IO.Error (isDoesNotExistError)
-import Unsafe.Coerce (unsafeCoerce)
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
@@ -190,9 +188,7 @@ libraryTests = do
 
     prop "works for Id" $ \i ->
       let toId :: Int -> FB.Id
-          toId = id' . B.pack . show
-            where id' :: Ascii -> FB.Id
-                  id' = unsafeCoerce
+          toId = FB.Id . B.pack . show
           j = abs i
       in FB.encodeFbParam (toId j) == FB.encodeFbParam j
 
