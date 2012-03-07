@@ -23,7 +23,7 @@ import System.Locale (defaultTimeLocale)
 -- import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Conduit as C
-import qualified Data.Text as T
+-- import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Time as TI
 -- import qualified Network.HTTP.Types as HT
