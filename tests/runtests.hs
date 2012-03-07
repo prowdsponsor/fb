@@ -17,6 +17,7 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Time as TI
 import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
@@ -160,7 +161,7 @@ libraryTests = do
     it "works for ZonedTime" $ FB.encodeFbParam zonedTime @?= "20121221T1107Z"
 
     let propShowRead :: (Show a, Read a, Eq a, FB.SimpleType a) => a -> Bool
-        propShowRead x = read (T.unpack $ FB.encodeFbParam x) == x
+        propShowRead x = read (B.unpack $ FB.encodeFbParam x) == x
     prop "works for Float"  (propShowRead :: Float  -> Bool)
     prop "works for Double" (propShowRead :: Double -> Bool)
     prop "works for Int"    (propShowRead :: Int    -> Bool)
@@ -173,7 +174,7 @@ libraryTests = do
     prop "works for Word32" (propShowRead :: Word32 -> Bool)
 
     let propShowReadL :: (Show a, Read a, Eq a, FB.SimpleType a) => [a] -> Bool
-        propShowReadL x = read ('[' : T.unpack (FB.encodeFbParam x) ++ "]") == x
+        propShowReadL x = read ('[' : B.unpack (FB.encodeFbParam x) ++ "]") == x
     prop "works for [Float]"  (propShowReadL :: [Float]  -> Bool)
     prop "works for [Double]" (propShowReadL :: [Double] -> Bool)
     prop "works for [Int]"    (propShowReadL :: [Int]    -> Bool)
@@ -185,7 +186,7 @@ libraryTests = do
     prop "works for [Word16]" (propShowReadL :: [Word16] -> Bool)
     prop "works for [Word32]" (propShowReadL :: [Word32] -> Bool)
 
-    prop "works for Text" (\t -> FB.encodeFbParam t == t)
+    prop "works for Text" (\t -> FB.encodeFbParam t == TE.encodeUtf8 t)
 
     prop "works for Id" $ \i ->
       let toId :: Int -> FB.Id
