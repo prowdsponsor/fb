@@ -28,7 +28,7 @@ data Credentials =
                 , appId     :: Ascii -- ^ Your application ID.
                 , appSecret :: Ascii -- ^ Your application secret key.
                 }
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 
 -- | An access token.  While you can make some API calls without

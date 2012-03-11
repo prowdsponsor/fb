@@ -101,7 +101,7 @@ data FacebookException =
                       }
     -- | An exception coming from the @fb@ package's code.
   | FbLibraryException { fbeMessage :: Text }
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON FacebookException where
     parseJSON (A.Object v) =

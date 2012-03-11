@@ -40,7 +40,7 @@ data User =
          , userVerified   :: Maybe Bool
          , userEmail      :: Maybe Text
          }
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON User where
     parseJSON (A.Object v) =
@@ -58,7 +58,7 @@ instance A.FromJSON User where
 
 
 -- | An user's gender.
-data Gender = Male | Female deriving (Eq, Ord, Show, Enum, Typeable)
+data Gender = Male | Female deriving (Eq, Ord, Show, Read, Enum, Typeable)
 
 instance A.FromJSON Gender where
     parseJSON (A.String "male")   = return Male
