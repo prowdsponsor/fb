@@ -27,6 +27,7 @@ description:
 
 extra-source-files:
   tests/runtests.hs
+  example.hs
 
 
 source-repository head
