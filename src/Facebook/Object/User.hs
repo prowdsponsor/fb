@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Object.User
     ( User(..)
     , Gender(..)
@@ -6,6 +7,7 @@ module Facebook.Object.User
 
 import Control.Applicative
 import Control.Monad (mzero)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))
 -- import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
@@ -78,7 +80,7 @@ instance A.ToJSON Gender where
 -- back by Facebook.  The user ID may be @\"me\"@, in which
 -- case you must provide an user access token and information
 -- about the token's owner is given.
-getUser :: C.ResourceIO m =>
+getUser :: (C.MonadResource m, MonadBaseControl IO m) =>
            UserId         -- ^ User ID or @\"me\"@.
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
