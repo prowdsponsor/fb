@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts, GADTs, ScopedTypeVariables, OverloadedStrings #-}
 module Facebook.Auth
     ( getAppAccessToken
     , getUserAccessTokenStep1
@@ -13,6 +14,7 @@ module Facebook.Auth
 import Control.Applicative
 import Control.Monad (join)
 import Control.Monad.IO.Class (MonadIO(liftIO))
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:))
 import Data.Aeson.Types (parseEither)
 import Data.Maybe (fromMaybe)
@@ -41,7 +43,7 @@ import Facebook.Monad
 
 -- | Get an app access token from Facebook using your
 -- credentials.
-getAppAccessToken :: C.ResourceIO m =>
+getAppAccessToken :: (C.MonadResource m, MonadBaseControl IO m) =>
                      FacebookT Auth m AppAccessToken
 getAppAccessToken =
   runResourceInFb $ do
@@ -86,7 +88,7 @@ getUserAccessTokenStep1 redirectUrl perms = do
 -- request query parameters passed to your 'RedirectUrl' and give
 -- to this function that will complete the user authentication
 -- flow and give you an @'UserAccessToken'@.
-getUserAccessTokenStep2 :: C.ResourceIO m =>
+getUserAccessTokenStep2 :: (MonadBaseControl IO m, C.MonadResource m) =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
                         -> [Argument]  -- ^ Query parameters.
@@ -211,7 +213,7 @@ hasExpired token =
 -- access token may not be valid as well.  For example, in the
 -- case of an user access token, they may have changed their
 -- password, logged out from Facebook or blocked your app.
-isValid :: C.ResourceIO m =>
+isValid :: (MonadBaseControl IO m, C.MonadResource m) =>
            AccessToken anyKind
         -> FacebookT anyAuth m Bool
 isValid token = do
@@ -241,10 +243,9 @@ isValid token = do
 -- the same data and expiration time as before, but you can't
 -- assume this).  Note that expired access tokens can't be
 -- extended, only valid tokens.
-extendUserAccessToken ::
-    C.ResourceIO m =>
-    UserAccessToken
- -> FacebookT Auth m (Either FacebookException UserAccessToken)
+extendUserAccessToken :: (MonadBaseControl IO m, C.MonadResource m) =>
+                         UserAccessToken
+                      -> FacebookT Auth m (Either FacebookException UserAccessToken)
 extendUserAccessToken token@(UserAccessToken _ data_ _)
     = do expired <- hasExpired token
          if expired then return (Left hasExpiredExc) else tryToExtend

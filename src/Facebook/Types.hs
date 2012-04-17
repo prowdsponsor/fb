@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving #-}
 module Facebook.Types
     ( Credentials(..)
     , AccessToken(..)

@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Base
     ( fbreq
     , ToSimpleQuery(..)
@@ -15,6 +16,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 
 import qualified Control.Exception.Lifted as E
+import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
 import qualified Data.ByteString as B
@@ -71,9 +73,9 @@ instance ToSimpleQuery (AccessToken anyKind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- JSON value.
-asJson :: (C.ResourceThrow m, C.IsSource bsrc, A.FromJSON a) =>
-          H.Response (bsrc m ByteString)
-       -> FacebookT anyAuth (C.ResourceT m) a
+asJson :: (C.MonadThrow m, A.FromJSON a) =>
+          H.Response (C.Source m ByteString)
+       -> FacebookT anyAuth m a
 asJson response = do
   val <- lift $ H.responseBody response C.$$ C.sinkParser A.json'
   case A.fromJSON val of
@@ -84,12 +86,12 @@ asJson response = do
              , " Facebook's response as a JSON value ("
              , T.pack str, ")" ]
 
--- | Converts a plain 'H.Response' into a string 'ByteString'.
-asBS :: (C.ResourceThrow m, C.IsSource bsrc) =>
-        H.Response (bsrc m ByteString)
-     -> FacebookT anyAuth (C.ResourceT m) ByteString
-asBS response = lift $ H.responseBody response C.$$ fmap B.concat CL.consume
 
+-- | Converts a plain 'H.Response' into a string 'ByteString'.
+asBS :: (Monad m) =>
+        H.Response (C.Source m ByteString)
+     -> FacebookT anyAuth m ByteString
+asBS response = lift $ H.responseBody response C.$$ fmap B.concat CL.consume
 
 
 -- | An exception that may be thrown by functions on this
@@ -114,13 +116,13 @@ instance E.Exception FacebookException where
 
 -- | Same as 'H.http', but tries to parse errors and throw
 -- meaningful 'FacebookException'@s@.
-fbhttp :: C.ResourceIO m =>
+fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
           H.Request m
-       -> FacebookT anyAuth (C.ResourceT m) (H.Response (C.Source m ByteString))
+       -> FacebookT anyAuth m (H.Response (C.Source m ByteString))
 fbhttp req = do
   manager <- getManager
   let req' = req { H.checkStatus = \_ _ -> Nothing }
-  response@(H.Response status headers _) <- lift (H.http req' manager)
+  response@(H.Response status _ headers _) <- lift (H.http req' manager)
   if isOkay status
     then return response
     else do
@@ -150,14 +152,15 @@ wwwAuthenticateParser =
 
 -- | Send a @HEAD@ request just to see if the resposne status
 -- code is 2XX (returns @True@) or not (returns @False@).
-httpCheck :: C.ResourceIO m =>
-             H.Request m
+httpCheck :: (MonadBaseControl IO m, C.MonadResource m) =>
+             H.Request (C.ResourceT m)
           -> FacebookT anyAuth m Bool
+
 httpCheck req = runResourceInFb $ do
   manager <- getManager
   let req' = req { H.method      = HT.methodHead
                  , H.checkStatus = \_ _ -> Nothing }
-  H.Response status _ _ <- lift (H.httpLbs req' manager)
+  H.Response status _ _ _ <- lift (H.httpLbs req' manager)
   return $! isOkay status
   -- Yes, we use httpLbs above so that we don't have to worry
   -- about consuming the responseBody.  Note that the
