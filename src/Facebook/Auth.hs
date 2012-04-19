@@ -19,6 +19,7 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime, UTCTime)
 import Data.String (IsString(..))
+import Control.Monad.Trans.Resource (MonadResourceBase)
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.Attoparsec.Char8 as A
@@ -41,7 +42,7 @@ import Facebook.Monad
 
 -- | Get an app access token from Facebook using your
 -- credentials.
-getAppAccessToken :: C.ResourceIO m =>
+getAppAccessToken :: (C.MonadResource m, MonadResourceBase m) =>
                      FacebookT Auth m AppAccessToken
 getAppAccessToken =
   runResourceInFb $ do
@@ -86,7 +87,7 @@ getUserAccessTokenStep1 redirectUrl perms = do
 -- request query parameters passed to your 'RedirectUrl' and give
 -- to this function that will complete the user authentication
 -- flow and give you an @'UserAccessToken'@.
-getUserAccessTokenStep2 :: C.ResourceIO m =>
+getUserAccessTokenStep2 :: (C.MonadResource m, MonadResourceBase m) =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
                         -> [Argument]  -- ^ Query parameters.
@@ -211,7 +212,7 @@ hasExpired token =
 -- access token may not be valid as well.  For example, in the
 -- case of an user access token, they may have changed their
 -- password, logged out from Facebook or blocked your app.
-isValid :: C.ResourceIO m =>
+isValid :: (C.MonadResource m, MonadResourceBase m) =>
            AccessToken anyKind
         -> FacebookT anyAuth m Bool
 isValid token = do
@@ -242,7 +243,7 @@ isValid token = do
 -- assume this).  Note that expired access tokens can't be
 -- extended, only valid tokens.
 extendUserAccessToken ::
-    C.ResourceIO m =>
+    (C.MonadResource m, MonadResourceBase m) =>
     UserAccessToken
  -> FacebookT Auth m (Either FacebookException UserAccessToken)
 extendUserAccessToken token@(UserAccessToken _ data_ _)

@@ -18,6 +18,7 @@ import Data.Word (Word8, Word16, Word32, Word)
 import Data.String (IsString(..))
 import Network.HTTP.Types (Ascii)
 import System.Locale (defaultTimeLocale)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 
 -- import qualified Control.Exception.Lifted as E
 -- import qualified Data.Aeson as A
@@ -43,7 +44,7 @@ import Facebook.Graph
 -- >              [ "recipe" #= "http://example.com/cookie.html"
 -- >              , "when"   #= now ]
 -- >              token
-createAction :: C.ResourceIO m =>
+createAction :: (C.MonadResource m, MonadResourceBase m) =>
                 Action     -- ^ Action kind to be created.
              -> [Argument] -- ^ Arguments of the action.
              -> Maybe AppAccessToken
@@ -55,7 +56,7 @@ createAction :: C.ResourceIO m =>
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  let post :: C.ResourceIO m => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
+  let post :: (C.MonadResource m, MonadResourceBase m) => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
       post prepath = postObject (prepath <> appName creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken

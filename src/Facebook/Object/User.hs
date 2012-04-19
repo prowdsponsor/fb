@@ -10,6 +10,7 @@ import Data.Aeson ((.:), (.:?))
 -- import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 
 -- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
@@ -78,7 +79,7 @@ instance A.ToJSON Gender where
 -- back by Facebook.  The user ID may be @\"me\"@, in which
 -- case you must provide an user access token and information
 -- about the token's owner is given.
-getUser :: C.ResourceIO m =>
+getUser :: (C.MonadResource m, MonadResourceBase m) =>
            UserId         -- ^ User ID or @\"me\"@.
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
