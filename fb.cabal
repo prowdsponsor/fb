@@ -1,5 +1,5 @@
 name:              fb
-version:           0.7
+version:           0.7.5
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -27,6 +27,7 @@ description:
 
 extra-source-files:
   tests/runtests.hs
+  example.hs
 
 
 source-repository head
@@ -90,7 +91,7 @@ test-suite runtests
       -- Test-only dependencies
     , HUnit
     , QuickCheck
-    , hspec == 0.9.*
+    , hspec >= 0.9.1 && < 0.10
     , fb
   extensions:
     TypeFamilies

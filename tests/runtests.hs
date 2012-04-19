@@ -3,7 +3,6 @@
 import Control.Applicative
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Writer (Writer)
 import Data.Int (Int8, Int16, Int32)
 import Data.Text (Text)
 import Data.Time (parseTime)
@@ -16,6 +15,7 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Time as TI
 import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
@@ -97,7 +97,7 @@ facebookTests :: String
               -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
-              -> Writer [Spec] ()
+              -> Specs
 facebookTests pretitle manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
   describe' "getAppAccessToken" $ do
@@ -143,7 +143,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.userGender user     &?= Just FB.Male
 
 
-libraryTests :: Writer [Spec] ()
+libraryTests :: Specs
 libraryTests = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
@@ -159,7 +159,7 @@ libraryTests = do
     it "works for ZonedTime" $ FB.encodeFbParam zonedTime @?= "20121221T1107Z"
 
     let propShowRead :: (Show a, Read a, Eq a, FB.SimpleType a) => a -> Bool
-        propShowRead x = read (T.unpack $ FB.encodeFbParam x) == x
+        propShowRead x = read (B.unpack $ FB.encodeFbParam x) == x
     prop "works for Float"  (propShowRead :: Float  -> Bool)
     prop "works for Double" (propShowRead :: Double -> Bool)
     prop "works for Int"    (propShowRead :: Int    -> Bool)
@@ -171,7 +171,26 @@ libraryTests = do
     prop "works for Word16" (propShowRead :: Word16 -> Bool)
     prop "works for Word32" (propShowRead :: Word32 -> Bool)
 
-    prop "works for Text" (\t -> FB.encodeFbParam t == t)
+    let propShowReadL :: (Show a, Read a, Eq a, FB.SimpleType a) => [a] -> Bool
+        propShowReadL x = read ('[' : B.unpack (FB.encodeFbParam x) ++ "]") == x
+    prop "works for [Float]"  (propShowReadL :: [Float]  -> Bool)
+    prop "works for [Double]" (propShowReadL :: [Double] -> Bool)
+    prop "works for [Int]"    (propShowReadL :: [Int]    -> Bool)
+    prop "works for [Int8]"   (propShowReadL :: [Int8]   -> Bool)
+    prop "works for [Int16]"  (propShowReadL :: [Int16]  -> Bool)
+    prop "works for [Int32]"  (propShowReadL :: [Int32]  -> Bool)
+    prop "works for [Word]"   (propShowReadL :: [Word]   -> Bool)
+    prop "works for [Word8]"  (propShowReadL :: [Word8]  -> Bool)
+    prop "works for [Word16]" (propShowReadL :: [Word16] -> Bool)
+    prop "works for [Word32]" (propShowReadL :: [Word32] -> Bool)
+
+    prop "works for Text" (\t -> FB.encodeFbParam t == TE.encodeUtf8 t)
+
+    prop "works for Id" $ \i ->
+      let toId :: Int -> FB.Id
+          toId = FB.Id . B.pack . show
+          j = abs i
+      in FB.encodeFbParam (toId j) == FB.encodeFbParam j
 
 
 -- Wrappers for HUnit operators using MonadIO

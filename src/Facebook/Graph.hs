@@ -52,7 +52,7 @@ postObject path query token =
 
 -- | The identification code of an object.
 newtype Id = Id { idCode :: Ascii }
-    deriving (Eq, Ord, Show, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON Id where
     parseJSON (A.Object v) = Id <$> v A..: "id"
