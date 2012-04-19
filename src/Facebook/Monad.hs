@@ -28,6 +28,7 @@ import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
                                    , defaultRestoreM )
 import Control.Monad.Trans.Reader (ReaderT(..), ask)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.Typeable (Typeable)
 
 import qualified Data.Conduit as C
@@ -127,7 +128,7 @@ withTier = flip liftM getTier
 
 
 -- | Run a 'ResourceT' inside a 'FacebookT'.
-runResourceInFb :: C.Resource m =>
+runResourceInFb :: MonadResourceBase m =>
                    FacebookT anyAuth (C.ResourceT m) a
                 -> FacebookT anyAuth m a
 runResourceInFb (F inner) = F $ ask >>= lift . C.runResourceT . runReaderT inner

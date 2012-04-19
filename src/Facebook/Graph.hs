@@ -11,6 +11,7 @@ import Control.Applicative
 -- import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Network.HTTP.Types (Ascii)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 
 -- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
@@ -27,7 +28,7 @@ import Facebook.Base
 
 -- | Make a raw @GET@ request to Facebook's Graph API.  Returns a
 -- raw JSON 'A.Value'.
-getObject :: (C.ResourceIO m, A.FromJSON a) =>
+getObject :: (C.MonadResource m, MonadResourceBase m, A.FromJSON a) =>
              Ascii          -- ^ Path (should begin with a slash @\/@)
           -> [Argument]     -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
@@ -39,7 +40,7 @@ getObject path query mtoken =
 
 -- | Make a raw @POST@ request to Facebook's Graph API.  Returns
 -- a raw JSON 'A.Value'.
-postObject :: (C.ResourceIO m, A.FromJSON a) =>
+postObject :: (C.MonadResource m, MonadResourceBase m, A.FromJSON a) =>
               Ascii               -- ^ Path (should begin with a slash @\/@)
            -> [Argument]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
