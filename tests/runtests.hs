@@ -13,6 +13,7 @@ import System.IO.Error (isDoesNotExistError)
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
+import qualified Data.Conduit as C
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -82,21 +83,21 @@ main = H.withManager $ \manager -> liftIO $ do
     -- Run the tests twice, once in Facebook's production tier...
     facebookTests "Production tier: "
                   manager
-                  (FB.runFacebookT creds manager)
-                  (FB.runNoAuthFacebookT manager)
+                  (C.runResourceT . FB.runFacebookT creds manager)
+                  (C.runResourceT . FB.runNoAuthFacebookT manager)
     -- ...and the other in Facebook's beta tier.
     facebookTests "Beta tier: "
                   manager
-                  (FB.beta_runFacebookT creds manager)
-                  (FB.beta_runNoAuthFacebookT manager)
+                  (C.runResourceT . FB.beta_runFacebookT creds manager)
+                  (C.runResourceT . FB.beta_runNoAuthFacebookT manager)
 
     -- Tests that don't depend on which tier is chosen.
     libraryTests
 
 facebookTests :: String
               -> H.Manager
-              -> (forall a. FB.FacebookT FB.Auth   IO a -> IO a)
-              -> (forall a. FB.FacebookT FB.NoAuth IO a -> IO a)
+              -> (forall a. FB.FacebookT FB.Auth   (C.ResourceT IO) a -> IO a)
+              -> (forall a. FB.FacebookT FB.NoAuth (C.ResourceT IO) a -> IO a)
               -> Specs
 facebookTests pretitle manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
@@ -106,11 +107,12 @@ facebookTests pretitle manager runAuth runNoAuth = do
         token <- FB.getAppAccessToken
         FB.isValid token #?= True
     it "throws a FacebookException on invalid credentials" $
+      C.runResourceT $
       FB.runFacebookT invalidCredentials manager $ do
         ret <- E.try $ FB.getAppAccessToken
         case ret  of
           Right token                      -> fail $ show token
-          Left (_ :: FB.FacebookException) -> lift (return () :: IO ())
+          Left (_ :: FB.FacebookException) -> lift $ lift (return () :: IO ())
 
   describe' "isValid" $ do
     it "returns False on a clearly invalid user access token" $
