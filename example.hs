@@ -8,6 +8,6 @@ import Control.Monad.IO.Class (liftIO)
 main :: IO ()
 main = do
   withManager $ \manager -> do
-    liftIO $ FB.runNoAuthFacebookT manager $ do
+    FB.runNoAuthFacebookT manager $ do
        u <- FB.getUser "zuck" [] Nothing
        liftIO $ print (FB.userName u)

@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
 module Facebook.Monad
     ( FacebookT
     , Auth
@@ -127,7 +127,7 @@ withTier = flip liftM getTier
 
 
 -- | Run a 'ResourceT' inside a 'FacebookT'.
-runResourceInFb :: C.Resource m =>
+runResourceInFb :: (C.MonadResource m, MonadBaseControl IO m) =>
                    FacebookT anyAuth (C.ResourceT m) a
                 -> FacebookT anyAuth m a
 runResourceInFb (F inner) = F $ ask >>= lift . C.runResourceT . runReaderT inner

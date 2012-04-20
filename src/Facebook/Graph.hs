@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Graph
     ( getObject
     , postObject
@@ -6,6 +7,7 @@ module Facebook.Graph
 
 
 import Control.Applicative
+import Control.Monad.Trans.Control (MonadBaseControl)
 -- import Control.Monad (mzero)
 -- import Data.ByteString.Char8 (ByteString)
 -- import Data.Text (Text)
@@ -27,7 +29,7 @@ import Facebook.Base
 
 -- | Make a raw @GET@ request to Facebook's Graph API.  Returns a
 -- raw JSON 'A.Value'.
-getObject :: (C.ResourceIO m, A.FromJSON a) =>
+getObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              Ascii          -- ^ Path (should begin with a slash @\/@)
           -> [Argument]     -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
@@ -39,7 +41,7 @@ getObject path query mtoken =
 
 -- | Make a raw @POST@ request to Facebook's Graph API.  Returns
 -- a raw JSON 'A.Value'.
-postObject :: (C.ResourceIO m, A.FromJSON a) =>
+postObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
               Ascii               -- ^ Path (should begin with a slash @\/@)
            -> [Argument]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token

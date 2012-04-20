@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Facebook.OpenGraph
     ( createAction
     , Action(..)
@@ -7,6 +8,7 @@ module Facebook.OpenGraph
 
 -- import Control.Applicative
 import Control.Arrow (first)
+import Control.Monad.Trans.Control (MonadBaseControl)
 -- import Control.Monad (mzero)
 -- import Data.ByteString.Char8 (ByteString)
 import Data.Function (on)
@@ -43,7 +45,7 @@ import Facebook.Graph
 -- >              [ "recipe" #= "http://example.com/cookie.html"
 -- >              , "when"   #= now ]
 -- >              token
-createAction :: C.ResourceIO m =>
+createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
                 Action     -- ^ Action kind to be created.
              -> [Argument] -- ^ Arguments of the action.
              -> Maybe AppAccessToken
@@ -55,7 +57,7 @@ createAction :: C.ResourceIO m =>
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  let post :: C.ResourceIO m => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
+  let post :: (C.MonadResource m, MonadBaseControl IO m)  => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
       post prepath = postObject (prepath <> appName creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken
