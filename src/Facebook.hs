@@ -35,6 +35,7 @@ module Facebook
     , User(..)
     , UserId
     , Gender(..)
+    , UserLocation(..)
     , getUser
 
       -- * Facebook's Open Graph API
