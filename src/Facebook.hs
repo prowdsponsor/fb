@@ -41,6 +41,7 @@ module Facebook
       -- * Facebook's Open Graph API
     , createAction
     , Action
+    , createCheckin
     , (#=)
     , SimpleType(..)
 
