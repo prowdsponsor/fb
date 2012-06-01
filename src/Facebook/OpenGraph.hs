@@ -77,7 +77,7 @@ createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
               -> FacebookT Auth m Id
 createCheckin pid (lat,lon) args usertoken = do
   let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
-      body = ["place" #= pid] ++ [coords] ++ args
+      body = ("place" #= pid) : coords : args
       toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
   postObject "me/checkins" body usertoken
 
