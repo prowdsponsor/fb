@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Facebook.OpenGraph
     ( createAction
+    , createCheckin
     , Action(..)
     , (#=)
     , SimpleType(..)
@@ -14,6 +15,8 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Function (on)
 import Data.List (intersperse)
 import Data.Text (Text)
+import qualified Data.Text.Lazy as TL (toStrict)
+import Data.Text.Lazy.Builder (toLazyText)
 -- import Data.Typeable (Typeable, Typeable1)
 import Data.Int (Int8, Int16, Int32)
 import Data.Word (Word8, Word16, Word32, Word)
@@ -22,7 +25,8 @@ import Network.HTTP.Types (Ascii)
 import System.Locale (defaultTimeLocale)
 
 -- import qualified Control.Exception.Lifted as E
--- import qualified Data.Aeson as A
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Encode as AE (fromValue)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Conduit as C
 -- import qualified Data.Text as T
@@ -63,6 +67,19 @@ createAction (Action action) query mapptoken usertoken = do
     Nothing       -> post "/me/" usertoken
     Just apptoken -> post ("/" <> accessTokenUserId usertoken <> "/") apptoken
 
+-- | Creates a 'check-in' and returns its id. Place and
+-- coordinates are both required by Facebook.
+createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
+                 Id               -- ^ Place Id
+              -> (Double, Double) -- ^ (Latitude, Longitude)
+              -> [Argument]       -- ^ Other arguments of the action.
+              -> UserAccessToken  -- ^ Required user access token.
+              -> FacebookT Auth m Id
+createCheckin pid (lat,lon) args usertoken = do
+  let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
+      body = ["place" #= pid] ++ [coords] ++ args
+      toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
+  postObject "me/checkins" body usertoken
 
 
 -- | An action of your app.  Please refer to Facebook's
