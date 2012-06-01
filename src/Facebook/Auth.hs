@@ -237,11 +237,15 @@ isValid token = do
 
 
 -- | Extend the expiration time of an user access token (see
--- <https://developers.facebook.com/docs/offline-access-deprecation/>).
--- Returns @Left exc@ if there is an error while extending, or
--- @Right token@ with the new user access token (which could have
--- the same data and expiration time as before, but you can't
--- assume this).  Note that expired access tokens can't be
+-- <https://developers.facebook.com/docs/offline-access-deprecation/>,
+-- <https://developers.facebook.com/roadmap/offline-access-removal/>).
+-- Only short-lived user access tokens may extended into
+-- long-lived user access tokens, you must get a new short-lived
+-- user access token if you need to extend a long-lived
+-- one.  Returns @Left exc@ if there is an error while extending,
+-- or @Right token@ with the new user access token (which could
+-- have the same data and expiration time as before, but you
+-- can't assume this).  Note that expired access tokens can't be
 -- extended, only valid tokens.
 extendUserAccessToken :: (MonadBaseControl IO m, C.MonadResource m) =>
                          UserAccessToken
