@@ -2,6 +2,7 @@
 module Facebook.OpenGraph
     ( createAction
     , createCheckin
+    , fqlQuery
     , Action(..)
     , (#=)
     , SimpleType(..)
@@ -37,7 +38,7 @@ import qualified Data.Time as TI
 
 import Facebook.Types
 import Facebook.Monad
--- import Facebook.Base
+import Facebook.Base
 import Facebook.Graph
 
 
@@ -81,6 +82,15 @@ createCheckin pid (lat,lon) args usertoken = do
       toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
   postObject "me/checkins" body usertoken
 
+-- | Query the Facebook Graph using FQL.
+fqlQuery :: (C.MonadResource m, MonadBaseControl IO m) =>
+             Text                        -- ^ FQL Query
+          -> Maybe (AccessToken anyKind) -- ^ Optional access token
+          -> FacebookT anyAuth m A.Value
+fqlQuery fql mtoken =
+  runResourceInFb $ do
+    let query = ["q" #= fql]
+    asJson =<< fbhttp =<< fbreq "/fql" mtoken query
 
 -- | An action of your app.  Please refer to Facebook's
 -- documentation at
