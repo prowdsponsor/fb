@@ -42,6 +42,7 @@ module Facebook
     , createAction
     , Action
     , createCheckin
+    , fqlQuery
     , (#=)
     , SimpleType(..)
 
