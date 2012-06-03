@@ -128,11 +128,11 @@ fbhttp req = do
   manager <- getManager
   let req' = req { H.checkStatus = \_ _ -> Nothing }
 #if DEBUG
-  () <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
+  _ <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s\n" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
 #endif
   response@(H.Response status _ headers _) <- lift (H.http req' manager)
 #if DEBUG
-  () <- liftIO $ printf "fbhttp response status: " (show status)
+  _ <- liftIO $ printf "fbhttp response status: %s\n" (show status)
 #endif
   if isOkay status
     then return response
