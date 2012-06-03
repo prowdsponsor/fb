@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings, CPP #-}
 module Facebook.Base
     ( fbreq
     , ToSimpleQuery(..)
@@ -26,6 +26,11 @@ import qualified Data.Conduit.List as CL
 import qualified Data.Text as T
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
+
+#if DEBUG
+import Control.Monad.IO.Class (liftIO)
+import Text.Printf (printf)
+#endif
 
 
 import Facebook.Types
@@ -122,7 +127,13 @@ fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
 fbhttp req = do
   manager <- getManager
   let req' = req { H.checkStatus = \_ _ -> Nothing }
+#if DEBUG
+  () <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
+#endif
   response@(H.Response status _ headers _) <- lift (H.http req' manager)
+#if DEBUG
+  () <- liftIO $ printf "fbhttp response status: " (show status)
+#endif
   if isOkay status
     then return response
     else do

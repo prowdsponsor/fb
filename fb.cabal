@@ -35,6 +35,11 @@ source-repository head
   location: git://github.com/meteficha/fb.git
 
 
+flag debug
+  default: False
+  description: Print debugging info.
+
+
 library
   hs-source-dirs: src
   ghc-options: -Wall
@@ -75,6 +80,8 @@ library
     TypeFamilies
     FlexibleInstances
     MultiParamTypeClasses
+  if flag(debug)
+    cpp-options: -DDEBUG
 
 
 test-suite runtests
