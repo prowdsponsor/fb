@@ -22,7 +22,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
 import qualified Network.HTTP.Conduit as H
 
-import Test.HUnit ((@?=))
+import Test.HUnit ((@?=), assertFailure)
 import Test.Hspec.Monadic
 import Test.Hspec.QuickCheck
 import Test.Hspec.HUnit ()
@@ -144,7 +144,19 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.userLastName user   &?= Just "Zuckerberg"
         FB.userGender user     &?= Just FB.Male
 
+  describe' "fqlQuery" $ do
+    it "is able to query Facebook's page name from its page id" $
+      runNoAuth $ do
+        A.Object obj <- FB.fqlQuery "SELECT name FROM page WHERE page_id = 20531316728" Nothing
+        let mr = flip A.parseMaybe () $ const r
+            r = do
+                  dataArray <- obj A..: "data"
+                  (head dataArray) A..: "name"
+        case mr of
+          Nothing -> liftIO $ assertFailure "Could not parse FQL query response."
+          Just r' -> r' &?= ("Facebook" :: Text)
 
+        
 libraryTests :: Specs
 libraryTests = do
   describe "SimpleType" $ do
