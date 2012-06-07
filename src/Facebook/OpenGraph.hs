@@ -124,11 +124,12 @@ createCheckin pid (lat,lon) args usertoken = do
   postObject "me/checkins" body usertoken
 
 
--- | Query the Facebook Graph using FQL.
-fqlQuery :: (C.MonadResource m, MonadBaseControl IO m) =>
+-- | Query the Facebook Graph using FQL.  You may want to use
+-- 'FQLResult' when parsing the returned JSON.
+fqlQuery :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              Text                        -- ^ FQL Query
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
-          -> FacebookT anyAuth m A.Value
+          -> FacebookT anyAuth m a
 fqlQuery fql mtoken =
   runResourceInFb $ do
     let query = ["q" #= fql]
