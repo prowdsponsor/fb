@@ -32,7 +32,7 @@ import qualified Data.Aeson as AE
 import qualified Data.Aeson.Types as AE
 import qualified Data.Attoparsec.Char8 as A
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Base64.URL as Base64URL
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
@@ -293,9 +293,9 @@ parseSignedRequest signedRequest =
     -- Split, decode and JSON-parse
     let (encodedSignature, encodedUnparsedPayloadWithDot) = B8.break (== '.') signedRequest
     ('.', encodedUnparsedPayload) <- MaybeT $ return (B8.uncons encodedUnparsedPayloadWithDot)
-    let signature       = Base64.decodeLenient encodedSignature
-        unparsedPayload = Base64.decodeLenient encodedUnparsedPayload
-    payload <- eitherToMaybeT $ A.parseOnly json' unparsedPayload
+    signature       <- eitherToMaybeT $ Base64URL.decode $ addBase64Padding encodedSignature
+    unparsedPayload <- eitherToMaybeT $ Base64URL.decode $ addBase64Padding encodedUnparsedPayload
+    payload         <- eitherToMaybeT $ A.parseOnly json' unparsedPayload
 
     -- Verify signature
     SignedRequestAlgorithm algo <- fromJson payload
@@ -318,3 +318,20 @@ newtype SignedRequestAlgorithm = SignedRequestAlgorithm Text
 instance AE.FromJSON SignedRequestAlgorithm where
   parseJSON (AE.Object v) = SignedRequestAlgorithm <$> v .: "algorithm"
   parseJSON _             = mzero
+
+
+-- | The @base64-bytestring@ package provides two different
+-- decoding functions for @base64url@: 'Base64URL.decode' and
+-- 'Base64URL.decodeLenient'.  The former is too strict for us
+-- since Facebook does add padding to its signed requests, but
+-- the latter is too lenient and will accept *anything*.
+--
+-- Instead of being too lenient, we just use this function add
+-- the padding base to the encoded string, thus allowing
+-- 'Base64URL.decode' to chew it.
+addBase64Padding :: B.ByteString -> B.ByteString
+addBase64Padding bs
+  | drem == 2 = bs `B.append` "=="
+  | drem == 3 = bs `B.append` "="
+  | otherwise = bs
+  where drem = B.length bs `mod` 4
