@@ -7,6 +7,7 @@ module Facebook.Auth
     , extendUserAccessToken
     , RedirectUrl
     , Permission
+    , unPermission
     , hasExpired
     , isValid
     , parseSignedRequest
@@ -200,7 +201,13 @@ type RedirectUrl = Text
 -- >
 -- > perms :: [Permission]
 -- > perms = ["user_about_me", "email", "offline_access"]
-newtype Permission = Permission { unPermission :: Text }
+newtype Permission =
+  Permission {
+    unPermission :: Text
+    -- ^ Retrieves the 'Text' back from a 'Permission'.  Most of
+    -- the time you won't need to use this function, but you may
+    -- need it if you're a library author.
+  }
 
 instance Show Permission where
     show = show . unPermission

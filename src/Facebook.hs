@@ -61,6 +61,9 @@ module Facebook
 
       -- * Exceptions
     , FacebookException(..)
+
+      -- * Internal functions
+    , unPermission
     ) where
 
 import Facebook.Types
