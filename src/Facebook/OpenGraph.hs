@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
 module Facebook.OpenGraph
     ( createAction
+    , Action(..)
     , createCheckin
     , fqlQuery
-    , Action(..)
     , (#=)
     , SimpleType(..)
     ) where
@@ -68,29 +68,6 @@ createAction (Action action) query mapptoken usertoken = do
     Nothing       -> post "/me/" usertoken
     Just apptoken -> post ("/" <> accessTokenUserId usertoken <> "/") apptoken
 
--- | Creates a 'check-in' and returns its id. Place and
--- coordinates are both required by Facebook.
-createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
-                 Id               -- ^ Place Id
-              -> (Double, Double) -- ^ (Latitude, Longitude)
-              -> [Argument]       -- ^ Other arguments of the action.
-              -> UserAccessToken  -- ^ Required user access token.
-              -> FacebookT Auth m Id
-createCheckin pid (lat,lon) args usertoken = do
-  let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
-      body = ("place" #= pid) : coords : args
-      toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
-  postObject "me/checkins" body usertoken
-
--- | Query the Facebook Graph using FQL.
-fqlQuery :: (C.MonadResource m, MonadBaseControl IO m) =>
-             Text                        -- ^ FQL Query
-          -> Maybe (AccessToken anyKind) -- ^ Optional access token
-          -> FacebookT anyAuth m A.Value
-fqlQuery fql mtoken =
-  runResourceInFb $ do
-    let query = ["q" #= fql]
-    asJson =<< fbhttp =<< fbreq "/fql" mtoken query
 
 -- | An action of your app.  Please refer to Facebook's
 -- documentation at
@@ -130,6 +107,32 @@ instance Read Action where
 
 instance IsString Action where
     fromString = Action . fromString
+
+
+-- | Creates a 'check-in' and returns its id. Place and
+-- coordinates are both required by Facebook.
+createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
+                 Id               -- ^ Place Id
+              -> (Double, Double) -- ^ (Latitude, Longitude)
+              -> [Argument]       -- ^ Other arguments of the action.
+              -> UserAccessToken  -- ^ Required user access token.
+              -> FacebookT Auth m Id
+createCheckin pid (lat,lon) args usertoken = do
+  let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
+      body = ("place" #= pid) : coords : args
+      toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
+  postObject "me/checkins" body usertoken
+
+
+-- | Query the Facebook Graph using FQL.
+fqlQuery :: (C.MonadResource m, MonadBaseControl IO m) =>
+             Text                        -- ^ FQL Query
+          -> Maybe (AccessToken anyKind) -- ^ Optional access token
+          -> FacebookT anyAuth m A.Value
+fqlQuery fql mtoken =
+  runResourceInFb $ do
+    let query = ["q" #= fql]
+    asJson =<< fbhttp =<< fbreq "/fql" mtoken query
 
 
 -- | Create an 'Argument' with a 'SimpleType'.  See the docs on
