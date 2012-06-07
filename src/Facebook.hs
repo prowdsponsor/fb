@@ -41,10 +41,15 @@ module Facebook
     , getUser
 
       -- * Facebook's Open Graph API
+      -- ** Actions
     , createAction
     , Action
+      -- ** Checkins
     , createCheckin
+      -- ** FQL
     , fqlQuery
+    , FQLResult(..)
+      -- ** Helpers
     , (#=)
     , SimpleType(..)
 

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, Rank2Types #-}
 
 import Control.Applicative
+import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
 import Data.Int (Int8, Int16, Int32)
@@ -22,7 +23,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
 import qualified Network.HTTP.Conduit as H
 
-import Test.HUnit ((@?=), assertFailure)
+import Test.HUnit ((@?=))
 import Test.Hspec.Monadic
 import Test.Hspec.QuickCheck
 import Test.Hspec.HUnit ()
@@ -147,14 +148,13 @@ facebookTests pretitle manager runAuth runNoAuth = do
   describe' "fqlQuery" $ do
     it "is able to query Facebook's page name from its page id" $
       runNoAuth $ do
-        A.Object obj <- FB.fqlQuery "SELECT name FROM page WHERE page_id = 20531316728" Nothing
-        let mr = flip A.parseMaybe () $ const r
-            r = do
-                  dataArray <- obj A..: "data"
-                  (head dataArray) A..: "name"
-        case mr of
-          Nothing -> liftIO $ assertFailure "Could not parse FQL query response."
-          Just r' -> r' &?= ("Facebook" :: Text)
+        r <- FB.fqlQuery "SELECT name FROM page WHERE page_id = 20531316728" Nothing
+        r &?= FB.FQLResult [PageName "Facebook"]
+
+newtype PageName = PageName Text deriving (Eq, Show)
+instance A.FromJSON PageName where
+  parseJSON (A.Object v) = PageName <$> (v A..: "name")
+  parseJSON _ = mzero
 
 
 libraryTests :: H.Manager -> Specs
