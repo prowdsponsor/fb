@@ -9,26 +9,35 @@ module Facebook.Auth
     , Permission
     , hasExpired
     , isValid
+    , parseSignedRequest
     ) where
 
 import Control.Applicative
-import Control.Monad (join)
+import Control.Monad (guard, join, liftM, mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Maybe (MaybeT(..))
+import Crypto.Classes (constTimeEq)
+import Crypto.Hash.SHA256 (SHA256)
+import Crypto.HMAC (hmac', MacKey(..))
 import Data.Aeson ((.:))
-import Data.Aeson.Types (parseEither)
+import Data.Aeson.Parser (json')
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime, UTCTime)
 import Data.String (IsString(..))
 
 import qualified Control.Exception.Lifted as E
+import qualified Data.Aeson as AE
+import qualified Data.Aeson.Types as AE
 import qualified Data.Attoparsec.Char8 as A
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.List as L
+import qualified Data.Serialize as Cereal
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TE
@@ -105,7 +114,7 @@ getUserAccessTokenStep2 redirectUrl query =
 
       -- Get user's ID throught Facebook's graph.
       userInfo <- asJson =<< fbhttp =<< fbreq "/me" (Just preToken) [("fields", "id")]
-      case (parseEither (.: "id") userInfo, preToken) of
+      case (AE.parseEither (.: "id") userInfo, preToken) of
         (Left str, _) ->
             E.throw $ FbLibraryException $ T.concat
                  [ "getUserAccessTokenStep2: failed to get the UserId ("
@@ -270,3 +279,42 @@ extendUserAccessToken token@(UserAccessToken _ data_ _)
           mkExc [ "the user access token has already expired, "
                 , "so I'll not try to extend it." ]
       mkExc = FbLibraryException . T.concat . ("extendUserAccessToken: ":)
+
+
+-- | Parses a Facebook signed request
+-- (<https://developers.facebook.com/docs/authentication/signed_request/>),
+-- verifies its authencity and integrity using the HMAC and
+-- decodes its JSON object.
+parseSignedRequest :: (AE.FromJSON a, Monad m) =>
+                      B8.ByteString -- ^ Encoded Facebook signed request
+                   -> FacebookT Auth m (Maybe a)
+parseSignedRequest signedRequest =
+  runMaybeT $ do
+    -- Split, decode and JSON-parse
+    let (encodedSignature, encodedUnparsedPayloadWithDot) = B8.break (== '.') signedRequest
+    ('.', encodedUnparsedPayload) <- MaybeT $ return (B8.uncons encodedUnparsedPayloadWithDot)
+    let signature       = Base64.decodeLenient encodedSignature
+        unparsedPayload = Base64.decodeLenient encodedUnparsedPayload
+    payload <- eitherToMaybeT $ A.parseOnly json' unparsedPayload
+
+    -- Verify signature
+    SignedRequestAlgorithm algo <- fromJson payload
+    guard (algo == "HMAC-SHA256")
+    hmacKey <- credsToHmacKey `liftM` lift getCreds
+    let expectedSignature = Cereal.encode $ hmac' hmacKey encodedUnparsedPayload
+    guard (signature `constTimeEq` expectedSignature)
+
+    -- Parse user data type
+    fromJson payload
+
+ where eitherToMaybeT :: Monad m => Either a b -> MaybeT m b
+       eitherToMaybeT = MaybeT . return . either (const Nothing) Just
+       fromJson :: (AE.FromJSON a, Monad m) => AE.Value -> MaybeT m a
+       fromJson = eitherToMaybeT . AE.parseEither AE.parseJSON
+       credsToHmacKey :: Credentials -> MacKey ctx SHA256
+       credsToHmacKey = MacKey . appSecret
+
+newtype SignedRequestAlgorithm = SignedRequestAlgorithm Text
+instance AE.FromJSON SignedRequestAlgorithm where
+  parseJSON (AE.Object v) = SignedRequestAlgorithm <$> v .: "algorithm"
+  parseJSON _             = mzero

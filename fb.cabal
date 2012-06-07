@@ -1,5 +1,5 @@
 name:              fb
-version:           0.9.3
+version:           0.9.4
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -67,8 +67,12 @@ library
     , attoparsec         >= 0.10    && < 0.11
     , attoparsec-conduit >= 0.4     && < 0.5
     , aeson              >= 0.5     && < 0.7
+    , base64-bytestring  >= 0.1.1   && < 0.2
     , time               >= 1.2     && < 1.5
     , old-locale
+    , cereal             == 0.3.*
+    , crypto-api         == 0.10.*
+    , cryptohash         == 0.7.*
   extensions:
     DeriveDataTypeable
     EmptyDataDecls

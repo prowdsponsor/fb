@@ -29,6 +29,8 @@ module Facebook
     , getUserAccessTokenStep2
     , getUserLogoutUrl
     , extendUserAccessToken
+      -- ** Signed requests
+    , parseSignedRequest
 
       -- * Facebook's Graph API Objects
       -- ** User

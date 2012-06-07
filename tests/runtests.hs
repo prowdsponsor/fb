@@ -92,7 +92,7 @@ main = H.withManager $ \manager -> liftIO $ do
                   (C.runResourceT . FB.beta_runNoAuthFacebookT manager)
 
     -- Tests that don't depend on which tier is chosen.
-    libraryTests
+    libraryTests manager
 
 facebookTests :: String
               -> H.Manager
@@ -156,9 +156,9 @@ facebookTests pretitle manager runAuth runNoAuth = do
           Nothing -> liftIO $ assertFailure "Could not parse FQL query response."
           Just r' -> r' &?= ("Facebook" :: Text)
 
-        
-libraryTests :: Specs
-libraryTests = do
+
+libraryTests :: H.Manager -> Specs
+libraryTests manager = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
 
@@ -205,6 +205,24 @@ libraryTests = do
           toId = FB.Id . B.pack . show
           j = abs i
       in FB.encodeFbParam (toId j) == FB.encodeFbParam j
+
+  describe "parseSignedRequest" $ do
+    let exampleSig, exampleData :: B.ByteString
+        exampleSig  = "vlXgu64BQGFSQrY0ZcJBZASMvYvTHu9GQ0YM9rjPSso"
+        exampleData = "eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsIjAiOiJwYXlsb2FkIn0"
+        exampleCreds = FB.Credentials "name" "id" "secret"
+        runExampleAuth :: FB.FacebookT FB.Auth (C.ResourceT IO) a -> IO a
+        runExampleAuth = C.runResourceT . FB.runFacebookT exampleCreds manager
+    it "works for Facebook example" $ do
+      runExampleAuth $ do
+        ret <- FB.parseSignedRequest (B.concat [exampleSig, ".", exampleData])
+        ret &?= Just (A.object [ "algorithm" A..= ("HMAC-SHA256" :: Text)
+                               , "0"         A..= ("payload"     :: Text)])
+    it "fails to parse the Facebook example when signature is corrupted" $ do
+      let corruptedSig = B.cons 'a' (B.tail exampleSig)
+      runExampleAuth $ do
+        ret <- FB.parseSignedRequest (B.concat [corruptedSig, ".", exampleData])
+        ret &?= (Nothing :: Maybe A.Value)
 
 
 -- Wrappers for HUnit operators using MonadIO
