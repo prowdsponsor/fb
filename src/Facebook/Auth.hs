@@ -266,7 +266,7 @@ isValid token = do
 extendUserAccessToken :: (MonadBaseControl IO m, C.MonadResource m) =>
                          UserAccessToken
                       -> FacebookT Auth m (Either FacebookException UserAccessToken)
-extendUserAccessToken token@(UserAccessToken _ data_ _)
+extendUserAccessToken token@(UserAccessToken uid data_ _)
     = do expired <- hasExpired token
          if expired then return (Left hasExpiredExc) else tryToExtend
     where
@@ -279,7 +279,9 @@ extendUserAccessToken token@(UserAccessToken _ data_ _)
         case eresponse of
           Right response -> do
             now <- liftIO getCurrentTime
-            return (Right $ userAccessTokenParser now response)
+            return (Right $ case userAccessTokenParser now response of
+                              UserAccessToken _ data' expires' ->
+                                UserAccessToken uid data' expires')
           Left exc -> return (Left exc)
 
       hasExpiredExc =
