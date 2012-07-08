@@ -62,7 +62,7 @@ getAppAccessToken =
              tsq creds [("grant_type", "client_credentials")]
     response <- fbhttp req
     lift $
-      H.responseBody response C.$$
+      H.responseBody response C.$$+-
       C.sinkParser (AppAccessToken <$  A.string "access_token="
                                    <*> A.takeByteString)
 

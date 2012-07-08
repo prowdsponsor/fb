@@ -79,10 +79,10 @@ instance ToSimpleQuery (AccessToken anyKind) where
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- JSON value.
 asJson :: (C.MonadThrow m, A.FromJSON a) =>
-          H.Response (C.Source m ByteString)
+          H.Response (C.ResumableSource m ByteString)
        -> FacebookT anyAuth m a
 asJson response = do
-  val <- lift $ H.responseBody response C.$$ C.sinkParser A.json'
+  val <- lift $ H.responseBody response C.$$+- C.sinkParser A.json'
   case A.fromJSON val of
     A.Success r -> return r
     A.Error str ->
@@ -94,9 +94,9 @@ asJson response = do
 
 -- | Converts a plain 'H.Response' into a string 'ByteString'.
 asBS :: (Monad m) =>
-        H.Response (C.Source m ByteString)
+        H.Response (C.ResumableSource m ByteString)
      -> FacebookT anyAuth m ByteString
-asBS response = lift $ H.responseBody response C.$$ fmap B.concat CL.consume
+asBS response = lift $ H.responseBody response C.$$+- fmap B.concat CL.consume
 
 
 -- | An exception that may be thrown by functions on this
@@ -123,7 +123,7 @@ instance E.Exception FacebookException where
 -- meaningful 'FacebookException'@s@.
 fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
           H.Request m
-       -> FacebookT anyAuth m (H.Response (C.Source m ByteString))
+       -> FacebookT anyAuth m (H.Response (C.ResumableSource m ByteString))
 fbhttp req = do
   manager <- getManager
   let req' = req { H.checkStatus = \_ _ -> Nothing }
