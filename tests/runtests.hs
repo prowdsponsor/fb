@@ -1,4 +1,6 @@
-{-# LANGUAGE OverloadedStrings, Rank2Types #-}
+{-# LANGUAGE OverloadedStrings
+           , Rank2Types
+           , ScopedTypeVariables #-}
 
 import Control.Applicative
 import Control.Monad (mzero)
