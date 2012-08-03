@@ -134,7 +134,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
             just x = Just (x :: Text)
         r &?= ( just "19292868552"
               , just "http://developers.facebook.com"
-              , just "Facebook Platform" )
+              , just "Facebook Developers" )
 
   describe' "getUser" $ do
     it "works for Zuckerberg" $ do
