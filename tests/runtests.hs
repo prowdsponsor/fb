@@ -82,7 +82,7 @@ invalidAppAccessToken = FB.AppAccessToken "invalid"
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
-  hspecX $ do
+  hspec $ do
     -- Run the tests twice, once in Facebook's production tier...
     facebookTests "Production tier: "
                   manager
@@ -101,7 +101,7 @@ facebookTests :: String
               -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   (C.ResourceT IO) a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth (C.ResourceT IO) a -> IO a)
-              -> Specs
+              -> Spec
 facebookTests pretitle manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
   describe' "getAppAccessToken" $ do
@@ -159,7 +159,7 @@ instance A.FromJSON PageName where
   parseJSON _ = mzero
 
 
-libraryTests :: H.Manager -> Specs
+libraryTests :: H.Manager -> Spec
 libraryTests manager = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
