@@ -147,6 +147,20 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.userLastName user   &?= Just "Zuckerberg"
         FB.userGender user     &?= Just FB.Male
 
+  describe' "getPage" $ do
+    it "works for FB Developers" $ do
+      runNoAuth $ do
+        page <- FB.getPage "19292868552" [] Nothing
+        FB.pageId page &?= "19292868552"
+        FB.pageName page &?= Just "Facebook Developers"
+        FB.pageCategory page &?= Just "Product/service"
+        FB.pageIsPublished page &?= Just True
+        FB.pageCanPost page &?= Nothing
+        FB.pagePhone page &?= Nothing
+        FB.pageCheckins page &?= Nothing
+        FB.pagePicture page &?= Just "http://profile.ak.fbcdn.net/hprofile-ak-ash2/276791_19292868552_1958181823_s.jpg"
+        FB.pageWebsite page &?= Just "http://developers.facebook.com"
+
   describe' "fqlQuery" $ do
     it "is able to query Facebook's page name from its page id" $
       runNoAuth $ do

@@ -39,6 +39,9 @@ module Facebook
     , Gender(..)
     , UserLocation(..)
     , getUser
+      -- ** Page
+    , Page(..)
+    , getPage
 
       -- * Facebook's Open Graph API
       -- ** Actions
@@ -71,5 +74,6 @@ import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph
+import Facebook.Object.Page
 import Facebook.Object.User
 import Facebook.OpenGraph

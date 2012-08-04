@@ -52,6 +52,7 @@ library
     Facebook.Auth
     Facebook.Graph
     Facebook.Object.User
+    Facebook.Object.Page
     Facebook.OpenGraph
   build-depends:
       base               >= 4       && < 5
