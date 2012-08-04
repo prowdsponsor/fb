@@ -5,6 +5,7 @@
 module Facebook.Object.Page
        ( Page(..)
        , getPage
+       , searchPages
        ) where
 
 import Control.Applicative
@@ -19,7 +20,7 @@ import Network.HTTP.Types (Ascii)
 
 import Facebook.Graph
 import Facebook.Monad
-import Facebook.Object.User
+import Facebook.Object.User (UserLocation)
 import Facebook.Types
 
 -- | A Facebook page (see
@@ -60,11 +61,19 @@ instance A.FromJSON Page where
   parseJSON _ = mzero
 
 
--- | Get a page using its ID.  The user access token is optional, but
--- when provided more information can be returned back by Facebook.
-getPage :: (C.MonadResource m, MonadBaseControl IO m) =>
-           Ascii                 -- ^ Page ID
-        -> [Argument]            -- ^ Arguments to be passed to Facebook.
-        -> Maybe UserAccessToken -- ^ Optional user access token.
+-- | Get a page using its ID. The user access token is optional.
+getPage :: (C.MonadResource m, MonadBaseControl IO m)
+        => Ascii                 -- ^ Page ID
+        -> [Argument]            -- ^ Arguments to be passed to Facebook
+        -> Maybe UserAccessToken -- ^ Optional user access token
         -> FacebookT anyAuth m Page
-getPage id_ = getObject ("/" <> id_)
+getPage id_ = getObject $ "/" <> id_
+
+
+-- | Search pages by keyword. The user access token is optional.
+searchPages :: (C.MonadResource m, MonadBaseControl IO m)
+            => Ascii                 -- ^ Keyword to search for
+            -> [Argument]            -- ^ Arguments to pass to Facebook
+            -> Maybe UserAccessToken -- ^ Optional user access token
+            -> FacebookT anyAuth m (SearchResultPage Page)
+searchPages = searchObjects "page"

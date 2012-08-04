@@ -39,9 +39,11 @@ module Facebook
     , Gender(..)
     , UserLocation(..)
     , getUser
+    , searchUsers
       -- ** Page
     , Page(..)
     , getPage
+    , searchPages
 
       -- * Facebook's Open Graph API
       -- ** Actions
@@ -59,6 +61,7 @@ module Facebook
       -- * Raw access to the Graph API
     , getObject
     , postObject
+    , searchObjects
     , Id(..)
     , Argument
 

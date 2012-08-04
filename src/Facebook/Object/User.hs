@@ -4,6 +4,7 @@ module Facebook.Object.User
     , Gender(..)
     , UserLocation(..)
     , getUser
+    , searchUsers
     ) where
 
 import Control.Applicative
@@ -13,6 +14,7 @@ import Data.Aeson ((.:), (.:?))
 -- import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
+import Network.HTTP.Types (Ascii)
 
 -- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
@@ -103,3 +105,12 @@ getUser :: (C.MonadResource m, MonadBaseControl IO m) =>
         -> Maybe UserAccessToken -- ^ Optional user access token.
         -> FacebookT anyAuth m User
 getUser id_ query mtoken = getObject ("/" <> id_) query mtoken
+
+
+-- | Search users by keyword.
+searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
+            => Ascii
+            -> [Argument]
+            -> Maybe UserAccessToken
+            -> FacebookT anyAuth m (SearchResultPage User)
+searchUsers = searchObjects "user"
