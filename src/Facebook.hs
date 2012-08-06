@@ -61,9 +61,10 @@ module Facebook
       -- * Raw access to the Graph API
     , getObject
     , postObject
-    , searchObjects
     , Id(..)
     , Argument
+    , searchObjects
+    , SearchResultPage(..)
 
       -- * Exceptions
     , FacebookException(..)
