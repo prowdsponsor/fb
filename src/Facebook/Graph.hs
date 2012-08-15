@@ -5,7 +5,6 @@ module Facebook.Graph
     , Id(..)
     , searchObjects
     , SearchResultPage(..)
-    , Pager(..)
     ) where
 
 
@@ -76,6 +75,9 @@ searchObjects objectType keyword query = getObject "/search" query'
   where query' = ("q", keyword) : ("type", objectType) : query
 
 
+-- | The result object for searchObjects. The type parameter is
+-- expected to be an instance of A.FromJSON, but nothing has been done
+-- to assure that Facebook will return the type expected.
 data SearchResultPage a = SearchResultPage
                           { searchResults :: [a]
                           , searchPage :: Maybe Pager
@@ -88,6 +90,9 @@ instance (A.FromJSON a) => A.FromJSON (SearchResultPage a) where
   parseJSON _ = mzero
 
 
+-- | Simply wraps potential links for previous and next pages within a
+-- search result set.  TODO: Replace with a type that encapsulates the
+-- paging requests instead of just their URLs?
 data Pager = Pager { previousPage :: Maybe Ascii
                    , nextPage :: Maybe Ascii
                    } deriving (Eq, Ord, Show, Read, Typeable)
