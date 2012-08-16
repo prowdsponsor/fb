@@ -12,11 +12,11 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))
+import Data.ByteString.Char8 (ByteString)
 import qualified Data.Aeson as A
 import qualified Data.Conduit as C
 import Data.Text (Text)
 import Data.Typeable (Typeable)
-import Network.HTTP.Types (Ascii)
 
 import Facebook.Graph
 import Facebook.Monad
@@ -28,9 +28,9 @@ import Facebook.Types
 --
 -- /NOTE:/ Does not yet support all fields. Please file an issue if
 -- you need any other fields.
-data Page = Page { pageId                :: Ascii
+data Page = Page { pageId                :: ByteString
                  , pageName              :: Maybe Text
-                 , pageLink              :: Maybe Ascii
+                 , pageLink              :: Maybe ByteString
                  , pageCategory          :: Maybe Text
                  , pageIsPublished       :: Maybe Bool
                  , pageCanPost           :: Maybe Bool
@@ -38,8 +38,8 @@ data Page = Page { pageId                :: Ascii
                  , pageLocation          :: Maybe UserLocation
                  , pagePhone             :: Maybe Text
                  , pageCheckins          :: Maybe Integer
-                 , pagePicture           :: Maybe Ascii
-                 , pageWebsite           :: Maybe Ascii
+                 , pagePicture           :: Maybe ByteString
+                 , pageWebsite           :: Maybe ByteString
                  , pageTalkingAboutCount :: Maybe Integer
                  } deriving (Eq, Ord, Show, Read, Typeable)
 
@@ -63,7 +63,7 @@ instance A.FromJSON Page where
 
 -- | Get a page using its ID. The user access token is optional.
 getPage :: (C.MonadResource m, MonadBaseControl IO m)
-        => Ascii                 -- ^ Page ID
+        => ByteString            -- ^ Page ID
         -> [Argument]            -- ^ Arguments to be passed to Facebook
         -> Maybe UserAccessToken -- ^ Optional user access token
         -> FacebookT anyAuth m Page
@@ -72,7 +72,7 @@ getPage id_ = getObject $ "/" <> id_
 
 -- | Search pages by keyword. The user access token is optional.
 searchPages :: (C.MonadResource m, MonadBaseControl IO m)
-            => Ascii                 -- ^ Keyword to search for
+            => ByteString            -- ^ Keyword to search for
             -> [Argument]            -- ^ Arguments to pass to Facebook
             -> Maybe UserAccessToken -- ^ Optional user access token
             -> FacebookT anyAuth m (SearchResultPage Page)

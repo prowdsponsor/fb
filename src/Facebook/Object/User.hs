@@ -11,10 +11,9 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))
--- import Data.ByteString.Char8 (ByteString)
+import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
-import Network.HTTP.Types (Ascii)
 
 -- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
@@ -109,7 +108,7 @@ getUser id_ query mtoken = getObject ("/" <> id_) query mtoken
 
 -- | Search users by keyword.
 searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
-            => Ascii
+            => ByteString
             -> [Argument]
             -> Maybe UserAccessToken
             -> FacebookT anyAuth m (SearchResultPage User)

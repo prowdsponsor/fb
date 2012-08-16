@@ -13,7 +13,7 @@ import Control.Applicative ((<$>))
 import Control.Arrow (first)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad (mzero)
--- import Data.ByteString.Char8 (ByteString)
+import Data.ByteString.Char8 (ByteString)
 import Data.Function (on)
 import Data.List (intersperse)
 import Data.Text (Text)
@@ -23,7 +23,6 @@ import Data.Text.Lazy.Builder (toLazyText)
 import Data.Int (Int8, Int16, Int32)
 import Data.Word (Word8, Word16, Word32, Word)
 import Data.String (IsString(..))
-import Network.HTTP.Types (Ascii)
 import System.Locale (defaultTimeLocale)
 
 -- import qualified Control.Exception.Lifted as E
@@ -63,7 +62,7 @@ createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  let post :: (C.MonadResource m, MonadBaseControl IO m)  => Ascii -> AccessToken anyKind -> FacebookT Auth m Id
+  let post :: (C.MonadResource m, MonadBaseControl IO m)  => ByteString -> AccessToken anyKind -> FacebookT Auth m Id
       post prepath = postObject (prepath <> appName creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken
@@ -75,7 +74,7 @@ createAction (Action action) query mapptoken usertoken = do
 -- <https://developers.facebook.com/docs/opengraph/keyconcepts/#actions-objects>
 -- to see how you can create actions.
 --
--- This is a @newtype@ of 'Ascii' that supports only 'IsString'.
+-- This is a @newtype@ of 'ByteString' that supports only 'IsString'.
 -- This means that to create an 'Action' you should use the
 -- @OverloadedStrings@ language extension.  For example,
 --
@@ -84,7 +83,7 @@ createAction (Action action) query mapptoken usertoken = do
 -- > foo token = do
 -- >   ...
 -- >   createAction "cook" [...] token
-newtype Action = Action { unAction :: Ascii }
+newtype Action = Action { unAction :: ByteString }
 
 instance Show Action where
     show = show . unAction
@@ -158,7 +157,7 @@ instance A.FromJSON a => A.FromJSON (FQLResult a) where
 
 -- | Create an 'Argument' with a 'SimpleType'.  See the docs on
 -- 'createAction' for an example.
-(#=) :: SimpleType a => Ascii -> a -> Argument
+(#=) :: SimpleType a => ByteString -> a -> Argument
 p #= v = (p, encodeFbParam v)
 
 

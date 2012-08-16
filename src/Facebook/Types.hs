@@ -19,15 +19,14 @@ import Data.ByteString (ByteString)
 import Data.Monoid (Monoid, mappend)
 import Data.Time (UTCTime)
 import Data.Typeable (Typeable, Typeable1)
-import Network.HTTP.Types (Ascii)
 
 
 -- | Credentials that you get for your app when you register on
 -- Facebook.
 data Credentials =
-    Credentials { appName   :: Ascii -- ^ Your application name (e.g. for OpenGraph calls).
-                , appId     :: Ascii -- ^ Your application ID.
-                , appSecret :: Ascii -- ^ Your application secret key.
+    Credentials { appName   :: ByteString -- ^ Your application name (e.g. for OpenGraph calls).
+                , appId     :: ByteString -- ^ Your application ID.
+                , appSecret :: ByteString -- ^ Your application secret key.
                 }
     deriving (Eq, Ord, Show, Read, Typeable)
 
@@ -67,10 +66,10 @@ deriving instance Typeable1 AccessToken
 
 -- | The access token data that is passed to Facebook's API
 -- calls.
-type AccessTokenData = Ascii
+type AccessTokenData = ByteString
 
 -- | A Facebook user id such as @1008905713901@.
-type UserId = Ascii
+type UserId = ByteString
 
 -- | Get the access token data.
 accessTokenData :: AccessToken anyKind -> AccessTokenData
