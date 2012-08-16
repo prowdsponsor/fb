@@ -39,6 +39,11 @@ module Facebook
     , Gender(..)
     , UserLocation(..)
     , getUser
+    , searchUsers
+      -- ** Page
+    , Page(..)
+    , getPage
+    , searchPages
 
       -- * Facebook's Open Graph API
       -- ** Actions
@@ -58,6 +63,8 @@ module Facebook
     , postObject
     , Id(..)
     , Argument
+    , searchObjects
+    , SearchResultPage(..)
 
       -- * Exceptions
     , FacebookException(..)
@@ -71,5 +78,6 @@ import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
 import Facebook.Graph
+import Facebook.Object.Page
 import Facebook.Object.User
 import Facebook.OpenGraph

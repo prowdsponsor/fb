@@ -1,4 +1,6 @@
-{-# LANGUAGE OverloadedStrings, Rank2Types #-}
+{-# LANGUAGE OverloadedStrings
+           , Rank2Types
+           , ScopedTypeVariables #-}
 
 import Control.Applicative
 import Control.Monad (mzero)
@@ -80,7 +82,7 @@ invalidAppAccessToken = FB.AppAccessToken "invalid"
 main :: IO ()
 main = H.withManager $ \manager -> liftIO $ do
   creds <- getCredentials
-  hspecX $ do
+  hspec $ do
     -- Run the tests twice, once in Facebook's production tier...
     facebookTests "Production tier: "
                   manager
@@ -99,7 +101,7 @@ facebookTests :: String
               -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   (C.ResourceT IO) a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth (C.ResourceT IO) a -> IO a)
-              -> Specs
+              -> Spec
 facebookTests pretitle manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
   describe' "getAppAccessToken" $ do
@@ -132,7 +134,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
             just x = Just (x :: Text)
         r &?= ( just "19292868552"
               , just "http://developers.facebook.com"
-              , just "Facebook Platform" )
+              , just "Facebook Developers" )
 
   describe' "getUser" $ do
     it "works for Zuckerberg" $ do
@@ -144,6 +146,20 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.userMiddleName user &?= Nothing
         FB.userLastName user   &?= Just "Zuckerberg"
         FB.userGender user     &?= Just FB.Male
+
+  describe' "getPage" $ do
+    it "works for FB Developers" $ do
+      runNoAuth $ do
+        page <- FB.getPage "19292868552" [] Nothing
+        FB.pageId page &?= "19292868552"
+        FB.pageName page &?= Just "Facebook Developers"
+        FB.pageCategory page &?= Just "Product/service"
+        FB.pageIsPublished page &?= Just True
+        FB.pageCanPost page &?= Nothing
+        FB.pagePhone page &?= Nothing
+        FB.pageCheckins page &?= Nothing
+        FB.pagePicture page &?= Just "http://profile.ak.fbcdn.net/hprofile-ak-ash2/276791_19292868552_1958181823_s.jpg"
+        FB.pageWebsite page &?= Just "http://developers.facebook.com"
 
   describe' "fqlQuery" $ do
     it "is able to query Facebook's page name from its page id" $
@@ -157,7 +173,7 @@ instance A.FromJSON PageName where
   parseJSON _ = mzero
 
 
-libraryTests :: H.Manager -> Specs
+libraryTests :: H.Manager -> Spec
 libraryTests manager = do
   describe "SimpleType" $ do
     it "works for Bool" $ (map FB.encodeFbParam [True, False]) @?= ["1", "0"]
