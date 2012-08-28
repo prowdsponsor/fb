@@ -28,8 +28,7 @@ import Facebook.Monad
 import Facebook.Base
 
 
--- | Make a raw @GET@ request to Facebook's Graph API.  Returns a
--- raw JSON 'A.Value'.
+-- | Make a raw @GET@ request to Facebook's Graph API.
 getObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              ByteString     -- ^ Path (should begin with a slash @\/@)
           -> [Argument]     -- ^ Arguments to be passed to Facebook
@@ -40,8 +39,7 @@ getObject path query mtoken =
     asJson =<< fbhttp =<< fbreq path mtoken query
 
 
--- | Make a raw @POST@ request to Facebook's Graph API.  Returns
--- a raw JSON 'A.Value'.
+-- | Make a raw @POST@ request to Facebook's Graph API.
 postObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
               ByteString          -- ^ Path (should begin with a slash @\/@)
            -> [Argument]          -- ^ Arguments to be passed to Facebook
