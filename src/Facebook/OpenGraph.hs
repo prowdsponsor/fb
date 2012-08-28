@@ -219,6 +219,9 @@ instance SimpleType Word32 where
 -- | Facebook's simple type @String@.
 instance SimpleType Text where
     encodeFbParam = TE.encodeUtf8
+-- | Facebook's simple type @String@.
+instance SimpleType ByteString where
+    encodeFbParam = id
 
 -- | An object's 'Id' code.
 instance SimpleType Id where

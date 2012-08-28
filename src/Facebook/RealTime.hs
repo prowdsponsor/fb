@@ -1,0 +1,178 @@
+{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+module Facebook.RealTime
+    ( RealTimeUpdateObject(..)
+    , RealTimeUpdateField
+    , RealTimeUpdateUrl
+    , RealTimeUpdateToken
+    , modifySubscription
+    , RealTimeUpdateSubscription(..)
+    , listSubscriptions
+    , RealTimeUpdateNotification(..)
+    , RealTimeUpdateNotificationUserEntry(..)
+    ) where
+
+import Control.Applicative ((<$>), (<*>))
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad (mzero)
+import Data.ByteString.Char8 (ByteString)
+import Data.Text (Text)
+import Data.Typeable (Typeable)
+
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Char8 as B
+import qualified Data.Conduit as C
+import qualified Data.Text.Encoding as TE
+
+import Facebook.Types
+import Facebook.Monad
+import Facebook.Graph
+import Facebook.OpenGraph
+
+
+-- | The type of objects that a real-time update refers to.
+data RealTimeUpdateObject =
+    UserRTUO
+  | PermissionsRTUO
+  | PageRTUO
+  | ErrorsRTUO
+  | OtherRTUO Text
+    deriving (Eq, Ord, Show, Typeable)
+
+rtuoToBS :: RealTimeUpdateObject -> ByteString
+rtuoToBS (UserRTUO)        = "user"
+rtuoToBS (PermissionsRTUO) = "permissions"
+rtuoToBS (PageRTUO)        = "page"
+rtuoToBS (ErrorsRTUO)      = "errors"
+rtuoToBS (OtherRTUO other) = TE.encodeUtf8 other
+
+instance A.FromJSON RealTimeUpdateObject where
+  parseJSON (A.String "user")        = return UserRTUO
+  parseJSON (A.String "permissions") = return PermissionsRTUO
+  parseJSON (A.String "page")        = return PageRTUO
+  parseJSON (A.String "errors")      = return ErrorsRTUO
+  parseJSON (A.String other)         = return (OtherRTUO other)
+  parseJSON _ = mzero
+
+instance A.ToJSON RealTimeUpdateObject where
+  toJSON = A.String . TE.decodeUtf8 . rtuoToBS
+
+
+-- | A field of a 'RealTimeUpdateObject' that you would like to
+-- receive notifications when changed.
+type RealTimeUpdateField = ByteString
+
+
+-- | The URL on your server that will receive the real-time
+-- updates.  Please refer to Facebook's documentation in order to
+-- see what this URL needs to implement.
+type RealTimeUpdateUrl = Text
+
+
+-- | A token that is sent back by Facebook's servers to your
+-- server in order to verify that you really were trying to
+-- modify your subscription.
+type RealTimeUpdateToken = ByteString
+
+
+-- | Add or modify a subscription for real-time updates.  If
+-- there were no previous subscriptions for the given
+-- 'RealTimeUpdateObject', then a new subscription is created.
+-- If there was any previous subscription for the given
+-- 'RealTimeUpdateObject', it's overriden by this one (even if
+-- the other subscription had a different callback URL).
+modifySubscription :: (C.MonadResource m, MonadBaseControl IO m) =>
+                      RealTimeUpdateObject
+                      -- ^ Type of objects whose subscription you
+                      -- and to add or modify.
+                   -> [RealTimeUpdateField]
+                      -- ^ Fields that you are interested in
+                      -- receiving updates.
+                   -> RealTimeUpdateUrl
+                      -- ^ Your callback URL.
+                   -> RealTimeUpdateToken
+                      -- ^ A verification token.
+                   -> AppAccessToken
+                      -- ^ Access token for your app.
+                   -> FacebookT Auth m ()
+modifySubscription object fields callbackUrl verifyToken apptoken = do
+  path <- getSubscriptionsPath
+  let args = [ "object"       #= rtuoToBS object
+             , "fields"       #= fields
+             , "callback_url" #= callbackUrl
+             , "verify_token" #= verifyToken
+             ]
+  postObject path args apptoken
+
+
+-- | (Internal)  Get the subscription's path.
+getSubscriptionsPath :: Monad m => FacebookT Auth m ByteString
+getSubscriptionsPath = do
+  creds <- getCreds
+  return $ B.concat ["/", appId creds, "/subscriptions"]
+
+
+-- | Information returned by Facebook about a real-time update
+-- notification subscription.
+data RealTimeUpdateSubscription =
+  RealTimeUpdateSubscription {
+    rtusObject      :: RealTimeUpdateObject
+  , rtusCallbackUrl :: RealTimeUpdateUrl
+  , rtusFields      :: [RealTimeUpdateField]
+  , rtusActive      :: Bool
+  } deriving (Eq, Ord, Show, Typeable)
+
+instance A.FromJSON RealTimeUpdateSubscription where
+  parseJSON (A.Object v) =
+    RealTimeUpdateSubscription
+      <$> v A..: "object"
+      <*> v A..: "callback_url"
+      <*> v A..: "fields"
+      <*> v A..: "active"
+  parseJSON _ = mzero
+
+
+-- | List current real-time update subscriptions.
+listSubscriptions :: FacebookT Auth m [RealTimeUpdateSubscription]
+listSubscriptions = undefined
+
+
+-- | When data changes and there's a valid subscription, Facebook
+-- will @POST@ to your 'RealTimeUpdateUrl' with a JSON-encoded
+-- object containing the notifications.  A
+-- 'RealTimeUpdateNotification a' represents such object where
+-- 'a' is type of the entries (e.g.,
+-- 'RealTimeUpdateNotificationUserEntry').
+--
+-- If you have a single 'RealTimeUpdateUrl' for different kinds
+-- of notifications, you may parse a @RealTimeUpdateNotification
+-- 'A.Value'@ and then manually parse the 'A.Value' depending on
+-- the value of 'rtunObject'.
+data RealTimeUpdateNotification a =
+  RealTimeUpdateNotification {
+    rtunObject  :: RealTimeUpdateObject
+  , rtunEntries :: [a]
+  } deriving (Eq, Ord, Show, Typeable)
+
+instance A.FromJSON a => A.FromJSON (RealTimeUpdateNotification a) where
+  parseJSON (A.Object v) =
+    RealTimeUpdateNotification
+      <$> v A..: "object"
+      <*> v A..: "entry"
+  parseJSON _ = mzero
+
+
+-- | A notification for the 'UserRTUO' object.
+data RealTimeUpdateNotificationUserEntry =
+  RealTimeUpdateNotificationUserEntry {
+    rtuneUserId        :: Id
+  , rtuneChangedFields :: [RealTimeUpdateField]
+  , rtuneTime          :: Integer
+  } deriving (Eq, Ord, Show, Typeable)
+
+instance A.FromJSON RealTimeUpdateNotificationUserEntry where
+  parseJSON (A.Object v) =
+    RealTimeUpdateNotificationUserEntry
+      <$> v A..: "uid"
+      <*> v A..: "changed_fields"
+      <*> v A..: "time"
+  parseJSON _ = mzero

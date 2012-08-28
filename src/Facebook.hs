@@ -58,6 +58,19 @@ module Facebook
     , (#=)
     , SimpleType(..)
 
+      -- * Real-time update notifications
+      -- ** Subscriptions
+    , modifySubscription
+    , listSubscriptions
+    , RealTimeUpdateObject(..)
+    , RealTimeUpdateField
+    , RealTimeUpdateUrl
+    , RealTimeUpdateToken
+    , RealTimeUpdateSubscription(..)
+      -- ** Notifications
+    , RealTimeUpdateNotification(..)
+    , RealTimeUpdateNotificationUserEntry(..)
+
       -- * Raw access to the Graph API
     , getObject
     , postObject
@@ -81,3 +94,4 @@ import Facebook.Graph
 import Facebook.Object.Page
 import Facebook.Object.User
 import Facebook.OpenGraph
+import Facebook.RealTime
