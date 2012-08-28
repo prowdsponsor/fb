@@ -144,7 +144,8 @@ listSubscriptions ::
   AppAccessToken -> FacebookT Auth m [RealTimeUpdateSubscription]
 listSubscriptions apptoken = do
   path <- getSubscriptionsPath
-  getObject path [] (Just apptoken)
+  FQLResult ret <- getObject path [] (Just apptoken)
+  return ret
 
 
 -- | Verifies the input's authenticity (i.e. it comes from

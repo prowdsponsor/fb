@@ -167,6 +167,13 @@ facebookTests pretitle manager runAuth runNoAuth = do
         r <- FB.fqlQuery "SELECT name FROM page WHERE page_id = 20531316728" Nothing
         r &?= FB.FQLResult [PageName "Facebook"]
 
+  describe' "listSubscriptions" $ do
+    it "returns something" $ do
+      runAuth $ do
+        token <- FB.getAppAccessToken
+        val   <- FB.listSubscriptions token
+        length val `seq` return ()
+
 newtype PageName = PageName Text deriving (Eq, Show)
 instance A.FromJSON PageName where
   parseJSON (A.Object v) = PageName <$> (v A..: "name")
