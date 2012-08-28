@@ -68,6 +68,8 @@ module Facebook
     , RealTimeUpdateToken
     , RealTimeUpdateSubscription(..)
       -- ** Notifications
+    , verifyRealTimeUpdateNotifications
+    , getRealTimeUpdateNotifications
     , RealTimeUpdateNotification(..)
     , RealTimeUpdateNotificationUserEntry(..)
 

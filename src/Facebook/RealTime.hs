@@ -7,19 +7,26 @@ module Facebook.RealTime
     , modifySubscription
     , RealTimeUpdateSubscription(..)
     , listSubscriptions
+    , verifyRealTimeUpdateNotifications
+    , getRealTimeUpdateNotifications
     , RealTimeUpdateNotification(..)
     , RealTimeUpdateNotificationUserEntry(..)
     ) where
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad (mzero)
+import Control.Monad (liftM, mzero)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
+import qualified Crypto.Classes as Crypto
+import qualified Crypto.HMAC as Crypto
+import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Conduit as C
 import qualified Data.Text.Encoding as TE
 
@@ -136,6 +143,45 @@ listSubscriptions :: FacebookT Auth m [RealTimeUpdateSubscription]
 listSubscriptions = undefined
 
 
+-- | Verifies the input's authenticity (i.e. it comes from
+-- Facebook) and integrity by calculating its HMAC-SHA1 (using
+-- your application secret as the key) and verifying that it
+-- matches the value from the HTTP request's @X-Hub-Signature@
+-- header's value.  If it's not valid, @Nothing@ is returned,
+-- other @Just data@ is returned where @data@ is the original
+-- data.
+verifyRealTimeUpdateNotifications ::
+     Monad m =>
+     ByteString
+     -- ^ @X-Hub-Signature@ HTTP header's value.
+  -> L.ByteString
+     -- ^ Request body with JSON-encoded notifications.
+  -> FacebookT Auth m (Maybe L.ByteString)
+verifyRealTimeUpdateNotifications sig body = do
+  creds <- getCreds
+  let key :: Crypto.MacKey SHA1.Ctx SHA1.SHA1
+      key = Crypto.MacKey (appSecret creds)
+      hash = Crypto.hmac key body
+      expected = "sha1=" <> Base16.encode (Crypto.encode hash)
+  return $! if sig `Crypto.constTimeEq` expected then Just body else Nothing
+
+
+-- | Same as 'verifyRealTimeUpdateNotifications' but also parses
+-- the response as JSON.  Returns @Nothing@ if either the
+-- signature is invalid or the data can't be parsed (use
+-- 'verifyRealTimeUpdateNotifications' if you need to distinguish
+-- between these two error conditions).
+getRealTimeUpdateNotifications ::
+     (Monad m, A.FromJSON a) =>
+     ByteString
+     -- ^ @X-Hub-Signature@ HTTP header's value.
+  -> L.ByteString
+     -- ^ Request body with JSON-encoded notifications.
+  -> FacebookT Auth m (Maybe (RealTimeUpdateNotification a))
+getRealTimeUpdateNotifications =
+  (liftM (>>= A.decode) .) . verifyRealTimeUpdateNotifications
+
+
 -- | When data changes and there's a valid subscription, Facebook
 -- will @POST@ to your 'RealTimeUpdateUrl' with a JSON-encoded
 -- object containing the notifications.  A
@@ -147,6 +193,8 @@ listSubscriptions = undefined
 -- of notifications, you may parse a @RealTimeUpdateNotification
 -- 'A.Value'@ and then manually parse the 'A.Value' depending on
 -- the value of 'rtunObject'.
+--
+-- We recommend using 'getRealTimeUpdateNotifications'.
 data RealTimeUpdateNotification a =
   RealTimeUpdateNotification {
     rtunObject  :: RealTimeUpdateObject
