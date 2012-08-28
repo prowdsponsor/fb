@@ -153,7 +153,7 @@ listSubscriptions apptoken = do
 -- your application secret as the key) and verifying that it
 -- matches the value from the HTTP request's @X-Hub-Signature@
 -- header's value.  If it's not valid, @Nothing@ is returned,
--- other @Just data@ is returned where @data@ is the original
+-- otherwise @Just data@ is returned where @data@ is the original
 -- data.
 verifyRealTimeUpdateNotifications ::
      Monad m =>
