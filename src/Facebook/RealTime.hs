@@ -139,8 +139,12 @@ instance A.FromJSON RealTimeUpdateSubscription where
 
 
 -- | List current real-time update subscriptions.
-listSubscriptions :: FacebookT Auth m [RealTimeUpdateSubscription]
-listSubscriptions = undefined
+listSubscriptions ::
+  (C.MonadResource m, MonadBaseControl IO m) =>
+  AppAccessToken -> FacebookT Auth m [RealTimeUpdateSubscription]
+listSubscriptions apptoken = do
+  path <- getSubscriptionsPath
+  getObject path [] (Just apptoken)
 
 
 -- | Verifies the input's authenticity (i.e. it comes from
