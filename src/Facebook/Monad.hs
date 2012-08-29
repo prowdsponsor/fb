@@ -13,6 +13,7 @@ module Facebook.Monad
     , getTier
     , withTier
     , runResourceInFb
+    , mapFacebookT
 
       -- * Re-export
     , lift
@@ -27,7 +28,7 @@ import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
                                    , defaultRestoreM )
-import Control.Monad.Trans.Reader (ReaderT(..), ask)
+import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Typeable (Typeable)
 
 import qualified Data.Conduit as C
@@ -131,3 +132,8 @@ runResourceInFb :: (C.MonadResource m, MonadBaseControl IO m) =>
                    FacebookT anyAuth (C.ResourceT m) a
                 -> FacebookT anyAuth m a
 runResourceInFb (F inner) = F $ ask >>= lift . C.runResourceT . runReaderT inner
+
+
+-- | Transform the computation inside a 'FacebookT'.
+mapFacebookT :: (m a -> n b) -> FacebookT anyAuth m a -> FacebookT anyAuth n b
+mapFacebookT f = F . mapReaderT f . unF
