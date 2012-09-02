@@ -15,7 +15,7 @@ module Facebook.RealTime
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad (liftM, mzero)
+import Control.Monad (liftM, mzero, void)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
@@ -29,9 +29,12 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Conduit as C
 import qualified Data.Text.Encoding as TE
+import qualified Network.HTTP.Conduit as H
+import qualified Network.HTTP.Types as HT
 
 import Facebook.Types
 import Facebook.Monad
+import Facebook.Base
 import Facebook.Graph
 import Facebook.OpenGraph
 
@@ -108,7 +111,10 @@ modifySubscription object fields callbackUrl verifyToken apptoken = do
              , "callback_url" #= callbackUrl
              , "verify_token" #= verifyToken
              ]
-  postObject path args apptoken
+  runResourceInFb $ do
+    req <- fbreq path (Just apptoken) args
+    void $ fbhttp req { H.method = HT.methodPost }
+  return ()
 
 
 -- | (Internal)  Get the subscription's path.
