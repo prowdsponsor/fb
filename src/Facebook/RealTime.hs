@@ -28,6 +28,7 @@ import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Conduit as C
+import qualified Data.Conduit.List as CL
 import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
@@ -150,8 +151,9 @@ listSubscriptions ::
   AppAccessToken -> FacebookT Auth m [RealTimeUpdateSubscription]
 listSubscriptions apptoken = do
   path <- getSubscriptionsPath
-  FQLResult ret <- getObject path [] (Just apptoken)
-  return ret
+  pager <- getObject path [] (Just apptoken)
+  src <- fetchAllNextPages pager
+  lift $ src C.$$ CL.consume
 
 
 -- | Verifies the input's authenticity (i.e. it comes from

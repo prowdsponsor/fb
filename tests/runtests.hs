@@ -165,7 +165,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
     it "is able to query Facebook's page name from its page id" $
       runNoAuth $ do
         r <- FB.fqlQuery "SELECT name FROM page WHERE page_id = 20531316728" Nothing
-        r &?= FB.FQLResult [PageName "Facebook"]
+        FB.pagerData r &?= [PageName "Facebook"]
 
   describe' "listSubscriptions" $ do
     it "returns something" $ do

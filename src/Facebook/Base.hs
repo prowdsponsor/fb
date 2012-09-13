@@ -6,6 +6,7 @@ module Facebook.Base
     , asBS
     , FacebookException(..)
     , fbhttp
+    , fbhttpHelper
     , httpCheck
     ) where
 
@@ -16,6 +17,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 
 import qualified Control.Exception.Lifted as E
+import Control.Monad.Trans.Class (MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
@@ -78,11 +80,16 @@ instance ToSimpleQuery (AccessToken anyKind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- JSON value.
-asJson :: (C.MonadThrow m, A.FromJSON a) =>
+asJson :: (MonadTrans t, C.MonadThrow m, A.FromJSON a) =>
           H.Response (C.ResumableSource m ByteString)
-       -> FacebookT anyAuth m a
-asJson response = do
-  val <- lift $ H.responseBody response C.$$+- C.sinkParser A.json'
+       -> t m a
+asJson = lift . asJsonHelper
+
+asJsonHelper :: (C.MonadThrow m, A.FromJSON a) =>
+                H.Response (C.ResumableSource m ByteString)
+             -> m a
+asJsonHelper response = do
+  val <- H.responseBody response C.$$+- C.sinkParser A.json'
   case A.fromJSON val of
     A.Success r -> return r
     A.Error str ->
@@ -126,11 +133,18 @@ fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
        -> FacebookT anyAuth m (H.Response (C.ResumableSource m ByteString))
 fbhttp req = do
   manager <- getManager
+  lift (fbhttpHelper manager req)
+
+fbhttpHelper :: (MonadBaseControl IO m, C.MonadResource m) =>
+                H.Manager
+             -> H.Request m
+             -> m (H.Response (C.ResumableSource m ByteString))
+fbhttpHelper manager req = do
   let req' = req { H.checkStatus = \_ _ -> Nothing }
 #if DEBUG
   _ <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s\n" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
 #endif
-  response@(H.Response status _ headers _) <- lift (H.http req' manager)
+  response@(H.Response status _ headers _) <- H.http req' manager
 #if DEBUG
   _ <- liftIO $ printf "fbhttp response status: %s\n" (show status)
 #endif
@@ -138,7 +152,7 @@ fbhttp req = do
     then return response
     else do
       let statusexc = H.StatusCodeException status headers
-      val <- E.try $ asJson response
+      val <- E.try $ asJsonHelper response
       case val :: Either E.SomeException FacebookException of
         Right fbexc -> E.throw fbexc
         Left _ -> do

@@ -45,6 +45,10 @@ module Facebook
     , Page(..)
     , getPage
     , searchPages
+      -- ** Pagination
+    , Pager(..)
+    , fetchNextPage
+    , fetchPreviousPage
 
       -- * Facebook's Open Graph API
       -- ** Actions
@@ -54,7 +58,6 @@ module Facebook
     , createCheckin
       -- ** FQL
     , fqlQuery
-    , FQLResult(..)
       -- ** Helpers
     , (#=)
     , SimpleType(..)
@@ -80,7 +83,6 @@ module Facebook
     , Id(..)
     , Argument
     , searchObjects
-    , SearchResultPage(..)
 
       -- * Exceptions
     , FacebookException(..)

@@ -75,5 +75,5 @@ searchPages :: (C.MonadResource m, MonadBaseControl IO m)
             => ByteString            -- ^ Keyword to search for
             -> [Argument]            -- ^ Arguments to pass to Facebook
             -> Maybe UserAccessToken -- ^ Optional user access token
-            -> FacebookT anyAuth m (SearchResultPage Page)
+            -> FacebookT anyAuth m (Pager Page)
 searchPages = searchObjects "page"

@@ -4,15 +4,13 @@ module Facebook.OpenGraph
     , Action(..)
     , createCheckin
     , fqlQuery
-    , FQLResult(..)
     , (#=)
     , SimpleType(..)
     ) where
 
-import Control.Applicative ((<$>))
+-- import Control.Applicative ((<$>))
 import Control.Arrow (first)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Control.Monad (mzero)
 import Data.ByteString.Char8 (ByteString)
 import Data.Function (on)
 import Data.List (intersperse)
@@ -124,35 +122,16 @@ createCheckin pid (lat,lon) args usertoken = do
   postObject "me/checkins" body usertoken
 
 
--- | Query the Facebook Graph using FQL.  You may want to use
--- 'FQLResult' when parsing the returned JSON.
+-- | Query the Facebook Graph using FQL.
 fqlQuery :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              Text                        -- ^ FQL Query
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
-          -> FacebookT anyAuth m a
+          -> FacebookT anyAuth m (Pager a)
 fqlQuery fql mtoken =
   runResourceInFb $ do
     let query = ["q" #= fql]
     asJson =<< fbhttp =<< fbreq "/fql" mtoken query
 
-
--- | Parses an FQL query result.  FQL query results are always of the form
---
--- @
---   { "data": [ret1, ret2, ...] }
--- @
---
--- This @newtype@ unwraps the array from the @"data"@ field
--- automatically for you, so you may write something like:
---
--- @
---   FQLResult [...] <- fqlQuery ...
--- @
-newtype FQLResult a = FQLResult [a] deriving (Eq, Ord, Show, Read)
-
-instance A.FromJSON a => A.FromJSON (FQLResult a) where
-  parseJSON (A.Object v) = FQLResult <$> (v A..: "data")
-  parseJSON _ = mzero
 
 
 -- | Create an 'Argument' with a 'SimpleType'.  See the docs on

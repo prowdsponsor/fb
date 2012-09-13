@@ -111,5 +111,5 @@ searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
             => ByteString
             -> [Argument]
             -> Maybe UserAccessToken
-            -> FacebookT anyAuth m (SearchResultPage User)
+            -> FacebookT anyAuth m (Pager User)
 searchUsers = searchObjects "user"
