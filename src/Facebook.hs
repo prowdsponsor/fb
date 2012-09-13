@@ -45,6 +45,11 @@ module Facebook
     , Page(..)
     , getPage
     , searchPages
+      -- ** Checkins
+    , Checkin(..)
+    , CheckinFrom(..)
+    , getCheckin
+    , createCheckin
       -- ** Pagination
     , Pager(..)
     , fetchNextPage
@@ -54,8 +59,6 @@ module Facebook
       -- ** Actions
     , createAction
     , Action
-      -- ** Checkins
-    , createCheckin
       -- ** FQL
     , fqlQuery
       -- ** Helpers
@@ -98,5 +101,6 @@ import Facebook.Auth
 import Facebook.Graph
 import Facebook.Object.Page
 import Facebook.Object.User
+import Facebook.Object.Checkin
 import Facebook.OpenGraph
 import Facebook.RealTime

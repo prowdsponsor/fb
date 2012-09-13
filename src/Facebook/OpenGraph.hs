@@ -2,7 +2,6 @@
 module Facebook.OpenGraph
     ( createAction
     , Action(..)
-    , createCheckin
     , fqlQuery
     , (#=)
     , SimpleType(..)
@@ -105,21 +104,6 @@ instance Read Action where
 
 instance IsString Action where
     fromString = Action . fromString
-
-
--- | Creates a 'check-in' and returns its id. Place and
--- coordinates are both required by Facebook.
-createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
-                 Id               -- ^ Place Id
-              -> (Double, Double) -- ^ (Latitude, Longitude)
-              -> [Argument]       -- ^ Other arguments of the action.
-              -> UserAccessToken  -- ^ Required user access token.
-              -> FacebookT Auth m Id
-createCheckin pid (lat,lon) args usertoken = do
-  let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
-      body = ("place" #= pid) : coords : args
-      toBS = TE.encodeUtf8 . TL.toStrict . toLazyText . AE.fromValue
-  postObject "me/checkins" body usertoken
 
 
 -- | Query the Facebook Graph using FQL.
