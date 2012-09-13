@@ -11,6 +11,9 @@ module Facebook.Graph
     , fetchAllPreviousPages
     , (#=)
     , SimpleType(..)
+    , Place(..)
+    , Location(..)
+    , GeoCoordinates(..)
     ) where
 
 
@@ -27,9 +30,12 @@ import Data.Word (Word8, Word16, Word32, Word)
 import System.Locale (defaultTimeLocale)
 
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Encode as AE (fromValue)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Conduit as C
 import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TLB
 import qualified Data.Time as TI
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
@@ -274,3 +280,67 @@ instance SimpleType a => SimpleType [a] where
 
 showBS :: Show a => a -> B.ByteString
 showBS = B.pack . show
+
+
+----------------------------------------------------------------------
+
+
+-- | Information about a place.  This is not a Graph Object,
+-- instead it's just a field of a Object.  (Not to be confused
+-- with the @Page@ object.)
+data Place =
+  Place { placeId       :: Id         -- ^ @Page@ ID.
+        , placeName     :: Maybe Text -- ^ @Page@ name.
+        , placeLocation :: Maybe Location
+        }
+  deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Place where
+  parseJSON (A.Object v) =
+    Place <$> v A..:  "id"
+          <*> v A..:? "name"
+          <*> v A..:? "location"
+  parseJSON _ = mzero
+
+
+-- | A geographical location.
+data Location =
+  Location { locationStreet  :: Maybe Text
+           , locationCity    :: Maybe Text
+           , locationState   :: Maybe Text
+           , locationCountry :: Maybe Text
+           , locationZip     :: Maybe Text
+           , locationCoords  :: Maybe GeoCoordinates
+           }
+  deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Location where
+  parseJSON obj@(A.Object v) =
+    Location <$> v A..:? "street"
+             <*> v A..:? "city"
+             <*> v A..:? "state"
+             <*> v A..:? "country"
+             <*> v A..:? "zip"
+             <*> A.parseJSON obj
+  parseJSON _ = mzero
+
+
+-- | Geographical coordinates.
+data GeoCoordinates =
+  GeoCoordinates { latitude  :: !Double
+                 , longitude :: !Double
+                 }
+  deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON GeoCoordinates where
+  parseJSON (A.Object v) =
+    GeoCoordinates <$> v A..: "latitude"
+                   <*> v A..: "longitude"
+  parseJSON _ = mzero
+
+instance SimpleType GeoCoordinates where
+  encodeFbParam c =
+    let obj  = A.object [ "latitude"  A..= latitude  c
+                        , "longitude" A..= longitude c]
+        toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.fromValue
+    in toBS obj

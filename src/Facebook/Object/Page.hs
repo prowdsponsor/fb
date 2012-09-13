@@ -20,7 +20,6 @@ import Data.Typeable (Typeable)
 
 import Facebook.Graph
 import Facebook.Monad
-import Facebook.Object.User (UserLocation)
 import Facebook.Types
 
 -- | A Facebook page (see
@@ -35,7 +34,7 @@ data Page = Page { pageId                :: ByteString
                  , pageIsPublished       :: Maybe Bool
                  , pageCanPost           :: Maybe Bool
                  , pageLikes             :: Maybe Integer
-                 , pageLocation          :: Maybe UserLocation
+                 , pageLocation          :: Maybe Location
                  , pagePhone             :: Maybe Text
                  , pageCheckins          :: Maybe Integer
                  , pagePicture           :: Maybe ByteString

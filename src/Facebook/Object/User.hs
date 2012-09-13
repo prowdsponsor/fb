@@ -2,7 +2,6 @@
 module Facebook.Object.User
     ( User(..)
     , Gender(..)
-    , UserLocation(..)
     , getUser
     , searchUsers
     ) where
@@ -43,7 +42,7 @@ data User =
          , userUsername   :: Maybe Text
          , userVerified   :: Maybe Bool
          , userEmail      :: Maybe Text
-         , userLocation   :: Maybe UserLocation
+         , userLocation   :: Maybe Place
          }
     deriving (Eq, Ord, Show, Read, Typeable)
 
@@ -77,20 +76,6 @@ instance A.ToJSON Gender where
           toText :: Gender -> Text
           toText Male   = "male"
           toText Female = "female"
-
-
--- | An user's location.
-data UserLocation =
-    UserLocation { userLocationId   :: Id
-                 , userLocationName :: Text
-                 }
-    deriving (Eq, Ord, Show, Read, Typeable)
-
-instance A.FromJSON UserLocation where
-    parseJSON (A.Object v) =
-      UserLocation <$> v .: "id"
-                   <*> v .: "name"
-    parseJSON _ = mzero
 
 
 -- | Get an user using his user ID.  The user access token is

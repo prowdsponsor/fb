@@ -33,12 +33,11 @@ module Facebook
       -- ** Signed requests
     , parseSignedRequest
 
-      -- * Facebook's Graph API Objects
+      -- * Facebook's Graph API
       -- ** User
     , User(..)
     , UserId
     , Gender(..)
-    , UserLocation(..)
     , getUser
     , searchUsers
       -- ** Page
@@ -54,10 +53,14 @@ module Facebook
     , getCheckin
     , createCheckin
 
-      -- * Facebook's Graph API basic functions
-      -- ** Helpers
+      -- * Facebook's Graph API basic functionality
+      -- ** Simple types
     , (#=)
     , SimpleType(..)
+      -- ** Complex types
+    , Place(..)
+    , Location(..)
+    , GeoCoordinates(..)
       -- ** Pagination
     , Pager(..)
     , fetchNextPage

@@ -14,14 +14,8 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Typeable (Typeable)
 
--- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
-import qualified Data.Aeson.Encode as AE (fromValue)
 import qualified Data.Conduit as C
--- import qualified Data.Text as T
-import qualified Data.Text.Encoding as TE
-import qualified Data.Text.Lazy as TL
-import qualified Data.Text.Lazy.Builder as TLB
 
 
 import Facebook.Types
@@ -36,10 +30,11 @@ import Facebook.Graph
 -- Facebook. Please fill an issue if you need access to any other
 -- fields.
 data Checkin =
-    Checkin { checkinId :: Id
-            , checkinFrom :: CheckinFrom
+    Checkin { checkinId          :: Id
+            , checkinFrom        :: CheckinFrom
+            , checkinPlace       :: Place
             , checkinCreatedTime :: Maybe UTCTime
-            , checkinMessage :: Maybe Text
+            , checkinMessage     :: Maybe Text
             }
     deriving (Eq, Ord, Show, Read, Typeable)
 
@@ -47,6 +42,7 @@ instance A.FromJSON Checkin where
     parseJSON (A.Object v) =
       Checkin <$> v .:  "id"
               <*> v .:  "from"
+              <*> v .:  "place"
               <*> v .:? "created_time"
               <*> v .:? "message"
     parseJSON _ = mzero
@@ -80,13 +76,11 @@ getCheckin (Id id_) query mtoken = getObject ("/" <> id_) query mtoken
 -- | Creates a 'check-in' and returns its ID. Place and
 -- coordinates are both required by Facebook.
 createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
-                 Id               -- ^ Place Id
-              -> (Double, Double) -- ^ (Latitude, Longitude)
+                 Id               -- ^ Place ID.
+              -> GeoCoordinates   -- ^ Coordinates.
               -> [Argument]       -- ^ Other arguments of the action.
               -> UserAccessToken  -- ^ Required user access token.
               -> FacebookT Auth m Id
-createCheckin pid (lat,lon) args usertoken = do
-  let coords = ("coordinates", toBS $ A.object ["latitude" A..= lat, "longitude" A..= lon])
-      body = ("place" #= pid) : coords : args
-      toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.fromValue
+createCheckin pid coords args usertoken = do
+  let body = ("place" #= pid) : ("coordinates" #= coords) : args
   postObject "me/checkins" body usertoken
