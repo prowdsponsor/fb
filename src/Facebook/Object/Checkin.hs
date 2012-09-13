@@ -34,6 +34,7 @@ data Checkin =
             , checkinFrom        :: CheckinFrom
             , checkinPlace       :: Place
             , checkinCreatedTime :: Maybe UTCTime
+            , checkinTags        :: Maybe (Pager Tag)
             , checkinMessage     :: Maybe Text
             }
     deriving (Eq, Ord, Show, Read, Typeable)
@@ -44,6 +45,7 @@ instance A.FromJSON Checkin where
               <*> v .:  "from"
               <*> v .:  "place"
               <*> v .:? "created_time"
+              <*> v .:? "tags"
               <*> v .:? "message"
     parseJSON _ = mzero
 

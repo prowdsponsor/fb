@@ -14,6 +14,7 @@ module Facebook.Graph
     , Place(..)
     , Location(..)
     , GeoCoordinates(..)
+    , Tag(..)
     ) where
 
 
@@ -344,3 +345,17 @@ instance SimpleType GeoCoordinates where
                         , "longitude" A..= longitude c]
         toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.fromValue
     in toBS obj
+
+
+-- | A tag (i.e. \"I'll /tag/ you on my post\").
+data Tag =
+  Tag { tagId   :: Id   -- ^ Who is tagged.
+      , tagName :: Text -- ^ Name of the tagged person.
+      }
+  deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Tag where
+  parseJSON (A.Object v) =
+    Tag <$> v A..: "id"
+        <*> v A..: "name"
+  parseJSON _ = mzero
