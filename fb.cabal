@@ -67,12 +67,12 @@ library
     , monad-control
     , conduit            >= 0.5     && < 0.6
     , http-types
-    , http-conduit       >= 1.5     && < 1.6
+    , http-conduit       >= 1.5     && < 1.7
     , attoparsec         >= 0.10    && < 0.11
     , attoparsec-conduit >= 0.5     && < 0.6
     , aeson              >= 0.5     && < 0.7
-    , base16-bytestring  == 0.1.*
-    , base64-bytestring  >= 0.1.1   && < 0.2
+    , base16-bytestring  >= 0.1.*
+    , base64-bytestring  >= 0.1.1
     , time               >= 1.2     && < 1.5
     , old-locale
     , cereal             == 0.3.*
