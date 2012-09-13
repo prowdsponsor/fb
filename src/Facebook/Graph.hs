@@ -146,6 +146,7 @@ fetchHelper pagerRef pager =
 -- | Tries to fetch all next pages and returns a 'C.Source' with
 -- all results.  The 'C.Source' will include the results from
 -- this page as well.  Previous pages will not be considered.
+-- Next pages will be fetched on-demand.
 fetchAllNextPages ::
   (Monad m, C.MonadResource n, MonadBaseControl IO n, A.FromJSON a) =>
   Pager a -> FacebookT anyAuth m (C.Source n a)
@@ -155,7 +156,7 @@ fetchAllNextPages = fetchAllHelper pagerNext
 -- | Tries to fetch all previous pages and returns a 'C.Source'
 -- with all results.  The 'C.Source' will include the results
 -- from this page as well.  Next pages will not be
--- considered.
+-- considered.  Previous pages will be fetched on-demand.
 fetchAllPreviousPages ::
   (Monad m, C.MonadResource n, MonadBaseControl IO n, A.FromJSON a) =>
   Pager a -> FacebookT anyAuth m (C.Source n a)
