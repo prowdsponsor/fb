@@ -4,6 +4,7 @@ module Facebook.Object.User
     , Gender(..)
     , getUser
     , searchUsers
+    , getUserCheckins
     ) where
 
 import Control.Applicative
@@ -23,6 +24,7 @@ import qualified Data.Conduit as C
 import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Object.Checkin
 
 
 -- | A Facebook user profile (see
@@ -98,3 +100,14 @@ searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
             -> Maybe UserAccessToken
             -> FacebookT anyAuth m (Pager User)
 searchUsers = searchObjects "user"
+
+
+-- | Get a list of check-ins made by a given user.
+getUserCheckins ::
+     (C.MonadResource m, MonadBaseControl IO m) =>
+     UserId          -- ^ User ID or @\"me\"@.
+  -> [Argument]      -- ^ Arguments to be passed to Facebook.
+  -> UserAccessToken -- ^ User access token.
+  -> FacebookT anyAuth m (Pager Checkin)
+getUserCheckins id_ query token =
+  getObject ("/" <> id_ <> "/checkins") query (Just token)

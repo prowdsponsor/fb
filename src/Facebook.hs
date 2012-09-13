@@ -40,6 +40,7 @@ module Facebook
     , Gender(..)
     , getUser
     , searchUsers
+    , getUserCheckins
       -- ** Page
     , Page(..)
     , getPage
