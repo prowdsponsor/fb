@@ -104,4 +104,5 @@ import Facebook.Object.User
 import Facebook.Object.Action
 import Facebook.Object.Checkin
 import Facebook.OpenGraph
+import Facebook.FQL
 import Facebook.RealTime
