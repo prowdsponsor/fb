@@ -51,6 +51,7 @@ library
     Facebook.Base
     Facebook.Auth
     Facebook.Graph
+    Facebook.Object.Action
     Facebook.Object.Checkin
     Facebook.Object.User
     Facebook.Object.Page

@@ -45,6 +45,9 @@ module Facebook
     , Page(..)
     , getPage
     , searchPages
+      -- ** Actions
+    , createAction
+    , Action
       -- ** Checkins
     , Checkin(..)
     , CheckinFrom(..)
@@ -56,9 +59,6 @@ module Facebook
     , fetchPreviousPage
 
       -- * Facebook's Open Graph API
-      -- ** Actions
-    , createAction
-    , Action
       -- ** FQL
     , fqlQuery
       -- ** Helpers
@@ -101,6 +101,7 @@ import Facebook.Auth
 import Facebook.Graph
 import Facebook.Object.Page
 import Facebook.Object.User
+import Facebook.Object.Action
 import Facebook.Object.Checkin
 import Facebook.OpenGraph
 import Facebook.RealTime
