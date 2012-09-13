@@ -55,9 +55,8 @@ library
     Facebook.Object.Checkin
     Facebook.Object.User
     Facebook.Object.Page
-    Facebook.OpenGraph
-    Facebook.FQL
     Facebook.RealTime
+    Facebook.FQL
   build-depends:
       base               >= 4       && < 5
     , lifted-base        >= 0.1     && < 0.2

@@ -37,7 +37,6 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Base
 import Facebook.Graph
-import Facebook.OpenGraph
 
 
 -- | The type of objects that a real-time update refers to.

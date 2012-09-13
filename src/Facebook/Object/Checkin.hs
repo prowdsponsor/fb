@@ -27,7 +27,6 @@ import qualified Data.Text.Lazy.Builder as TLB
 import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
-import Facebook.OpenGraph
 
 
 -- | A Facebook check-in (see

@@ -13,7 +13,6 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Base
 import Facebook.Graph
-import Facebook.OpenGraph
 
 
 -- | Query the Facebook Graph using FQL.

@@ -46,24 +46,24 @@ module Facebook
     , getPage
     , searchPages
       -- ** Actions
-    , createAction
     , Action
+    , createAction
       -- ** Checkins
     , Checkin(..)
     , CheckinFrom(..)
     , getCheckin
     , createCheckin
+
+      -- * Facebook's Graph API basic functions
+      -- ** Helpers
+    , (#=)
+    , SimpleType(..)
       -- ** Pagination
     , Pager(..)
     , fetchNextPage
     , fetchPreviousPage
-
-      -- * Facebook's Open Graph API
-      -- ** FQL
-    , fqlQuery
-      -- ** Helpers
-    , (#=)
-    , SimpleType(..)
+    , fetchAllNextPages
+    , fetchAllPreviousPages
 
       -- * Real-time update notifications
       -- ** Subscriptions
@@ -80,12 +80,15 @@ module Facebook
     , RealTimeUpdateNotification(..)
     , RealTimeUpdateNotificationUserEntry(..)
 
+      -- * FQL
+    , fqlQuery
+
       -- * Raw access to the Graph API
     , getObject
     , postObject
+    , searchObjects
     , Id(..)
     , Argument
-    , searchObjects
 
       -- * Exceptions
     , FacebookException(..)
@@ -103,6 +106,5 @@ import Facebook.Object.Page
 import Facebook.Object.User
 import Facebook.Object.Action
 import Facebook.Object.Checkin
-import Facebook.OpenGraph
-import Facebook.FQL
 import Facebook.RealTime
+import Facebook.FQL

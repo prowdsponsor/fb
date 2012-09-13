@@ -24,7 +24,7 @@ import Data.Typeable (Typeable, Typeable1)
 -- | Credentials that you get for your app when you register on
 -- Facebook.
 data Credentials =
-    Credentials { appName   :: ByteString -- ^ Your application name (e.g. for OpenGraph calls).
+    Credentials { appName   :: ByteString -- ^ Your application name (e.g. for Open Graph calls).
                 , appId     :: ByteString -- ^ Your application ID.
                 , appSecret :: ByteString -- ^ Your application secret key.
                 }
