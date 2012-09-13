@@ -31,8 +31,8 @@ import Facebook.Graph
 -- fields.
 data Checkin =
     Checkin { checkinId          :: Id
-            , checkinFrom        :: CheckinFrom
-            , checkinPlace       :: Place
+            , checkinFrom        :: Maybe CheckinFrom
+            , checkinPlace       :: Maybe Place
             , checkinCreatedTime :: Maybe UTCTime
             , checkinTags        :: Maybe (Pager Tag)
             , checkinMessage     :: Maybe Text
@@ -42,8 +42,8 @@ data Checkin =
 instance A.FromJSON Checkin where
     parseJSON (A.Object v) =
       Checkin <$> v .:  "id"
-              <*> v .:  "from"
-              <*> v .:  "place"
+              <*> v .:? "from"
+              <*> v .:? "place"
               <*> v .:? "created_time"
               <*> v .:? "tags"
               <*> v .:? "message"
