@@ -1,6 +1,11 @@
 module TryIt (runFB) where
 
--- You may import this file from GHCi in order to try the fb package.
+-- You may import this file from GHCi in order to try the fb
+-- package.  For example:
+--
+--   > :l tryIt
+--
+--   > runFB FB.getAppAccessToken
 
 import qualified Data.Conduit as C
 import qualified Facebook as FB
