@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings
            , Rank2Types
            , ScopedTypeVariables #-}
+module Main (main, getCredentials) where
 
 import Control.Applicative
 import Control.Monad (mzero)
