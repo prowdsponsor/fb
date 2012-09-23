@@ -13,12 +13,17 @@ module Facebook.Types
     , AppKind
     , Argument
     , (<>)
+    , FbUTCTime(..)
     ) where
 
 import Data.ByteString (ByteString)
 import Data.Monoid (Monoid, mappend)
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, parseTime)
 import Data.Typeable (Typeable, Typeable1)
+import System.Locale (defaultTimeLocale)
+
+import qualified Data.Aeson as A
+import qualified Data.Text as T
 
 
 -- | Credentials that you get for your app when you register on
@@ -102,3 +107,17 @@ type Argument = (ByteString, ByteString)
 -- | Synonym for 'mappend'.
 (<>) :: Monoid a => a -> a -> a
 (<>) = mappend
+
+
+-- | (Internal) @newtype@ for 'UTCTime' that follows Facebook's
+-- conventions of JSON parsing.  While @aeson@ expects a format
+-- of @%FT%T%Q@, Facebook gives time values formatted as
+-- @%FT%T%z@.
+newtype FbUTCTime = FbUTCTime { unFbUTCTime :: UTCTime }
+
+instance A.FromJSON FbUTCTime where
+  parseJSON (A.String t) =
+    case parseTime defaultTimeLocale "%FT%T%z" (T.unpack t) of
+      Just d -> return (FbUTCTime d)
+      _      -> fail $ "could not parse FbUTCTime string " ++ show t
+  parseJSON _ = fail "could not parse FbUTCTime from something which is not a string"

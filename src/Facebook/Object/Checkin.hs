@@ -44,7 +44,7 @@ instance A.FromJSON Checkin where
       Checkin <$> v .:  "id"
               <*> v .:? "from"
               <*> v .:? "place"
-              <*> v .:? "created_time"
+              <*> ((unFbUTCTime <$>) <$> v .:? "created_time")
               <*> v .:? "tags"
               <*> v .:? "message"
     parseJSON _ = mzero
