@@ -1,5 +1,5 @@
 name:              fb
-version:           0.12.4
+version:           0.12.4.1
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -26,7 +26,8 @@ description:
   (<https://github.com/meteficha/fb/issues>).
 
 extra-source-files:
-  tests/runtests.hs
+  tests/Main.hs
+  tests/tryIt.hs
   example.hs
 
 
