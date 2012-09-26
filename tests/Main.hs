@@ -175,6 +175,18 @@ facebookTests pretitle manager runAuth runNoAuth = do
         val   <- FB.listSubscriptions token
         length val `seq` return ()
 
+  describe' "fetchAllNextPages" $ do
+    let hasAtLeast :: C.Source (C.ResourceT IO) A.Value -> Int -> IO ()
+        src `hasAtLeast` n = C.runResourceT $ src C.$$ go n
+          where go 0 = return ()
+                go m = C.await >>= maybe not_ (\_ -> go (m-1))
+                not_ = fail $ "Source does not have at least " ++ show n ++ " elements."
+    it "seems to work on a public list of comments" $ do
+      runNoAuth $ do
+        pager <- FB.getObject "/135529993185189_397300340341485/comments" [] Nothing
+        src   <- FB.fetchAllNextPages pager
+        liftIO $ src `hasAtLeast` 200 -- items
+
 newtype PageName = PageName Text deriving (Eq, Show)
 instance A.FromJSON PageName where
   parseJSON (A.Object v) = PageName <$> (v A..: "name")
