@@ -8,7 +8,7 @@ import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
 import Data.Int (Int8, Int16, Int32)
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Data.Text (Text)
 import Data.Time (parseTime)
 import Data.Word (Word8, Word16, Word32, Word)
@@ -175,6 +175,34 @@ facebookTests pretitle manager runAuth runNoAuth = do
         token <- FB.getAppAccessToken
         val   <- FB.listSubscriptions token
         length val `seq` return ()
+
+  describe' "fetchNextPage" $ do
+    let fetchNextPageWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (C.ResourceT IO) ()
+        fetchNextPageWorks pager
+          | isNothing (FB.pagerNext pager) = return ()
+          | otherwise = FB.fetchNextPage pager >>= maybe not_ (\_ -> return ())
+          where not_ = fail "Pager had a next page but fetchNextPage didn't work."
+    it "seems to work on a public list of comments" $ do
+      runNoAuth $ do
+        fetchNextPageWorks =<< FB.getObject "/135529993185189_397300340341485/comments" [] Nothing
+    it "seems to work on a private list of app insights" $ do
+      runAuth $ do
+        token <- FB.getAppAccessToken
+        fetchNextPageWorks =<< FB.getObject "/app/insights" [] (Just token)
+
+  describe' "fetchNextPage/fetchPreviousPage" $ do
+    let backAndForthWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (C.ResourceT IO) ()
+        backAndForthWorks pager = do
+          Just pager2 <- FB.fetchNextPage     pager
+          Just pager3 <- FB.fetchPreviousPage pager2
+          pager3 &?= pager
+    it "seems to work on a public list of comments" $ do
+      runNoAuth $ do
+        backAndForthWorks =<< FB.getObject "/135529993185189_397300340341485/comments" [] Nothing
+    it "seems to work on a private list of app insights" $ do
+      runAuth $ do
+        token <- FB.getAppAccessToken
+        backAndForthWorks =<< FB.getObject "/app/insights" [] (Just token)
 
   describe' "fetchAllNextPages" $ do
     let hasAtLeast :: C.Source (C.ResourceT IO) A.Value -> Int -> IO ()
