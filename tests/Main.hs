@@ -8,6 +8,7 @@ import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
 import Data.Int (Int8, Int16, Int32)
+import Data.Maybe (isJust)
 import Data.Text (Text)
 import Data.Time (parseTime)
 import Data.Word (Word8, Word16, Word32, Word)
@@ -186,6 +187,16 @@ facebookTests pretitle manager runAuth runNoAuth = do
         pager <- FB.getObject "/135529993185189_397300340341485/comments" [] Nothing
         src   <- FB.fetchAllNextPages pager
         liftIO $ src `hasAtLeast` 200 -- items
+    it "seems to work on a private list of app insights" $ do
+      runAuth $ do
+        token <- FB.getAppAccessToken
+        pager <- FB.getObject "/app/insights" [] (Just token)
+        src   <- FB.fetchAllNextPages pager
+        let firstPageElms = length (FB.pagerData pager)
+            hasNextPage   = isJust (FB.pagerNext pager)
+        if hasNextPage
+          then liftIO $ src `hasAtLeast` (firstPageElms * 3) -- items
+          else fail "This isn't an insightful app =(."
 
 newtype PageName = PageName Text deriving (Eq, Show)
 instance A.FromJSON PageName where
