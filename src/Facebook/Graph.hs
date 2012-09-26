@@ -193,7 +193,7 @@ fetchAllHelper pagerRef pager = do
         req <- liftIO (H.parseUrl next)
         let get = fbhttpHelper manager req { H.redirectCount = 3 }
         start =<< lift (C.runResourceT $ asJsonHelper =<< get)
-      start p = go (pagerData p) $! pagerRef pager
+      start p = go (pagerData p) $! pagerRef p
   return (start pager)
 
 
