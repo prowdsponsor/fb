@@ -3,6 +3,7 @@ module Facebook.Base
     ( fbreq
     , ToSimpleQuery(..)
     , asJson
+    , asJsonHelper
     , asBS
     , FacebookException(..)
     , fbhttp

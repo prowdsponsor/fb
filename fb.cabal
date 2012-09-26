@@ -66,6 +66,7 @@ library
     , transformers       >= 0.2     && < 0.4
     , transformers-base
     , monad-control
+    , resourcet
     , conduit            >= 0.5     && < 0.6
     , http-types
     , http-conduit       >= 1.5     && < 1.7

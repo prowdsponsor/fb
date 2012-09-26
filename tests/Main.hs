@@ -205,8 +205,8 @@ facebookTests pretitle manager runAuth runNoAuth = do
         backAndForthWorks =<< FB.getObject "/app/insights" [] (Just token)
 
   describe' "fetchAllNextPages" $ do
-    let hasAtLeast :: C.Source (C.ResourceT IO) A.Value -> Int -> IO ()
-        src `hasAtLeast` n = C.runResourceT $ src C.$$ go n
+    let hasAtLeast :: C.Source IO A.Value -> Int -> IO ()
+        src `hasAtLeast` n = src C.$$ go n
           where go 0 = return ()
                 go m = C.await >>= maybe not_ (\_ -> go (m-1))
                 not_ = fail $ "Source does not have at least " ++ show n ++ " elements."

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Graph
     ( Id(..)
     , getObject
@@ -22,6 +22,7 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString.Char8 (ByteString)
 import Data.Int (Int8, Int16, Int32)
 import Data.List (intersperse)
@@ -165,7 +166,7 @@ fetchHelper pagerRef pager =
 -- this page as well.  Previous pages will not be considered.
 -- Next pages will be fetched on-demand.
 fetchAllNextPages ::
-  (Monad m, C.MonadResource n, MonadBaseControl IO n, A.FromJSON a) =>
+  (Monad m, MonadResourceBase n, A.FromJSON a) =>
   Pager a -> FacebookT anyAuth m (C.Source n a)
 fetchAllNextPages = fetchAllHelper pagerNext
 
@@ -175,14 +176,14 @@ fetchAllNextPages = fetchAllHelper pagerNext
 -- from this page as well.  Next pages will not be
 -- considered.  Previous pages will be fetched on-demand.
 fetchAllPreviousPages ::
-  (Monad m, C.MonadResource n, MonadBaseControl IO n, A.FromJSON a) =>
+  (Monad m, MonadResourceBase n, A.FromJSON a) =>
   Pager a -> FacebookT anyAuth m (C.Source n a)
 fetchAllPreviousPages = fetchAllHelper pagerPrevious
 
 
 -- | (Internal) See 'fetchAllNextPages' and 'fetchAllPreviousPages'.
 fetchAllHelper ::
-  (Monad m, C.MonadResource n, MonadBaseControl IO n, A.FromJSON a) =>
+  (Monad m, MonadResourceBase n, A.FromJSON a) =>
   (Pager a -> Maybe String) -> Pager a -> FacebookT anyAuth m (C.Source n a)
 fetchAllHelper pagerRef pager = do
   manager <- getManager
@@ -191,7 +192,7 @@ fetchAllHelper pagerRef pager = do
       go [] (Just next) = do
         req <- liftIO (H.parseUrl next)
         let get = fbhttpHelper manager req { H.redirectCount = 3 }
-        start =<< asJson =<< lift get
+        start =<< lift (C.runResourceT $ asJsonHelper =<< get)
       start p = go (pagerData p) $! pagerRef pager
   return (start pager)
 
