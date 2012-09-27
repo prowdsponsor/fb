@@ -30,6 +30,7 @@ import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , defaultRestoreM )
 import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Typeable (Typeable)
+import qualified Control.Monad.Trans.Resource as R
 
 import qualified Data.Conduit as C
 import qualified Network.HTTP.Conduit as H
@@ -44,7 +45,8 @@ import Facebook.Types
 -- supplied any 'Credentials').
 newtype FacebookT auth m a = F { unF :: ReaderT FbData m a }
     deriving ( Functor, Applicative, Alternative, Monad
-             , MonadFix, MonadPlus, MonadIO, MonadTrans )
+             , MonadFix, MonadPlus, MonadIO, MonadTrans
+             , R.MonadThrow, R.MonadActive, R.MonadResource )
 
 instance MonadBase b m => MonadBase b (FacebookT auth m) where
     liftBase = lift . liftBase
