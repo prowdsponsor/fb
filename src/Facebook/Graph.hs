@@ -271,6 +271,10 @@ instance SimpleType ByteString where
 instance SimpleType Id where
     encodeFbParam = idCode
 
+-- | 'Permission' is a @newtype@ of 'Text'
+instance SimpleType Permission where
+    encodeFbParam = encodeFbParam . unPermission
+
 -- | A comma-separated list of simple types.  This definition
 -- doesn't work everywhere, just for a few combinations that
 -- Facebook uses (e.g. @[Int]@).  Also, encoding a list of lists
