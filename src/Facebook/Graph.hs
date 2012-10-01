@@ -43,9 +43,10 @@ import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
 
 
-import Facebook.Types
-import Facebook.Monad
+import Facebook.Auth
 import Facebook.Base
+import Facebook.Monad
+import Facebook.Types
 
 
 -- | The identification code of an object.
@@ -270,6 +271,10 @@ instance SimpleType ByteString where
 -- | An object's 'Id' code.
 instance SimpleType Id where
     encodeFbParam = idCode
+
+-- | 'Permission' is a @newtype@ of 'Text'
+instance SimpleType Permission where
+    encodeFbParam = encodeFbParam . unPermission
 
 -- | A comma-separated list of simple types.  This definition
 -- doesn't work everywhere, just for a few combinations that
