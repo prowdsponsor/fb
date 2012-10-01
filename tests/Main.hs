@@ -8,6 +8,8 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Function (on)
 import Data.Int (Int8, Int16, Int32)
 import Data.Maybe (isJust, isNothing)
 import Data.Text (Text)
@@ -16,31 +18,29 @@ import Data.Word (Word8, Word16, Word32, Word)
 import System.Environment (getEnv)
 import System.Exit (exitFailure)
 import System.IO.Error (isDoesNotExistError)
-import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Function (on)
 
 
+import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
+import qualified Data.ByteString.Char8 as B
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
-import qualified Data.ByteString.Char8 as B
+import qualified Data.Default as D
+import qualified Data.Maybe as M
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Time as TI
-import qualified Control.Exception.Lifted as E
 import qualified Facebook as FB
 import qualified Network.HTTP.Conduit as H
-import qualified Data.Maybe as M
-import qualified Data.Default as D
-import qualified Data.Set as S
+import qualified Test.QuickCheck as QC
 
 
 import Test.HUnit ((@?=))
+import Test.Hspec.HUnit ()
 import Test.Hspec.Monadic
 import Test.Hspec.QuickCheck
-import Test.Hspec.HUnit ()
-import qualified Test.QuickCheck as QC
 
 
 -- | Grab the Facebook credentials from the environment.
@@ -242,13 +242,13 @@ facebookTests pretitle manager runAuth runNoAuth = do
         token <- FB.getAppAccessToken
         -- New test user information
         let userInfo = FB.CreateTestUser {
-                            FB.ctuInstalled = FB.CreateTestUserInstalled {
-                                                FB.ctuiPermissions = [ "read_stream"
-                                                                     , "read_friendlists"
-                                                                     , "publish_stream"]}
-                          , FB.ctuName = Just "Gabriel"
-                          , FB.ctuLocale = Just "en_US"
-                          }
+          FB.ctuInstalled = FB.CreateTestUserInstalled {
+            FB.ctuiPermissions = [ "read_stream"
+                                 , "read_friendlists"
+                                 , "publish_stream"]}
+                       , FB.ctuName = Just "Gabriel"
+                       , FB.ctuLocale = Just "en_US"
+                       }
         -- Create the test user
         newTestUser <- FB.createTestUser userInfo token
         let newTestUserToken = (M.fromJust $ FB.incompleteTestUserAccessToken newTestUser)
@@ -268,13 +268,11 @@ facebookTests pretitle manager runAuth runNoAuth = do
       runAuth $
         withTestUser D.def $ \testUser1 ->
         withTestUser D.def $ \testUser2 -> do
-            let (Just tokenUserA) = FB.incompleteTestUserAccessToken testUser1
-            let (Just tokenUserB) = FB.incompleteTestUserAccessToken testUser2
+            let Just tokenUserA = FB.incompleteTestUserAccessToken testUser1
+            let Just tokenUserB = FB.incompleteTestUserAccessToken testUser2
             -- Create a friend connection between the new test users
             friendship <- FB.makeFriendConn testUser1 testUser2
-            -- Check if the friend connection succeeded
-            friendship &?= ()
-            -- Check if the new test users' tokens are invalid (because the users were removed)
+            -- Check if the new test users' tokens are valid
             FB.isValid tokenUserA #?= True
             FB.isValid tokenUserB #?= True
 
@@ -286,10 +284,10 @@ facebookTests pretitle manager runAuth runNoAuth = do
         src     <- FB.fetchAllNextPages pager
         oldList <- liftIO $ C.runResourceT $ src C.$$ CL.consume
         withTestUser D.def $ \testUser -> do
-                            let (%?=) = (&?=) `on` fmap FB.tuId
-                                (//)  = S.difference `on` S.fromList
-                            newList <- FB.pagerData <$> FB.getTestUsers token
-                            S.toList (newList // oldList) %?= [testUser]
+          let (%?=) = (&?=) `on` fmap FB.tuId
+              (//)  = S.difference `on` S.fromList
+          newList <- FB.pagerData <$> FB.getTestUsers token
+          S.toList (newList // oldList) %?= [testUser]
 
 
 newtype PageName = PageName Text deriving (Eq, Show)
@@ -382,7 +380,7 @@ instance QC.Arbitrary Text where
 
 
 -- | Perform an action with a new test user. Remove the new test user
--- after the action is performed
+-- after the action is performed.
 withTestUser :: (C.MonadResource m, MonadBaseControl IO m)
                 => FB.CreateTestUser
                 -> (FB.TestUser -> FB.FacebookT FB.Auth m a)
