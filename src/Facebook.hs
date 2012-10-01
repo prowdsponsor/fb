@@ -88,6 +88,16 @@ module Facebook
       -- * FQL
     , fqlQuery
 
+      -- * Test User API
+    , getTestUsers
+    , removeTestUser
+    , createTestUser
+    , makeFriendConn
+    , incompleteTestUserAccessToken
+    , TestUser(..)
+    , CreateTestUser(..)
+    , CreateTestUserInstalled(..)
+
       -- * Raw access to the Graph API
     , getObject
     , postObject
@@ -113,3 +123,4 @@ import Facebook.Object.Action
 import Facebook.Object.Checkin
 import Facebook.RealTime
 import Facebook.FQL
+import Facebook.TestUsers

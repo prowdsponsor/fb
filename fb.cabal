@@ -58,6 +58,7 @@ library
     Facebook.Object.Page
     Facebook.RealTime
     Facebook.FQL
+    Facebook.TestUsers
   build-depends:
       base               >= 4       && < 5
     , lifted-base        >= 0.1     && < 0.2
@@ -68,6 +69,7 @@ library
     , monad-control
     , resourcet
     , conduit            >= 0.5     && < 0.6
+    , data-default
     , http-types
     , http-conduit       >= 1.5     && < 1.7
     , attoparsec         >= 0.10    && < 0.11
