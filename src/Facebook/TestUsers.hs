@@ -156,19 +156,6 @@ makeFriendConn (TestUser {tuId = id1, tuAccessToken = (Just token1)}) (TestUser 
   unless r2 $ E.throw $ FbLibraryException "Couldn't accept friend request."
   return ()
 
--- let result userId1 userId2 token = getObject ("/" <> userId1 <> "/friends/" <> userId2) [ "method" #= ("post" :: B.ByteString), "access_token" #= token ] Nothing
--- r1 <- result id1 id2 token1
--- r2 <- result id2 id1 token2
-
-{-  result1 <- getObjectBool
-                ("/" <> id1 <> "/friends/" <> id2)
-                [ "method" #= ("post" :: B.ByteString), "access_token" #= token1 ]
-                Nothing
-  result2 <- getObjectBool
-                ("/" <> id2 <> "/friends/" <> id1)
-                [ "method" #= ("post" :: B.ByteString), "access_token" #= token2 ]
-                Nothing-}
-
 
 -- | Create an 'UserAccessToken' from a 'TestUser'.  It's incomplete
 -- because it will not have the right expiration time.
