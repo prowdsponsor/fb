@@ -241,14 +241,14 @@ facebookTests pretitle manager runAuth runNoAuth = do
       runAuth $ do
         token <- FB.getAppAccessToken
         -- New test user information
-        let userInfo = FB.CreateTestUser {
-          FB.ctuInstalled = FB.CreateTestUserInstalled {
-            FB.ctuiPermissions = [ "read_stream"
-                                 , "read_friendlists"
-                                 , "publish_stream"]}
-                       , FB.ctuName = Just "Gabriel"
-                       , FB.ctuLocale = Just "en_US"
-                       }
+        let installed = FB.CreateTestUserInstalled
+                         [ "read_stream"
+                         , "read_friendlists"
+                         , "publish_stream" ]
+            userInfo = FB.CreateTestUser
+                       { FB.ctuInstalled = installed
+                       , FB.ctuName      = Just "Gabriel"
+                       , FB.ctuLocale    = Just "en_US" }
         -- Create the test user
         newTestUser <- FB.createTestUser userInfo token
         let newTestUserToken = (M.fromJust $ FB.incompleteTestUserAccessToken newTestUser)
