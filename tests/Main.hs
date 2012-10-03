@@ -363,6 +363,12 @@ libraryTests manager = do
         ret <- FB.parseSignedRequest (B.concat [corruptedSig, ".", exampleData])
         ret &?= (Nothing :: Maybe A.Value)
 
+  describe "FQLQuery" $ do
+    it "seems to work" $ do
+      let input  = "[1348678357]"
+          output = FB.FQLTime (read "2012-09-26 16:52:37 UTC")
+      A.decode input @?= Just [output]
+
 
 -- Wrappers for HUnit operators using MonadIO
 
