@@ -106,9 +106,11 @@ test-suite runtests
       -- Library dependencies used on the tests.  No need to
       -- specify versions since they'll use the same as above.
       base, lifted-base, transformers, bytestring,
-      conduit, http-conduit, text, time, aeson
+      conduit, http-conduit, text, time, aeson, monad-control
 
       -- Test-only dependencies
+    , containers
+    , data-default
     , HUnit
     , QuickCheck
     , hspec == 1.3.*

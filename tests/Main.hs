@@ -255,7 +255,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
         -- Get the created user
         createdUser <- FB.getUser (FB.tuId newTestUser) [] (Just newTestUserToken)
         -- Remove the test user
-        FB.removeTestUser newTestUser token
+        True <- FB.removeTestUser newTestUser token
         -- Check user attributes
         FB.userId createdUser     &?= FB.tuId newTestUser
         FB.userName createdUser   &?= Just "Gabriel"
@@ -271,7 +271,7 @@ facebookTests pretitle manager runAuth runNoAuth = do
             let Just tokenUserA = FB.incompleteTestUserAccessToken testUser1
             let Just tokenUserB = FB.incompleteTestUserAccessToken testUser2
             -- Create a friend connection between the new test users
-            friendship <- FB.makeFriendConn testUser1 testUser2
+            FB.makeFriendConn testUser1 testUser2
             -- Check if the new test users' tokens are valid
             FB.isValid tokenUserA #?= True
             FB.isValid tokenUserB #?= True
