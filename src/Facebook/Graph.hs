@@ -24,11 +24,11 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString.Char8 (ByteString)
-import Data.Int (Int8, Int16, Int32)
+import Data.Int (Int8, Int16, Int32, Int64)
 import Data.List (intersperse)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
-import Data.Word (Word8, Word16, Word32, Word)
+import Data.Word (Word, Word8, Word16, Word32, Word64)
 import System.Locale (defaultTimeLocale)
 
 import qualified Data.Aeson as A
@@ -259,6 +259,12 @@ instance SimpleType Int32 where
     encodeFbParam = showBS
 -- | Facebook's simple type @Integer@.
 instance SimpleType Word32 where
+    encodeFbParam = showBS
+-- | Facebook's simple type @Integer@.
+instance SimpleType Int64 where
+    encodeFbParam = showBS
+-- | Facebook's simple type @Integer@.
+instance SimpleType Word64 where
     encodeFbParam = showBS
 
 -- | Facebook's simple type @String@.
