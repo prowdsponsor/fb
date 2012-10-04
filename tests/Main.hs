@@ -373,6 +373,16 @@ libraryTests manager = do
           output = FB.FQLTime (read "2012-09-26 16:52:37 UTC")
       A.decode input @?= Just [output]
 
+  describe "Id" $ do
+    it "can be parsed from a string" $ do
+      A.decode "[\"1234\"]" @?= Just [FB.Id "1234"]
+    it "can be parsed from an integer" $ do
+      A.decode "[1234]" @?= Just [FB.Id "1234"]
+    it "can be parsed from an object with a string" $ do
+      A.decode "{\"id\": \"1234\"}" @?= Just (FB.Id "1234")
+    it "can be parsed from an object with an integer" $ do
+      A.decode "{\"id\": 1234}" @?= Just (FB.Id "1234")
+
 
 -- Wrappers for HUnit operators using MonadIO
 
