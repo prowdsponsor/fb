@@ -27,6 +27,7 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
 import qualified Data.Default as D
+import qualified Data.Map as Map
 import qualified Data.Maybe as M
 import qualified Data.Set as S
 import qualified Data.Text as T
@@ -384,6 +385,18 @@ libraryTests manager = do
       A.decode "[1234]" @?= j [1234]
     it "parses {\"1234\": 1234}" $ do
       A.decode "{\"1234\": 1234}" @?= j [1234]
+
+  describe "FQLObject" $ do
+    let j :: [(Text, Int)] -> Maybe (FB.FQLObject (Map.Map Text Int))
+        j = Just . FB.FQLObject . Map.fromList
+    it "parses []" $ do
+      A.decode "[]" @?= j []
+    it "parses {}" $ do
+      A.decode "{}" @?= j []
+    it "parses {\"abc\": 1234}" $ do
+      A.decode "{\"abc\": 1234}" @?= j [("abc", 1234)]
+    it "does not parse [1234]" $ do
+      A.decode "[1234]" @?= (Nothing `asTypeOf` j [])
 
   describe "Id" $ do
     it "can be parsed from a string" $ do

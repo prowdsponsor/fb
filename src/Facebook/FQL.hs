@@ -3,10 +3,12 @@ module Facebook.FQL
     ( fqlQuery
     , FQLTime(..)
     , FQLList(..)
+    , FQLObject(..)
     ) where
 
 import Control.Applicative((<$>))
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Monoid (mempty)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
@@ -62,3 +64,19 @@ newtype FQLList a = FQLList { unFQLList :: [a] }
 instance A.FromJSON a => A.FromJSON (FQLList a) where
   parseJSON (A.Object o) = FQLList <$> mapM A.parseJSON (HMS.elems o)
   parseJSON v            = FQLList <$> A.parseJSON v
+
+
+-- | @newtype@ wrapper around any object that works around FQL's
+-- strange objects.
+--
+-- For example, if you fetch the @app_data@ field from @stream@,
+-- you'll find that empty objects are actually represented as
+-- empty lists @[]@ instead of a proper empty object @{}@.  Also
+-- note that FQL's documentation says that @app_data@ is an
+-- array, which it clear is not.  See also 'FQLList'.
+newtype FQLObject a = FQLObject { unFQLObject :: a }
+  deriving (Eq, Ord, Show)
+
+instance A.FromJSON a => A.FromJSON (FQLObject a) where
+  parseJSON (A.Array a) | a == mempty = FQLObject <$> A.parseJSON (A.Object mempty)
+  parseJSON v                         = FQLObject <$> A.parseJSON v
