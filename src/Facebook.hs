@@ -88,6 +88,7 @@ module Facebook
       -- * FQL
     , fqlQuery
     , FQLTime(..)
+    , FQLList(..)
 
       -- * Test User API
     , getTestUsers

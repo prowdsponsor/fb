@@ -2,8 +2,10 @@
 module Facebook.FQL
     ( fqlQuery
     , FQLTime(..)
+    , FQLList(..)
     ) where
 
+import Control.Applicative((<$>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
 import Data.Time (UTCTime)
@@ -11,6 +13,7 @@ import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 import qualified Data.Aeson as A
 import qualified Data.Conduit as C
+import qualified Data.HashMap.Strict as HMS
 
 import Facebook.Types
 import Facebook.Monad
@@ -39,3 +42,23 @@ instance A.FromJSON FQLTime where
                    . posixSecondsToUTCTime
                    . fromInteger)
             . A.parseJSON
+
+
+-- | @newtype@ wrapper around lists that works around FQL's
+-- strange lists.
+--
+-- For example, if you fetch the @tagged_uids@ field from
+-- @location_post@, you'll find that Facebook's FQL represents an
+-- empty list of tagged UIDs as plain JSON array (@[]@).
+-- However, it represents a singleton list as an object
+-- @{\"1234\": 1234}@ instead of the much more correct @[1234]@.
+--
+-- On the other hand, not all FQL arrays are represented in this
+-- bogus manner.  Also, some so-called arrays by FQL's
+-- documentation are actually objects, see 'FQLObject'.
+newtype FQLList a = FQLList { unFQLList :: [a] }
+  deriving (Eq, Ord, Show)
+
+instance A.FromJSON a => A.FromJSON (FQLList a) where
+  parseJSON (A.Object o) = FQLList <$> mapM A.parseJSON (HMS.elems o)
+  parseJSON v            = FQLList <$> A.parseJSON v

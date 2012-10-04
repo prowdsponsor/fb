@@ -373,6 +373,18 @@ libraryTests manager = do
           output = FB.FQLTime (read "2012-09-26 16:52:37 UTC")
       A.decode input @?= Just [output]
 
+  describe "FQLList" $ do
+    let j :: [Int] -> Maybe (FB.FQLList Int)
+        j = Just . FB.FQLList
+    it "parses []" $ do
+      A.decode "[]" @?= j []
+    it "parses {}" $ do
+      A.decode "{}" @?= j []
+    it "parses [1234]" $ do
+      A.decode "[1234]" @?= j [1234]
+    it "parses {\"1234\": 1234}" $ do
+      A.decode "{\"1234\": 1234}" @?= j [1234]
+
   describe "Id" $ do
     it "can be parsed from a string" $ do
       A.decode "[\"1234\"]" @?= Just [FB.Id "1234"]
