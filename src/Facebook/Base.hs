@@ -60,6 +60,7 @@ fbreq path mtoken query =
                , H.queryString   =
                    HT.renderSimpleQuery False $
                    maybe id tsq mtoken query
+               , H.responseTimeout = Just 120000000 -- 2 minutes
                }
 
 
