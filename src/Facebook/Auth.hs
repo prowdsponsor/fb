@@ -31,12 +31,14 @@ import Data.String (IsString(..))
 import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as AE
 import qualified Data.Aeson.Types as AE
-import qualified Data.Attoparsec.Char8 as A
+import qualified Data.Attoparsec.Char8 as AB
+import qualified Data.Attoparsec.Text as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64.URL as Base64URL
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
+import qualified Data.Conduit.Text as CT
 import qualified Data.List as L
 import qualified Data.Serialize as Cereal
 import qualified Data.Text as T
@@ -63,8 +65,9 @@ getAppAccessToken =
     response <- fbhttp req
     lift $
       H.responseBody response C.$$+-
+      CT.decode CT.utf8 C.=$
       C.sinkParser (AppAccessToken <$  A.string "access_token="
-                                   <*> A.takeByteString)
+                                   <*> A.takeText)
 
 
 -- | The first step to get an user access token.  Returns the
@@ -82,7 +85,7 @@ getUserAccessTokenStep1 redirectUrl perms = do
                     Production -> "https://www.facebook.com/dialog/oauth?client_id="
                     Beta ->  "https://www.beta.facebook.com/dialog/oauth?client_id="
     in T.concat $ urlBase
-                : TE.decodeUtf8 (appId creds)
+                : appId creds
                 : "&redirect_uri="
                 : redirectUrl
                 : (case perms of
@@ -140,11 +143,12 @@ userAccessTokenParser :: UTCTime -- ^ 'getCurrentTime'
 userAccessTokenParser now bs =
     let q = HT.parseQuery bs; lookup' a = join (lookup a q)
     in case (,) <$> lookup' "access_token" <*> lookup' "expires" of
-         (Just (tok, expt)) -> UserAccessToken userId tok (toExpire expt)
+         (Just (tok, expt)) -> UserAccessToken userId (dec tok) (toExpire expt)
          _ -> error $ "userAccessTokenParser: failed to parse " ++ show bs
        where toExpire expt = let i = read (B8.unpack expt) :: Int
                              in addUTCTime (fromIntegral i) now
              userId = error "userAccessTokenParser: never here"
+             dec = TE.decodeUtf8With TE.lenientDecode
 
 
 -- | The URL an user should be redirected to in order to log them
@@ -178,7 +182,7 @@ getUserLogoutUrl (UserAccessToken _ data_ _) next = do
     in TE.decodeUtf8 $
          urlBase <>
          HT.renderQuery False [ ("next", Just (TE.encodeUtf8 next))
-                              , ("access_token", Just data_) ]
+                              , ("access_token", Just (TE.encodeUtf8 data_)) ]
 
 
 -- | URL where the user is redirected to after Facebook
@@ -274,7 +278,7 @@ extendUserAccessToken token@(UserAccessToken uid data_ _)
         creds <- getCreds
         req   <- fbreq "/oauth/access_token" Nothing $
                  tsq creds [ ("grant_type", "fb_exchange_token")
-                           , ("fb_exchange_token", data_) ]
+                           , ("fb_exchange_token", TE.encodeUtf8 data_) ]
         eresponse <- E.try (asBS =<< fbhttp req)
         case eresponse of
           Right response -> do
@@ -304,7 +308,7 @@ parseSignedRequest signedRequest =
     ('.', encodedUnparsedPayload) <- MaybeT $ return (B8.uncons encodedUnparsedPayloadWithDot)
     signature       <- eitherToMaybeT $ Base64URL.decode $ addBase64Padding encodedSignature
     unparsedPayload <- eitherToMaybeT $ Base64URL.decode $ addBase64Padding encodedUnparsedPayload
-    payload         <- eitherToMaybeT $ A.parseOnly json' unparsedPayload
+    payload         <- eitherToMaybeT $ AB.parseOnly json' unparsedPayload
 
     -- Verify signature
     SignedRequestAlgorithm algo <- fromJson payload
@@ -321,7 +325,7 @@ parseSignedRequest signedRequest =
        fromJson :: (AE.FromJSON a, Monad m) => AE.Value -> MaybeT m a
        fromJson = eitherToMaybeT . AE.parseEither AE.parseJSON
        credsToHmacKey :: Credentials -> MacKey ctx SHA256
-       credsToHmacKey = MacKey . appSecret
+       credsToHmacKey = MacKey . appSecretBS
 
 newtype SignedRequestAlgorithm = SignedRequestAlgorithm Text
 instance AE.FromJSON SignedRequestAlgorithm where

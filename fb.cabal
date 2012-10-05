@@ -1,5 +1,5 @@
 name:              fb
-version:           0.12.9
+version:           0.13
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -63,7 +63,6 @@ library
       base               >= 4       && < 5
     , lifted-base        >= 0.1     && < 0.2
     , bytestring         >= 0.9     && < 0.11
-    , bytestring-lexing  == 0.4.*
     , text               >= 0.11    && < 0.12
     , transformers       >= 0.2     && < 0.4
     , transformers-base

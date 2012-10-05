@@ -27,6 +27,7 @@ import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.Conduit.List as CL
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
 
@@ -73,11 +74,11 @@ class ToSimpleQuery a where
     tsq _ = id
 
 instance ToSimpleQuery Credentials where
-    tsq creds = (:) ("client_id",     appId     creds) .
-                (:) ("client_secret", appSecret creds)
+    tsq creds = (:) ("client_id",     appIdBS     creds) .
+                (:) ("client_secret", appSecretBS creds)
 
 instance ToSimpleQuery (AccessToken anyKind) where
-    tsq token = (:) ("access_token", accessTokenData token)
+    tsq token = (:) ("access_token", TE.encodeUtf8 $ accessTokenData token)
 
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a

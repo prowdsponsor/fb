@@ -18,7 +18,6 @@ import Data.Typeable (Typeable)
 -- import qualified Control.Exception.Lifted as E
 import qualified Data.Aeson as A
 import qualified Data.Conduit as C
--- import qualified Data.Text as T
 
 
 import Facebook.Types
@@ -90,7 +89,7 @@ getUser :: (C.MonadResource m, MonadBaseControl IO m) =>
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
         -> FacebookT anyAuth m User
-getUser id_ query mtoken = getObject ("/" <> id_) query mtoken
+getUser id_ query mtoken = getObject ("/" <> idCodeBS id_) query mtoken
 
 
 -- | Search users by keyword.
@@ -110,4 +109,4 @@ getUserCheckins ::
   -> UserAccessToken -- ^ User access token.
   -> FacebookT anyAuth m (Pager Checkin)
 getUserCheckins id_ query token =
-  getObject ("/" <> id_ <> "/checkins") query (Just token)
+  getObject ("/" <> idCodeBS id_ <> "/checkins") query (Just token)

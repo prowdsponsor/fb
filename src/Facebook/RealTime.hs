@@ -121,7 +121,7 @@ modifySubscription object fields callbackUrl verifyToken apptoken = do
 getSubscriptionsPath :: Monad m => FacebookT Auth m ByteString
 getSubscriptionsPath = do
   creds <- getCreds
-  return $ B.concat ["/", appId creds, "/subscriptions"]
+  return $ B.concat ["/", appIdBS creds, "/subscriptions"]
 
 
 -- | Information returned by Facebook about a real-time update
@@ -172,7 +172,7 @@ verifyRealTimeUpdateNotifications ::
 verifyRealTimeUpdateNotifications sig body = do
   creds <- getCreds
   let key :: Crypto.MacKey SHA1.Ctx SHA1.SHA1
-      key = Crypto.MacKey (appSecret creds)
+      key = Crypto.MacKey (appSecretBS creds)
       hash = Crypto.hmac key body
       expected = "sha1=" <> Base16.encode (Crypto.encode hash)
   return $! if sig `Crypto.constTimeEq` expected then Just body else Nothing

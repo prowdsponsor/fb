@@ -38,10 +38,10 @@ createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
   let post :: (C.MonadResource m, MonadBaseControl IO m)  => ByteString -> AccessToken anyKind -> FacebookT Auth m Id
-      post prepath = postObject (prepath <> appName creds <> ":" <> action) query
+      post prepath = postObject (prepath <> appNameBS creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken
-    Just apptoken -> post ("/" <> accessTokenUserId usertoken <> "/") apptoken
+    Just apptoken -> post ("/" <> idCodeBS (accessTokenUserId usertoken) <> "/") apptoken
 
 
 -- | An action of your app.  Please refer to Facebook's

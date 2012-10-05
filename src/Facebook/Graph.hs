@@ -1,7 +1,6 @@
 {-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Graph
-    ( Id(..)
-    , getObject
+    ( getObject
     , postObject
     , searchObjects
     , Pager(..)
@@ -24,10 +23,8 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.ByteString.Char8 (ByteString)
-import Data.ByteString.Lex.Integral (packDecimal)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.List (intersperse)
-import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
@@ -49,18 +46,6 @@ import Facebook.Auth
 import Facebook.Base
 import Facebook.Monad
 import Facebook.Types
-
-
--- | The identification code of an object.
-newtype Id = Id { idCode :: ByteString }
-    deriving (Eq, Ord, Show, Read, Typeable)
-
-instance A.FromJSON Id where
-    parseJSON (A.Object v) = v A..: "id"
-    parseJSON (A.String s) = pure $ Id $ TE.encodeUtf8 s
-    parseJSON (A.Number d) = pure $ Id $ from $ floor d
-      where from i = fromMaybe (B.pack $ show i) (packDecimal (i :: Int64))
-    parseJSON o = fail $ "Can't parse Facebook.Id from " ++ show o
 
 
 -- | Make a raw @GET@ request to Facebook's Graph API.
@@ -281,7 +266,7 @@ instance SimpleType ByteString where
 
 -- | An object's 'Id' code.
 instance SimpleType Id where
-    encodeFbParam = idCode
+    encodeFbParam = TE.encodeUtf8 . idCode
 
 -- | 'Permission' is a @newtype@ of 'Text'
 instance SimpleType Permission where

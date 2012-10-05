@@ -50,7 +50,7 @@ getCredentials = tryToGet `E.catch` showHelp
     where
       tryToGet = do
         [appName, appId, appSecret] <- mapM getEnv ["APP_NAME", "APP_ID", "APP_SECRET"]
-        return $ FB.Credentials (B.pack appName) (B.pack appId) (B.pack appSecret)
+        return $ FB.Credentials (T.pack appName) (T.pack appId) (T.pack appSecret)
 
       showHelp exc | not (isDoesNotExistError exc) = E.throw exc
       showHelp _ = do
@@ -80,7 +80,7 @@ invalidCredentials :: FB.Credentials
 invalidCredentials = FB.Credentials "this" "isn't" "valid"
 
 invalidUserAccessToken :: FB.UserAccessToken
-invalidUserAccessToken = FB.UserAccessToken "invalid" "user" farInTheFuture
+invalidUserAccessToken = FB.UserAccessToken (FB.Id "invalid") "user" farInTheFuture
     where
       Just farInTheFuture = parseTime (error "farInTheFuture") "%Y" "3000"
       -- It's actually important to use 'farInTheFuture' since we
@@ -152,8 +152,8 @@ facebookTests pretitle manager runAuth runNoAuth = do
   describe' "getUser" $ do
     it "works for Zuckerberg" $ do
       runNoAuth $ do
-        user <- FB.getUser "zuck" [] Nothing
-        FB.userId user         &?= "4"
+        user <- FB.getUser (FB.Id "zuck") [] Nothing
+        FB.userId user         &?= FB.Id "4"
         FB.userName user       &?= Just "Mark Zuckerberg"
         FB.userFirstName user  &?= Just "Mark"
         FB.userMiddleName user &?= Nothing
@@ -346,7 +346,7 @@ libraryTests manager = do
 
     prop "works for Id" $ \i ->
       let toId :: Int -> FB.Id
-          toId = FB.Id . B.pack . show
+          toId = FB.Id . T.pack . show
           j = abs i
       in FB.encodeFbParam (toId j) == FB.encodeFbParam j
 

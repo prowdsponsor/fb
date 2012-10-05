@@ -105,7 +105,7 @@ createTestUser :: (C.MonadResource m, MonadBaseControl IO m)
 createTestUser userInfo token = do
   creds <- getCreds
   let query = ("method","post") : createTestUserQueryArgs userInfo
-  getObject ("/" <> appId creds <> "/accounts/test-users") query (Just token)
+  getObject ("/" <> appIdBS creds <> "/accounts/test-users") query (Just token)
 
 
 -- | Get a list of test users.
@@ -114,7 +114,7 @@ getTestUsers :: (C.MonadResource m, MonadBaseControl IO m)
                 -> FacebookT Auth m (Pager TestUser)
 getTestUsers token = do
   creds <- getCreds
-  getObject ("/" <> appId creds <> "/accounts/test-users") [] (Just token)
+  getObject ("/" <> appIdBS creds <> "/accounts/test-users") [] (Just token)
 
 
 -- | Remove an existing test user.
@@ -123,7 +123,7 @@ removeTestUser :: (C.MonadResource m, MonadBaseControl IO m)
                   -> AppAccessToken -- ^ Access token for your app.
                   -> FacebookT Auth m Bool
 removeTestUser testUser token =
-  getObjectBool ("/" <> tuId testUser) [("method","delete")] (Just token)
+  getObjectBool ("/" <> idCodeBS (tuId testUser)) [("method","delete")] (Just token)
 
 
 -- | Make a friend connection between two test users.
@@ -146,7 +146,7 @@ makeFriendConn _ (TestUser { tuAccessToken = Nothing }) = E.throw $
                      \ a token. Both users must have a token."
 makeFriendConn (TestUser {tuId = id1, tuAccessToken = (Just token1)}) (TestUser {tuId = id2, tuAccessToken = (Just token2)}) = do
   let friendReq userId1 userId2 token =
-          getObjectBool ("/" <> userId1 <> "/friends/" <> userId2)
+          getObjectBool ("/" <> idCodeBS userId1 <> "/friends/" <> idCodeBS userId2)
                         [ "method" #= ("post" :: B.ByteString),
                           "access_token" #= token ]
                         Nothing

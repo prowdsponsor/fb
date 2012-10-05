@@ -1,10 +1,15 @@
 {-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving #-}
 module Facebook.Types
     ( Credentials(..)
+    , appNameBS
+    , appIdBS
+    , appSecretBS
     , AccessToken(..)
     , UserAccessToken
     , AppAccessToken
     , AccessTokenData
+    , Id(..)
+    , idCodeBS
     , UserId
     , accessTokenData
     , accessTokenExpires
@@ -16,24 +21,43 @@ module Facebook.Types
     , FbUTCTime(..)
     ) where
 
+import Control.Applicative (pure)
 import Data.ByteString (ByteString)
+import Data.Int (Int64)
 import Data.Monoid (Monoid, mappend)
+import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
 import Data.Typeable (Typeable, Typeable1)
 import System.Locale (defaultTimeLocale)
 
 import qualified Data.Aeson as A
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Builder as TLB
+import qualified Data.Text.Lazy.Builder.Int as TLBI
 
 
 -- | Credentials that you get for your app when you register on
 -- Facebook.
 data Credentials =
-    Credentials { appName   :: ByteString -- ^ Your application name (e.g. for Open Graph calls).
-                , appId     :: ByteString -- ^ Your application ID.
-                , appSecret :: ByteString -- ^ Your application secret key.
+    Credentials { appName   :: Text -- ^ Your application name (e.g. for Open Graph calls).
+                , appId     :: Text -- ^ Your application ID.
+                , appSecret :: Text -- ^ Your application secret key.
                 }
     deriving (Eq, Ord, Show, Read, Typeable)
+
+-- | 'appName' for 'ByteString'.
+appNameBS :: Credentials -> ByteString
+appNameBS = TE.encodeUtf8 . appName
+
+-- | 'appId' for 'ByteString'.
+appIdBS :: Credentials -> ByteString
+appIdBS = TE.encodeUtf8 . appId
+
+-- | 'appSecret' for 'ByteString'.
+appSecretBS :: Credentials -> ByteString
+appSecretBS = TE.encodeUtf8 . appSecret
 
 
 -- | An access token.  While you can make some API calls without
@@ -69,12 +93,30 @@ deriving instance Ord  (AccessToken kind)
 deriving instance Show (AccessToken kind)
 deriving instance Typeable1 AccessToken
 
+
 -- | The access token data that is passed to Facebook's API
 -- calls.
-type AccessTokenData = ByteString
+type AccessTokenData = Text
 
--- | A Facebook user id such as @1008905713901@.
-type UserId = ByteString
+-- | The identification code of an object.
+newtype Id = Id { idCode :: Text }
+    deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Id where
+    parseJSON (A.Object v) = v A..: "id"
+    parseJSON (A.String s) = pure $ Id s
+    parseJSON (A.Number d) = pure $ Id $ from $ floor d
+      where from i = TL.toStrict $ TLB.toLazyText $ TLBI.decimal (i :: Int64)
+    parseJSON o = fail $ "Can't parse Facebook.Id from " ++ show o
+
+-- | 'idCode' for 'ByteString'.
+idCodeBS :: Id -> ByteString
+idCodeBS = TE.encodeUtf8 . idCode
+
+
+-- | A Facebook user ID such as @1008905713901@.
+type UserId = Id
+
 
 -- | Get the access token data.
 accessTokenData :: AccessToken anyKind -> AccessTokenData
