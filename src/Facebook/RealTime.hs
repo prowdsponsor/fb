@@ -25,10 +25,10 @@ import qualified Crypto.HMAC as Crypto
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as Base16
-import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Conduit as C
 import qualified Data.Conduit.List as CL
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
@@ -118,10 +118,10 @@ modifySubscription object fields callbackUrl verifyToken apptoken = do
 
 
 -- | (Internal)  Get the subscription's path.
-getSubscriptionsPath :: Monad m => FacebookT Auth m ByteString
+getSubscriptionsPath :: Monad m => FacebookT Auth m Text
 getSubscriptionsPath = do
   creds <- getCreds
-  return $ B.concat ["/", appIdBS creds, "/subscriptions"]
+  return $ T.concat ["/", appId creds, "/subscriptions"]
 
 
 -- | Information returned by Facebook about a real-time update

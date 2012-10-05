@@ -72,7 +72,7 @@ getCheckin :: (C.MonadResource m, MonadBaseControl IO m) =>
            -> [Argument]            -- ^ Arguments to be passed to Facebook.
            -> Maybe UserAccessToken -- ^ Optional user access token.
            -> FacebookT anyAuth m Checkin
-getCheckin id_ query mtoken = getObject ("/" <> idCodeBS id_) query mtoken
+getCheckin id_ query mtoken = getObject ("/" <> idCode id_) query mtoken
 
 
 -- | Creates a 'check-in' and returns its ID. Place and

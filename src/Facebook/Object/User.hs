@@ -11,7 +11,6 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))
-import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
@@ -89,12 +88,12 @@ getUser :: (C.MonadResource m, MonadBaseControl IO m) =>
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
         -> FacebookT anyAuth m User
-getUser id_ query mtoken = getObject ("/" <> idCodeBS id_) query mtoken
+getUser id_ query mtoken = getObject ("/" <> idCode id_) query mtoken
 
 
 -- | Search users by keyword.
 searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
-            => ByteString
+            => Text
             -> [Argument]
             -> Maybe UserAccessToken
             -> FacebookT anyAuth m (Pager User)
@@ -109,4 +108,4 @@ getUserCheckins ::
   -> UserAccessToken -- ^ User access token.
   -> FacebookT anyAuth m (Pager Checkin)
 getUserCheckins id_ query token =
-  getObject ("/" <> idCodeBS id_ <> "/checkins") query (Just token)
+  getObject ("/" <> idCode id_ <> "/checkins") query (Just token)

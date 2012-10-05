@@ -6,9 +6,9 @@ module Facebook.Object.Action
 
 import Control.Arrow (first)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.ByteString.Char8 (ByteString)
 import Data.Function (on)
 import Data.String (IsString(..))
+import Data.Text (Text)
 
 import qualified Data.Conduit as C
 
@@ -37,11 +37,11 @@ createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  let post :: (C.MonadResource m, MonadBaseControl IO m)  => ByteString -> AccessToken anyKind -> FacebookT Auth m Id
-      post prepath = postObject (prepath <> appNameBS creds <> ":" <> action) query
+  let post :: (C.MonadResource m, MonadBaseControl IO m)  => Text -> AccessToken anyKind -> FacebookT Auth m Id
+      post prepath = postObject (prepath <> appName creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken
-    Just apptoken -> post ("/" <> idCodeBS (accessTokenUserId usertoken) <> "/") apptoken
+    Just apptoken -> post ("/" <> idCode (accessTokenUserId usertoken) <> "/") apptoken
 
 
 -- | An action of your app.  Please refer to Facebook's
@@ -49,7 +49,7 @@ createAction (Action action) query mapptoken usertoken = do
 -- <https://developers.facebook.com/docs/opengraph/keyconcepts/#actions-objects>
 -- to see how you can create actions.
 --
--- This is a @newtype@ of 'ByteString' that supports only 'IsString'.
+-- This is a @newtype@ of 'Text' that supports only 'IsString'.
 -- This means that to create an 'Action' you should use the
 -- @OverloadedStrings@ language extension.  For example,
 --
@@ -58,7 +58,7 @@ createAction (Action action) query mapptoken usertoken = do
 -- > foo token = do
 -- >   ...
 -- >   createAction "cook" [...] token
-newtype Action = Action { unAction :: ByteString }
+newtype Action = Action { unAction :: Text }
 
 instance Show Action where
     show = show . unAction

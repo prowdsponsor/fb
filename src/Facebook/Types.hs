@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving #-}
 module Facebook.Types
     ( Credentials(..)
-    , appNameBS
     , appIdBS
     , appSecretBS
     , AccessToken(..)
@@ -9,7 +8,6 @@ module Facebook.Types
     , AppAccessToken
     , AccessTokenData
     , Id(..)
-    , idCodeBS
     , UserId
     , accessTokenData
     , accessTokenExpires
@@ -46,10 +44,6 @@ data Credentials =
                 , appSecret :: Text -- ^ Your application secret key.
                 }
     deriving (Eq, Ord, Show, Read, Typeable)
-
--- | 'appName' for 'ByteString'.
-appNameBS :: Credentials -> ByteString
-appNameBS = TE.encodeUtf8 . appName
 
 -- | 'appId' for 'ByteString'.
 appIdBS :: Credentials -> ByteString
@@ -108,10 +102,6 @@ instance A.FromJSON Id where
     parseJSON (A.Number d) = pure $ Id $ from $ floor d
       where from i = TL.toStrict $ TLB.toLazyText $ TLBI.decimal (i :: Int64)
     parseJSON o = fail $ "Can't parse Facebook.Id from " ++ show o
-
--- | 'idCode' for 'ByteString'.
-idCodeBS :: Id -> ByteString
-idCodeBS = TE.encodeUtf8 . idCode
 
 
 -- | A Facebook user ID such as @1008905713901@.

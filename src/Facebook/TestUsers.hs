@@ -105,7 +105,7 @@ createTestUser :: (C.MonadResource m, MonadBaseControl IO m)
 createTestUser userInfo token = do
   creds <- getCreds
   let query = ("method","post") : createTestUserQueryArgs userInfo
-  getObject ("/" <> appIdBS creds <> "/accounts/test-users") query (Just token)
+  getObject ("/" <> appId creds <> "/accounts/test-users") query (Just token)
 
 
 -- | Get a list of test users.
@@ -114,7 +114,7 @@ getTestUsers :: (C.MonadResource m, MonadBaseControl IO m)
                 -> FacebookT Auth m (Pager TestUser)
 getTestUsers token = do
   creds <- getCreds
-  getObject ("/" <> appIdBS creds <> "/accounts/test-users") [] (Just token)
+  getObject ("/" <> appId creds <> "/accounts/test-users") [] (Just token)
 
 
 -- | Remove an existing test user.
@@ -123,7 +123,7 @@ removeTestUser :: (C.MonadResource m, MonadBaseControl IO m)
                   -> AppAccessToken -- ^ Access token for your app.
                   -> FacebookT Auth m Bool
 removeTestUser testUser token =
-  getObjectBool ("/" <> idCodeBS (tuId testUser)) [("method","delete")] (Just token)
+  getObjectBool ("/" <> idCode (tuId testUser)) [("method","delete")] (Just token)
 
 
 -- | Make a friend connection between two test users.
@@ -146,7 +146,7 @@ makeFriendConn _ (TestUser { tuAccessToken = Nothing }) = E.throw $
                      \ a token. Both users must have a token."
 makeFriendConn (TestUser {tuId = id1, tuAccessToken = (Just token1)}) (TestUser {tuId = id2, tuAccessToken = (Just token2)}) = do
   let friendReq userId1 userId2 token =
-          getObjectBool ("/" <> idCodeBS userId1 <> "/friends/" <> idCodeBS userId2)
+          getObjectBool ("/" <> idCode userId1 <> "/friends/" <> idCode userId2)
                         [ "method" #= ("post" :: B.ByteString),
                           "access_token" #= token ]
                         Nothing
@@ -170,7 +170,7 @@ incompleteTestUserAccessToken t = do
 -- as a JSON, it tries to parse either as "true" or "false".
 -- Used only by the Test User API bindings.
 getObjectBool :: (C.MonadResource m, MonadBaseControl IO m)
-                 => B.ByteString
+                 => Text
                  -- ^ Path (should begin with a slash @\/@).
                  -> [Argument]
                  -- ^ Arguments to be passed to Facebook.

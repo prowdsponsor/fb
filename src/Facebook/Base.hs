@@ -44,7 +44,7 @@ import Facebook.Monad
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of
 -- 'H.def' when creating new 'H.Request'@s@ for Facebook.
 fbreq :: Monad m =>
-         ByteString                  -- ^ Path.
+         Text                        -- ^ Path.
       -> Maybe (AccessToken anyKind) -- ^ Access token.
       -> HT.SimpleQuery              -- ^ Parameters.
       -> FacebookT anyAuth m (H.Request n)
@@ -56,7 +56,7 @@ fbreq path mtoken query =
       in H.def { H.secure        = True
                , H.host          = host
                , H.port          = 443
-               , H.path          = path
+               , H.path          = TE.encodeUtf8 path
                , H.redirectCount = 3
                , H.queryString   =
                    HT.renderSimpleQuery False $

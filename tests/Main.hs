@@ -163,8 +163,8 @@ facebookTests pretitle manager runAuth runNoAuth = do
   describe' "getPage" $ do
     it "works for FB Developers" $ do
       runNoAuth $ do
-        page <- FB.getPage "19292868552" [] Nothing
-        FB.pageId page &?= "19292868552"
+        page <- FB.getPage (FB.Id "19292868552") [] Nothing
+        FB.pageId page &?= (FB.Id "19292868552")
         FB.pageName page &?= Just "Facebook Developers"
         FB.pageCategory page &?= Just "Product/service"
         FB.pageIsPublished page &?= Just True

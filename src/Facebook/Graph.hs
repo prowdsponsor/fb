@@ -50,7 +50,7 @@ import Facebook.Types
 
 -- | Make a raw @GET@ request to Facebook's Graph API.
 getObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
-             ByteString     -- ^ Path (should begin with a slash @\/@)
+             Text           -- ^ Path (should begin with a slash @\/@)
           -> [Argument]     -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
           -> FacebookT anyAuth m a
@@ -61,7 +61,7 @@ getObject path query mtoken =
 
 -- | Make a raw @POST@ request to Facebook's Graph API.
 postObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
-              ByteString          -- ^ Path (should begin with a slash @\/@)
+              Text                -- ^ Path (should begin with a slash @\/@)
            -> [Argument]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
            -> FacebookT Auth m a
@@ -74,13 +74,13 @@ postObject path query token =
 -- | Make a raw @GET@ request to the /search endpoint of Facebook’s
 -- Graph API.  Returns a raw JSON 'A.Value'.
 searchObjects :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a)
-              => ByteString            -- ^ A Facebook object type to search for
-              -> ByteString            -- ^ The keyword to search for
+              => Text                  -- ^ A Facebook object type to search for
+              -> Text                  -- ^ The keyword to search for
               -> [Argument]            -- ^ Additional arguments to pass
               -> Maybe UserAccessToken -- ^ Optional access token
               -> FacebookT anyAuth m (Pager a)
 searchObjects objectType keyword query = getObject "/search" query'
-  where query' = ("q", keyword) : ("type", objectType) : query
+  where query' = ("q" #= keyword) : ("type" #= objectType) : query
 
 
 ----------------------------------------------------------------------
