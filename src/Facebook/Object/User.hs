@@ -5,6 +5,8 @@ module Facebook.Object.User
     , getUser
     , searchUsers
     , getUserCheckins
+    , Friend(..)
+    , getUserFriends
     ) where
 
 import Control.Applicative
@@ -109,3 +111,28 @@ getUserCheckins ::
   -> FacebookT anyAuth m (Pager Checkin)
 getUserCheckins id_ query token =
   getObject ("/" <> idCode id_ <> "/checkins") query (Just token)
+
+
+-- | A friend connection of a 'User'.
+data Friend =
+    Friend { friendId   :: UserId
+           , friendName :: Text
+           }
+    deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Friend where
+    parseJSON (A.Object v) =
+      Friend <$> v .: "id"
+             <*> v .: "name"
+    parseJSON _ = mzero
+
+
+-- | Get the list of friends of the given user.
+getUserFriends ::
+     (C.MonadResource m, MonadBaseControl IO m) =>
+     UserId          -- ^ User ID or @\"me\"@.
+  -> [Argument]      -- ^ Arguments to be passed to Facebook.
+  -> UserAccessToken -- ^ User access token.
+  -> FacebookT anyAuth m (Pager Friend)
+getUserFriends id_ query token =
+  getObject ("/" <> idCode id_ <> "/friends") query (Just token)

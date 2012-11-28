@@ -41,6 +41,8 @@ module Facebook
     , getUser
     , searchUsers
     , getUserCheckins
+    , Friend(..)
+    , getUserFriends
       -- ** Page
     , Page(..)
     , getPage

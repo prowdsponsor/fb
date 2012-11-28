@@ -269,13 +269,21 @@ facebookTests pretitle manager runAuth runNoAuth = do
       runAuth $
         withTestUser D.def $ \testUser1 ->
         withTestUser D.def $ \testUser2 -> do
-            let Just tokenUserA = FB.incompleteTestUserAccessToken testUser1
-            let Just tokenUserB = FB.incompleteTestUserAccessToken testUser2
-            -- Create a friend connection between the new test users
+            let Just tokenUser1 = FB.incompleteTestUserAccessToken testUser1
+            let Just tokenUser2 = FB.incompleteTestUserAccessToken testUser2
+            -- Check if the new test users' tokens are valid.
+            FB.isValid tokenUser1 #?= True
+            FB.isValid tokenUser2 #?= True
+            -- Create a friend connection between the new test users.
             FB.makeFriendConn testUser1 testUser2
-            -- Check if the new test users' tokens are valid
-            FB.isValid tokenUserA #?= True
-            FB.isValid tokenUserB #?= True
+            -- Verify that one is a friend of the other.
+            user1 <- FB.getUser (FB.tuId testUser1) [] (Just tokenUser1)
+            user2 <- FB.getUser (FB.tuId testUser2) [] (Just tokenUser2)
+            friends1 <- FB.getUserFriends (FB.tuId testUser1) [] tokenUser1
+            friends2 <- FB.getUserFriends (FB.tuId testUser2) [] tokenUser2
+            FB.pagerData friends1 &?= [FB.Friend (FB.tuId testUser2) (M.fromJust (FB.userName user2))]
+            FB.pagerData friends2 &?= [FB.Friend (FB.tuId testUser1) (M.fromJust (FB.userName user1))]
+
 
   describe' "getTestUsers" $ do
     it "gets a list of test users" $ do
