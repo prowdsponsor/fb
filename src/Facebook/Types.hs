@@ -23,6 +23,7 @@ import Control.Applicative (pure)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
 import Data.Monoid (Monoid, mappend)
+import Data.String (IsString)
 import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
 import Data.Typeable (Typeable, Typeable1)
@@ -94,7 +95,7 @@ type AccessTokenData = Text
 
 -- | The identification code of an object.
 newtype Id = Id { idCode :: Text }
-    deriving (Eq, Ord, Show, Read, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable, IsString)
 
 instance A.FromJSON Id where
     parseJSON (A.Object v) = v A..: "id"
