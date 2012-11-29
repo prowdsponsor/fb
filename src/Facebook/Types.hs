@@ -104,6 +104,9 @@ instance A.FromJSON Id where
       where from i = TL.toStrict $ TLB.toLazyText $ TLBI.decimal (i :: Int64)
     parseJSON o = fail $ "Can't parse Facebook.Id from " ++ show o
 
+instance A.ToJSON Id where
+    toJSON (Id t) = A.String t
+
 
 -- | A Facebook user ID such as @1008905713901@.
 type UserId = Id
