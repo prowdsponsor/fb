@@ -71,7 +71,7 @@ library
     , conduit            >= 0.5     && < 0.6
     , data-default
     , http-types
-    , http-conduit       >= 1.5     && < 1.7
+    , http-conduit       >= 1.5     && < 1.9
     , attoparsec         >= 0.10    && < 0.11
     , attoparsec-conduit >= 0.5     && < 0.6
     , unordered-containers
