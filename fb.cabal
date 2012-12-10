@@ -82,7 +82,7 @@ library
     , old-locale
     , cereal             == 0.3.*
     , crypto-api         == 0.10.*
-    , cryptohash         == 0.7.*
+    , cryptohash         >= 0.7
   extensions:
     DeriveDataTypeable
     EmptyDataDecls
