@@ -161,8 +161,8 @@ fbhttpHelper manager req = do
         Left _ -> do
           case AT.parse wwwAuthenticateParser <$>
                lookup "WWW-Authenticate" headers of
-            Just (AT.Done _ fbexc) -> E.throw fbexc
-            _                      -> E.throw statusexc
+            Just (AT.Done _ fbexc) -> E.throwIO fbexc
+            _                      -> E.throwIO statusexc
 
 
 -- | Try to parse the @WWW-Authenticate@ header of a Facebook
