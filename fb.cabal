@@ -114,7 +114,7 @@ test-suite runtests
     , data-default
     , HUnit
     , QuickCheck
-    , hspec == 1.3.*
+    , hspec == 1.4.*
     , fb
   extensions:
     TypeFamilies

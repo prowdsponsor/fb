@@ -39,8 +39,8 @@ import qualified Test.QuickCheck as QC
 
 
 import Test.HUnit ((@?=))
+import Test.Hspec
 import Test.Hspec.HUnit ()
-import Test.Hspec.Monadic
 import Test.Hspec.QuickCheck
 
 
