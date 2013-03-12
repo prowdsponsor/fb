@@ -143,18 +143,21 @@ fbhttpHelper :: (MonadBaseControl IO m, C.MonadResource m) =>
              -> H.Request m
              -> m (H.Response (C.ResumableSource m ByteString))
 fbhttpHelper manager req = do
-  let req' = req { H.checkStatus = \_ _ -> Nothing }
+  let req' = req { H.checkStatus = \_ _ _ -> Nothing }
 #if DEBUG
   _ <- liftIO $ printf "fbhttp doing request\n\tmethod: %s\n\tsecure: %s\n\thost: %s\n\tport: %s\n\tpath: %s\n\tqueryString: %s\n\trequestHeaders: %s\n" (show $ H.method req') (show $ H.secure req') (show $ H.host req') (show $ H.port req') (show $ H.path req') (show $ H.queryString req') (show $ H.requestHeaders req')
 #endif
-  response@(H.Response status _ headers _) <- H.http req' manager
+  response <- H.http req' manager
+  let status  = H.responseStatus    response
+      headers = H.responseHeaders   response
+      cookies = H.responseCookieJar response
 #if DEBUG
   _ <- liftIO $ printf "fbhttp response status: %s\n" (show status)
 #endif
   if isOkay status
     then return response
     else do
-      let statusexc = H.StatusCodeException status headers
+      let statusexc = H.StatusCodeException status headers cookies
       val <- E.try $ asJsonHelper response
       case val :: Either E.SomeException FacebookException of
         Right fbexc -> E.throw fbexc
@@ -187,9 +190,8 @@ httpCheck :: (MonadBaseControl IO m, C.MonadResource m) =>
 httpCheck req = runResourceInFb $ do
   manager <- getManager
   let req' = req { H.method      = HT.methodHead
-                 , H.checkStatus = \_ _ -> Nothing }
-  H.Response status _ _ _ <- lift (H.httpLbs req' manager)
-  return $! isOkay status
+                 , H.checkStatus = \_ _ _ -> Nothing }
+  isOkay . H.responseStatus <$> lift (H.httpLbs req' manager)
   -- Yes, we use httpLbs above so that we don't have to worry
   -- about consuming the responseBody.  Note that the
   -- responseBody should be empty since we're using HEAD, but
