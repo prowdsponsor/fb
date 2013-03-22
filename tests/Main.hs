@@ -171,7 +171,6 @@ facebookTests pretitle manager runAuth runNoAuth = do
         FB.pageCanPost page &?= Nothing
         FB.pagePhone page &?= Nothing
         FB.pageCheckins page &?= Nothing
-        FB.pagePicture page &?= Just "http://profile.ak.fbcdn.net/hprofile-ak-ash2/276791_19292868552_1958181823_s.jpg"
         FB.pageWebsite page &?= Just "http://developers.facebook.com"
 
   describe' "fqlQuery" $ do
