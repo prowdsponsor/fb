@@ -2,6 +2,7 @@
 module Facebook.Graph
     ( getObject
     , postObject
+    , deleteObject
     , searchObjects
     , Pager(..)
     , fetchNextPage
@@ -65,10 +66,29 @@ postObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
            -> [Argument]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
            -> FacebookT Auth m a
-postObject path query token =
+postObject = methodObject HT.methodPost
+
+
+-- | Make a raw @DELETE@ request to Facebook's Graph API.
+deleteObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+                Text                -- ^ Path (should begin with a slash @\/@)
+             -> [Argument]          -- ^ Arguments to be passed to Facebook
+             -> AccessToken anyKind -- ^ Access token
+             -> FacebookT Auth m a
+deleteObject = methodObject HT.methodDelete
+
+
+-- | Helper function used by 'postObject' and 'deleteObject'.
+methodObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+                HT.Method
+             -> Text                -- ^ Path (should begin with a slash @\/@)
+             -> [Argument]          -- ^ Arguments to be passed to Facebook
+             -> AccessToken anyKind -- ^ Access token
+             -> FacebookT Auth m a
+methodObject method path query token =
   runResourceInFb $ do
     req <- fbreq path (Just token) query
-    asJson =<< fbhttp req { H.method = HT.methodPost }
+    asJson =<< fbhttp req { H.method = method }
 
 
 -- | Make a raw @GET@ request to the /search endpoint of Facebook’s
