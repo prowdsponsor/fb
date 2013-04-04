@@ -106,6 +106,7 @@ module Facebook
       -- * Raw access to the Graph API
     , getObject
     , postObject
+    , deleteObject
     , searchObjects
     , Id(..)
     , Argument
