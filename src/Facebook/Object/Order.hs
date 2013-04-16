@@ -19,8 +19,10 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
 
+-- | Order Id type
 type OrderId = Id
 
+-- | A Facebook Order oject
 data Order = Order {
 	orderId   	:: OrderId,
 	orderFrom 	:: UserId,
@@ -34,6 +36,7 @@ data Order = Order {
 	orderUpdatedTime	:: Maybe Text
 } deriving (Show, Typeable)
 
+-- | A Facebook Order status type
 data OrderStatus = 
 	OrderPlaced 
 	| OrderSettled 
@@ -42,6 +45,7 @@ data OrderStatus =
 	| OrderCancelled
 	deriving (Show, Enum, Eq, Typeable)
 
+-- | A trimmed down version of Facebook Application as it is used in Order
 data OrderApplication = OrderApplication {
 	appId 	:: Text,
 	appName	:: Text
