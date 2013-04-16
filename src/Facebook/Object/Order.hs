@@ -7,14 +7,22 @@ module Facebook.Object.Order
 
 import Control.Applicative
 import Control.Monad (mzero)
+import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
 import Data.Aeson ((.:), (.:?))
+import Data.Typeable (Typeable)
+
 import qualified Data.Aeson as A
+import qualified Data.Conduit as C
 
 import Facebook.Types
+import Facebook.Monad
+import Facebook.Graph
+
+type OrderId = Id
 
 data Order = Order {
-	orderId   	:: Text,
+	orderId   	:: OrderId,
 	orderFrom 	:: UserId,
 	orderTo	  	:: UserId,
 	orderAmount :: Integer,
@@ -24,7 +32,7 @@ data Order = Order {
 	orderRefundCode		:: Maybe Text,
 	orderCreatedTime 	:: Maybe Text,
 	orderUpdatedTime	:: Maybe Text
-} deriving (Show)
+} deriving (Show, Typeable)
 
 data OrderStatus = 
 	OrderPlaced 
@@ -32,12 +40,12 @@ data OrderStatus =
 	| OrderRefunded 
 	| OrderDisputed 
 	| OrderCancelled
-	deriving (Show, Enum, Eq)
+	deriving (Show, Enum, Eq, Typeable)
 
 data OrderApplication = OrderApplication {
 	appId 	:: Text,
 	appName	:: Text
-} deriving (Show)
+} deriving (Show, Typeable)
 
 instance A.FromJSON OrderApplication where
 	parseJSON (A.Object v) 	=
@@ -66,3 +74,11 @@ instance A.FromJSON OrderStatus where
 	parseJSON (A.String "disputed")		= return OrderDisputed
 	parseJSON (A.String "cancelled")	= return OrderCancelled
 	parseJSON _							= mzero
+
+-- | Get an order using order ID.  The user access token is
+-- mandatory. 
+getOrder :: (C.MonadResource m, MonadBaseControl IO m) =>
+           OrderId         -- ^ Order ID.
+        -> UserAccessToken -- ^ Optional user access token.
+        -> FacebookT anyAuth m Order
+getOrder id_ mtoken = getObject ("/" <> idCode id_) [] (Just mtoken)
