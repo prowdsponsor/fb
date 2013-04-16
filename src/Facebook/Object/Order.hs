@@ -11,6 +11,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
 import Data.Aeson ((.:), (.:?))
 import Data.Typeable (Typeable)
+import Data.Time.LocalTime (ZonedTime)
 
 import qualified Data.Aeson as A
 import qualified Data.Conduit as C
@@ -32,8 +33,8 @@ data Order = Order {
 	orderApplication 	:: OrderApplication,
 	orderCountry		:: Text,
 	orderRefundCode		:: Maybe Text,
-	orderCreatedTime 	:: Maybe Text,
-	orderUpdatedTime	:: Maybe Text
+	orderCreatedTime 	:: ZonedTime,
+	orderUpdatedTime	:: ZonedTime
 } deriving (Show, Typeable)
 
 -- | A Facebook Order status type
@@ -67,8 +68,8 @@ instance A.FromJSON Order where
 			  <*> v .: "application"
 			  <*> v .: "country"
 			  <*> v .:? "refund_reason_code"
-			  <*> v .:? "created_time"
-			  <*> v .:? "updated_time"
+			  <*> v .: "created_time"
+			  <*> v .: "updated_time"
 	parseJSON _ = mzero
 
 instance A.FromJSON OrderStatus where
