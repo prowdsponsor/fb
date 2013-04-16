@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Object.Order
 	( Order(..)
+	, OrderStatus(..)
+	, OrderApplication(..)
 	) where
 
 import Control.Applicative
@@ -17,7 +19,7 @@ data Order = Order {
 	orderTo	  	:: UserId,
 	orderAmount :: Integer,
 	orderStatus :: OrderStatus,
-	-- orderApplication 	:: Application
+	orderApplication 	:: OrderApplication,
 	orderCountry		:: Text,
 	orderRefundCode		:: Maybe Text,
 	orderCreatedTime 	:: Maybe Text,
@@ -32,6 +34,17 @@ data OrderStatus =
 	| OrderCancelled
 	deriving (Show, Enum, Eq)
 
+data OrderApplication = OrderApplication {
+	appId 	:: Text,
+	appName	:: Text
+} deriving (Show)
+
+instance A.FromJSON OrderApplication where
+	parseJSON (A.Object v) 	=
+		OrderApplication 	<$> v .: "id"
+						 	<*> v .: "name"
+	parseJSON _ 			= mzero 
+
 instance A.FromJSON Order where
 	parseJSON (A.Object v) =
 		Order <$> v .: "id"
@@ -39,6 +52,7 @@ instance A.FromJSON Order where
 			  <*> v .: "to"
 			  <*> v .: "amount"
 			  <*> v .: "status"
+			  <*> v .: "application"
 			  <*> v .: "country"
 			  <*> v .:? "refund_reason_code"
 			  <*> v .:? "created_time"
