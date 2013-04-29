@@ -81,7 +81,7 @@ library
     , time               >= 1.2     && < 1.5
     , old-locale
     , cereal             == 0.3.*
-    , crypto-api         == 0.11.*
+    , crypto-api         >= 0.11    && < 0.13
     , cryptohash         >= 0.7
   extensions:
     DeriveDataTypeable
