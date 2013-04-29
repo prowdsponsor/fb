@@ -16,13 +16,13 @@ module Facebook.RealTime
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad (liftM, mzero, void)
+import Crypto.Hash.CryptoAPI (SHA1)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
 import qualified Crypto.Classes as Crypto
 import qualified Crypto.HMAC as Crypto
-import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -171,7 +171,7 @@ verifyRealTimeUpdateNotifications ::
   -> FacebookT Auth m (Maybe L.ByteString)
 verifyRealTimeUpdateNotifications sig body = do
   creds <- getCreds
-  let key :: Crypto.MacKey SHA1.Ctx SHA1.SHA1
+  let key :: Crypto.MacKey ctx SHA1
       key = Crypto.MacKey (appSecretBS creds)
       hash = Crypto.hmac key body
       expected = "sha1=" <> Base16.encode (Crypto.encode hash)
