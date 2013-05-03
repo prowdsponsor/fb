@@ -3,6 +3,7 @@ module Facebook.Object.Order
 	( Order(..)
 	, OrderStatus(..)
 	, OrderApplication(..)
+	, getOrder
 	) where
 
 import Control.Applicative
