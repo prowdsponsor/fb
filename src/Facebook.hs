@@ -55,6 +55,12 @@ module Facebook
     , CheckinFrom(..)
     , getCheckin
     , createCheckin
+      -- ** Order
+    , Order(..)
+    , OrderId
+    , OrderApplication
+    , OrderStatus
+    , getOrder
 
       -- * Facebook's Graph API basic functionality
       -- ** Simple types
@@ -127,6 +133,7 @@ import Facebook.Object.Page
 import Facebook.Object.User
 import Facebook.Object.Action
 import Facebook.Object.Checkin
+import Facebook.Object.Order
 import Facebook.RealTime
 import Facebook.FQL
 import Facebook.TestUsers
