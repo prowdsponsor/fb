@@ -22,14 +22,14 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
 
--- | Order Id type
+-- | 'Order' Id type.
 type OrderId = Id
 
--- | A Facebook Order oject
+-- | A Facebook @Order@ oject.
 data Order = Order {
     orderId             :: OrderId,
     orderFrom           :: UserId,
-    orderTo	            :: UserId,
+    orderTo             :: UserId,
     orderAmount         :: Integer,
     orderStatus         :: OrderStatus,
     orderApplication    :: OrderApplication,
@@ -39,26 +39,26 @@ data Order = Order {
     orderUpdatedTime    :: ZonedTime
 } deriving (Show, Typeable)
 
--- | A Facebook Order status type
-data OrderStatus = 
-    OrderPlaced 
-    | OrderSettled 
-    | OrderRefunded 
-    | OrderDisputed 
+-- | A Facebook 'Order' status type.
+data OrderStatus =
+    OrderPlaced
+    | OrderSettled
+    | OrderRefunded
+    | OrderDisputed
     | OrderCancelled
     deriving (Show, Enum, Eq, Typeable)
 
--- | A trimmed down version of Facebook Application as it is used in Order
+-- | A trimmed down version of Facebook Application as it is used in 'Order'.
 data OrderApplication = OrderApplication {
-    appId 	:: Text,
-    appName	:: Text
+    appId   :: Text,
+    appName :: Text
 } deriving (Show, Typeable)
 
 instance A.FromJSON OrderApplication where
     parseJSON (A.Object v)  =
         OrderApplication    <$> v .: "id"
                             <*> v .: "name"
-    parseJSON _             = mzero 
+    parseJSON _             = mzero
 
 instance A.FromJSON Order where
     parseJSON (A.Object v) =
@@ -80,10 +80,10 @@ instance A.FromJSON OrderStatus where
     parseJSON (A.String "refunded")     = return OrderRefunded
     parseJSON (A.String "disputed")     = return OrderDisputed
     parseJSON (A.String "cancelled")    = return OrderCancelled
-    parseJSON _	                        = mzero
+    parseJSON _                         = mzero
 
--- | Get an order using order ID.  The user access token is
--- mandatory. 
+-- | Get an 'Order' using its 'OrderId'.  The user access token
+-- is mandatory.
 getOrder :: (C.MonadResource m, MonadBaseControl IO m) =>
            OrderId         -- ^ Order ID.
         -> UserAccessToken -- ^ User access token.
