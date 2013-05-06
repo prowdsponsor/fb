@@ -58,7 +58,7 @@ instance A.FromJSON OrderApplication where
     parseJSON (A.Object v)  =
         OrderApplication    <$> v .: "id"
                             <*> v .: "name"
-	parseJSON _             = mzero 
+    parseJSON _             = mzero 
 
 instance A.FromJSON Order where
     parseJSON (A.Object v) =
@@ -72,7 +72,7 @@ instance A.FromJSON Order where
                 <*> v .:? "refund_reason_code"
                 <*> v .: "created_time"
                 <*> v .: "updated_time"
-	parseJSON _ = mzero
+    parseJSON _ = mzero
 
 instance A.FromJSON OrderStatus where
     parseJSON (A.String "placed")       = return OrderPlaced
