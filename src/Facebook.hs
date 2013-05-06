@@ -55,7 +55,12 @@ module Facebook
     , CheckinFrom(..)
     , getCheckin
     , createCheckin
+      -- ** Order
     , Order(..)
+    , OrderId
+    , OrderApplication
+    , OrderStatus
+    , getOrder
 
       -- * Facebook's Graph API basic functionality
       -- ** Simple types
