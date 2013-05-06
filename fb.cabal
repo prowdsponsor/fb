@@ -56,6 +56,7 @@ library
     Facebook.Object.Checkin
     Facebook.Object.User
     Facebook.Object.Page
+    Facebook.Object.Order
     Facebook.RealTime
     Facebook.FQL
     Facebook.TestUsers
