@@ -128,6 +128,7 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Base
 import Facebook.Auth
+import Facebook.Pager
 import Facebook.Graph
 import Facebook.Object.Page
 import Facebook.Object.User

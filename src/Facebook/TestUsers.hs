@@ -31,6 +31,7 @@ import Facebook.Base
 import Facebook.Graph
 import Facebook.Monad
 import Facebook.Types
+import Facebook.Pager
 
 
 -- | A Facebook test user.

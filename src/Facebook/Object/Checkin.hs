@@ -21,6 +21,7 @@ import qualified Data.Conduit as C
 import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Pager
 
 
 -- | A Facebook check-in (see

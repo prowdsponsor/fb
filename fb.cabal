@@ -51,6 +51,7 @@ library
     Facebook.Monad
     Facebook.Base
     Facebook.Auth
+    Facebook.Pager
     Facebook.Graph
     Facebook.Object.Action
     Facebook.Object.Checkin

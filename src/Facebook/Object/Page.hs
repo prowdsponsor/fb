@@ -20,6 +20,7 @@ import Data.Typeable (Typeable)
 import Facebook.Graph
 import Facebook.Monad
 import Facebook.Types
+import Facebook.Pager
 
 -- | A Facebook page (see
 -- <https://developers.facebook.com/docs/reference/api/page/>).
