@@ -159,14 +159,15 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
             Just t  -> compare t now &?= LT
           isJust (FB.dtScopes ret) &?= True
           FB.dtUserId ret &?= Just (FB.tuId testUser)
-{-
           case FB.dtAccessToken ret of
             Nothing -> fail "dtAccessToken is Nothing"
-            Just (FB.UserAccessToken uid dt exps) -> do
-              uid &?= FB.tuId testUser
-              dt  &?= testUserAccessTokenData
-              Just exps &?= FB.dtExpiresAt ret
--}
+            Just t -> do
+              let f :: FB.UserAccessToken -> FB.FacebookT FB.Auth (C.ResourceT IO) ()
+                  f (FB.UserAccessToken uid dt exps) = do
+                    uid &?= FB.tuId testUser
+                    dt  &?= testUserAccessTokenData
+                    Just exps &?= FB.dtExpiresAt ret
+              f t
 
   describe' "getObject" $ do
     it "is able to fetch Facebook's own page" $
