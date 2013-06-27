@@ -121,10 +121,11 @@ getTestUsers token = do
 -- | Remove an existing test user.
 removeTestUser :: (C.MonadResource m, MonadBaseControl IO m)
                   => TestUser       -- ^ The TestUser to be removed.
-                  -> AppAccessToken -- ^ Access token for your app.
+                  -> AppAccessToken -- ^ Access token for your app (ignored since fb 0.14.7).
                   -> FacebookT Auth m Bool
-removeTestUser testUser token =
-  getObjectBool ("/" <> idCode (tuId testUser)) [("method","delete")] (Just token)
+removeTestUser testUser _token =
+  getObjectBool ("/" <> idCode (tuId testUser)) [("method","delete")] token
+  where token = incompleteTestUserAccessToken testUser
 
 
 -- | Make a friend connection between two test users.
