@@ -13,6 +13,7 @@ module Facebook.Base
 
 import Control.Applicative
 import Control.Monad (mzero)
+import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
@@ -23,6 +24,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as L
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.Conduit.List as CL
@@ -32,7 +34,7 @@ import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
 
 #if DEBUG
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Text.Printf (printf)
 #endif
 
@@ -83,16 +85,22 @@ instance ToSimpleQuery (AccessToken anyKind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- JSON value.
-asJson :: (MonadTrans t, C.MonadThrow m, A.FromJSON a) =>
+asJson :: (MonadIO m, MonadTrans t, C.MonadThrow m, A.FromJSON a) =>
           H.Response (C.ResumableSource m ByteString)
        -> t m a
 asJson = lift . asJsonHelper
 
-asJsonHelper :: (C.MonadThrow m, A.FromJSON a) =>
+asJsonHelper :: (MonadIO m, C.MonadThrow m, A.FromJSON a) =>
                 H.Response (C.ResumableSource m ByteString)
              -> m a
 asJsonHelper response = do
+#if DEBUG
+  bs <- H.responseBody response C.$$+- fmap L.fromChunks CL.consume
+  _ <- liftIO $ printf "asJsonHelper: %s\n" (show bs)
+  val <- either (fail . ("asJsonHelper: A.decode returned " ++)) return (A.eitherDecode bs)
+#else
   val <- H.responseBody response C.$$+- C.sinkParser A.json'
+#endif
   case A.fromJSON val of
     A.Success r -> return r
     A.Error str ->
