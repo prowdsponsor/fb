@@ -211,7 +211,7 @@ newtype Permission =
     -- ^ Retrieves the 'Text' back from a 'Permission'.  Most of
     -- the time you won't need to use this function, but you may
     -- need it if you're a library author.
-  }
+  } deriving (Eq, Ord)
 
 instance Show Permission where
     show = show . unPermission
