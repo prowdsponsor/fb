@@ -24,6 +24,7 @@ import Control.Monad (MonadPlus, liftM)
 import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)
 import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.Logger (MonadLogger(..))
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
@@ -60,6 +61,11 @@ instance MonadBaseControl b m => MonadBaseControl b (FacebookT auth m) where
     newtype StM (FacebookT auth m) a = StMT {unStMT :: ComposeSt (FacebookT auth) m a}
     liftBaseWith = defaultLiftBaseWith StMT
     restoreM     = defaultRestoreM   unStMT
+
+-- | Since @fb-0.14.8@.
+instance MonadLogger m => MonadLogger (FacebookT auth m) where
+    monadLoggerLog loc src lvl msg = lift (monadLoggerLog loc src lvl msg)
+
 
 -- | Phantom type stating that you have provided your
 -- 'Credentials' and thus have access to the whole API.
