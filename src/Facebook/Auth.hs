@@ -11,6 +11,8 @@ module Facebook.Auth
     , hasExpired
     , isValid
     , parseSignedRequest
+    , debugToken
+    , DebugToken(..)
     ) where
 
 import Control.Applicative
@@ -26,6 +28,7 @@ import Data.Aeson.Parser (json')
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import Data.Time (getCurrentTime, addUTCTime, UTCTime)
+import Data.Typeable (Typeable)
 import Data.String (IsString(..))
 
 import qualified Control.Exception.Lifted as E
@@ -348,3 +351,62 @@ addBase64Padding bs
   | drem == 3 = bs `B.append` "="
   | otherwise = bs
   where drem = B.length bs `mod` 4
+
+
+-- | Get detailed information about an access token.
+debugToken :: (MonadBaseControl IO m, C.MonadResource m) =>
+              AppAccessToken  -- ^ Your app access token.
+           -> AccessTokenData -- ^ The access token you want to debug.
+           -> FacebookT Auth m DebugToken
+debugToken appToken userTokenData  = do
+  req <- fbreq "/debug_token" (Just appToken) $
+           [ ("input_token", TE.encodeUtf8 userTokenData) ]
+  ret <- undata <$> (asJson =<< fbhttp req)
+  let muserToken = UserAccessToken <$> dtUserId ret
+                                   <*> return userTokenData
+                                   <*> dtExpiresAt ret
+  return ret { dtAccessToken = muserToken }
+
+
+-- | Helper used in 'debugToken'.  Unfortunately, we can't use 'Pager' here.
+data Undata a =
+  Undata {
+    undata :: a
+  }
+
+instance AE.FromJSON a => AE.FromJSON (Undata a) where
+  parseJSON (AE.Object v) =
+    Undata <$> v AE..: "data"
+  parseJSON _ = mzero
+
+
+-- | Detailed information about an access token (cf. 'debugToken').
+data DebugToken =
+  DebugToken
+    { dtAppId       :: Maybe Text
+    , dtAppName     :: Maybe Text
+    , dtExpiresAt   :: Maybe UTCTime
+    , dtIsValid     :: Maybe Bool
+    , dtIssuedAt    :: Maybe UTCTime
+    , dtScopes      :: Maybe [Permission]
+    , dtUserId      :: Maybe Id
+    , dtAccessToken :: Maybe UserAccessToken
+    } deriving (Eq, Ord, Show, Typeable)
+
+
+-- | Note: this instance always sets 'dtAccessToken' to
+-- 'Nothing', but 'debugToken' will update this field before
+-- returning the final 'DebugToken'.  This is done because we
+-- need the 'AccessTokenData', which is not part of FB's
+-- response.
+instance AE.FromJSON DebugToken where
+  parseJSON (AE.Object v) =
+    DebugToken <$> (fmap idCode <$> v AE..:? "app_id")
+               <*> v AE..:? "application"
+               <*> (fmap unFbUTCTime <$> v AE..:? "expires_at")
+               <*> v AE..:? "is_valid"
+               <*> (fmap unFbUTCTime <$> v AE..:? "issued_at")
+               <*> (fmap (map Permission) <$> v AE..:? "scopes")
+               <*> v AE..:? "user_id"
+               <*> pure Nothing
+  parseJSON _ = mzero

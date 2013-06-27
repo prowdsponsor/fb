@@ -30,6 +30,8 @@ module Facebook
     , getUserAccessTokenStep2
     , getUserLogoutUrl
     , extendUserAccessToken
+    , debugToken
+    , DebugToken(..)
       -- ** Signed requests
     , parseSignedRequest
 

@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings
            , Rank2Types
            , ScopedTypeVariables
+           , GADTs
            , FlexibleContexts #-}
 module Main (main, getCredentials) where
 
@@ -97,11 +98,13 @@ main = H.withManager $ \manager -> liftIO $ do
   hspec $ do
     -- Run the tests twice, once in Facebook's production tier...
     facebookTests "Production tier: "
+                  creds
                   manager
                   (C.runResourceT . FB.runFacebookT creds manager)
                   (C.runResourceT . FB.runNoAuthFacebookT manager)
     -- ...and the other in Facebook's beta tier.
     facebookTests "Beta tier: "
+                  creds
                   manager
                   (C.runResourceT . FB.beta_runFacebookT creds manager)
                   (C.runResourceT . FB.beta_runNoAuthFacebookT manager)
@@ -110,11 +113,12 @@ main = H.withManager $ \manager -> liftIO $ do
     libraryTests manager
 
 facebookTests :: String
+              -> FB.Credentials
               -> H.Manager
               -> (forall a. FB.FacebookT FB.Auth   (C.ResourceT IO) a -> IO a)
               -> (forall a. FB.FacebookT FB.NoAuth (C.ResourceT IO) a -> IO a)
               -> Spec
-facebookTests pretitle manager runAuth runNoAuth = do
+facebookTests pretitle creds manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
 
   describe' "getAppAccessToken" $ do
@@ -135,6 +139,34 @@ facebookTests pretitle manager runAuth runNoAuth = do
       runNoAuth $ FB.isValid invalidUserAccessToken #?= False
     it "returns False on a clearly invalid app access token" $
       runNoAuth $ FB.isValid invalidAppAccessToken  #?= False
+
+  describe' "debugToken" $ do
+    it "works on a test user access token" $ do
+      runAuth $
+        withTestUser D.def $ \testUser -> do
+          Just testUserAccessTokenData <- return (FB.tuAccessToken testUser)
+          appToken <- FB.getAppAccessToken
+          ret <- FB.debugToken appToken testUserAccessTokenData
+          now <- liftIO TI.getCurrentTime
+          FB.dtAppId ret &?= Just (FB.appId creds)
+          FB.dtAppName ret &?= Just (FB.appName creds)
+          case FB.dtExpiresAt ret of
+            Nothing -> fail "dtExpiresAt is Nothing"
+            Just t  -> compare t now &?= GT
+          FB.dtIsValid ret &?= Just True
+          case FB.dtIssuedAt ret of
+            Nothing -> return () -- ok since it's a test user
+            Just t  -> compare t now &?= LT
+          isJust (FB.dtScopes ret) &?= True
+          FB.dtUserId ret &?= Just (FB.tuId testUser)
+{-
+          case FB.dtAccessToken ret of
+            Nothing -> fail "dtAccessToken is Nothing"
+            Just (FB.UserAccessToken uid dt exps) -> do
+              uid &?= FB.tuId testUser
+              dt  &?= testUserAccessTokenData
+              Just exps &?= FB.dtExpiresAt ret
+-}
 
   describe' "getObject" $ do
     it "is able to fetch Facebook's own page" $
