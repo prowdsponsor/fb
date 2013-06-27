@@ -66,6 +66,7 @@ module Facebook
       -- ** Simple types
     , (#=)
     , SimpleType(..)
+    , FbUTCTime(..)
       -- ** Complex types
     , Place(..)
     , Location(..)

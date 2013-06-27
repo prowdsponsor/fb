@@ -26,6 +26,7 @@ import Data.Monoid (Monoid, mappend)
 import Data.String (IsString)
 import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Typeable (Typeable, Typeable1)
 import System.Locale (defaultTimeLocale)
 
@@ -145,15 +146,22 @@ type Argument = (ByteString, ByteString)
 (<>) = mappend
 
 
--- | (Internal) @newtype@ for 'UTCTime' that follows Facebook's
--- conventions of JSON parsing.  While @aeson@ expects a format
--- of @%FT%T%Q@, Facebook gives time values formatted as
--- @%FT%T%z@.
+-- | @newtype@ for 'UTCTime' that follows Facebook's
+-- conventions of JSON parsing.
+--
+--  * As a string, while @aeson@ expects a format of @%FT%T%Q@,
+--    Facebook gives time values formatted as @%FT%T%z@.
+--
+--  * As a number, 'FbUTCTime' accepts a number of seconds since
+--    the Unix epoch.
 newtype FbUTCTime = FbUTCTime { unFbUTCTime :: UTCTime }
+  deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON FbUTCTime where
   parseJSON (A.String t) =
     case parseTime defaultTimeLocale "%FT%T%z" (T.unpack t) of
       Just d -> return (FbUTCTime d)
       _      -> fail $ "could not parse FbUTCTime string " ++ show t
-  parseJSON _ = fail "could not parse FbUTCTime from something which is not a string"
+  parseJSON (A.Number n) =
+    return $ FbUTCTime $ posixSecondsToUTCTime $ fromInteger $ floor n
+  parseJSON _ = fail "could not parse FbUTCTime from something which is not a string or number"

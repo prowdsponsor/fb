@@ -46,6 +46,8 @@ instance A.FromJSON FQLTime where
                    . fromInteger)
             . A.parseJSON
 
+{-# DEPRECATED FQLTime "Deprecated since fb 0.14.7, please use FbUTCTime instead." #-}
+
 
 -- | @newtype@ wrapper around lists that works around FQL's
 -- strange lists.

@@ -381,6 +381,15 @@ libraryTests manager = do
           output = FB.FQLTime (read "2012-09-26 16:52:37 UTC")
       A.decode input @?= Just [output]
 
+  describe "FbUTCTime" $ do
+    let output = FB.FbUTCTime (read "2012-09-26 16:52:37 UTC")
+    it "seems to work (string)" $ do
+      let input  = "[\"2012-09-26T16:52:37+0000\"]"
+      A.decode input @?= Just [output]
+    it "seems to work (unix epoch)" $ do
+      let input  = "[1348678357]"
+      A.decode input @?= Just [output]
+
   describe "FQLList" $ do
     let j :: [Int] -> Maybe (FB.FQLList Int)
         j = Just . FB.FQLList
