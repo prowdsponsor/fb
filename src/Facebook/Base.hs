@@ -24,7 +24,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C
 import qualified Data.Conduit.List as CL
@@ -36,6 +35,7 @@ import qualified Network.HTTP.Types as HT
 #if DEBUG
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Text.Printf (printf)
+import qualified Data.ByteString.Lazy as L
 #endif
 
 
