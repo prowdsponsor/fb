@@ -457,6 +457,12 @@ libraryTests manager = do
     it "can be parsed from an object with an integer" $ do
       A.decode "{\"id\": 1234}" @?= Just (FB.Id "1234")
 
+  describe "AccessToken" $ do
+    it "can be round-tripped with ToJSON/FromJSON (UserKind)" $ do
+      A.eitherDecode (A.encode invalidUserAccessToken) @?= Right invalidUserAccessToken
+    it "can be round-tripped with ToJSON/FromJSON (AppKind)" $ do
+      A.eitherDecode (A.encode invalidAppAccessToken) @?= Right invalidAppAccessToken
+
 
 -- Wrappers for HUnit operators using MonadIO
 

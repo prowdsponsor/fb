@@ -19,7 +19,8 @@ module Facebook.Types
     , FbUTCTime(..)
     ) where
 
-import Control.Applicative (pure)
+import Control.Applicative ((<$>), (<*>), pure)
+import Control.Monad (mzero)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
 import Data.Monoid (Monoid, mappend)
@@ -31,6 +32,7 @@ import Data.Typeable (Typeable, Typeable1)
 import System.Locale (defaultTimeLocale)
 
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
@@ -144,6 +146,63 @@ type Argument = (ByteString, ByteString)
 -- | Synonym for 'mappend'.
 (<>) :: Monoid a => a -> a -> a
 (<>) = mappend
+
+
+----------------------------------------------------------------------
+
+
+-- | /Since 0.14.9./ Not a Facebook JSON format, but a custom @fb@
+-- format for convenience if you need to serialize access tokens.
+instance A.ToJSON (AccessToken kind) where
+  toJSON (UserAccessToken uid data_ expires) =
+    A.object
+      [ "kind"    A..= ("user" :: Text)
+      , "id"      A..= uid
+      , "token"   A..= data_
+      , "expires" A..= expires ]
+  toJSON (AppAccessToken data_) =
+    A.object
+      [ "kind"    A..= ("app" :: Text)
+      , "token"   A..= data_ ]
+
+
+-- | (Internal) Since the user of 'parseJSON' is going to choose
+-- via its @kind@ whether a 'UserAccessToken' or an
+-- 'AppAccessToken' is wanted, we need this type class to
+-- implement 'FromJSON'.
+class ParseAccessToken kind where
+  parseTokenJSON :: A.Object -> A.Parser (AccessToken kind)
+
+instance ParseAccessToken UserKind where
+  parseTokenJSON v =
+    checkKind v "user" $
+      UserAccessToken <$> v A..: "id"
+                      <*> v A..: "token"
+                      <*> v A..: "expires"
+
+instance ParseAccessToken AppKind where
+  parseTokenJSON v =
+    checkKind v "app" $
+      AppAccessToken <$> v A..: "token"
+
+-- | (Internal) Used to implement 'parseTokenJSON'.
+checkKind :: A.Object -> Text -> A.Parser a -> A.Parser a
+checkKind v kind ok = do
+  kind' <- v A..: "kind"
+  if kind == kind'
+    then ok
+    else fail $ "Expected access token kind " <> show kind <>
+                " but found " <> show kind' <> "."
+
+-- | /Since 0.14.9./ Parses the format that 'ToJSON' produces.
+-- Note that you need to statically decide whether you want to
+-- parse a user access token or an app access token.
+instance ParseAccessToken kind => A.FromJSON (AccessToken kind) where
+  parseJSON (A.Object v) = parseTokenJSON v
+  parseJSON _            = mzero
+
+
+----------------------------------------------------------------------
 
 
 -- | @newtype@ for 'UTCTime' that follows Facebook's
