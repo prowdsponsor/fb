@@ -15,6 +15,7 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.IO.Class (MonadIO)
 import Data.ByteString.Char8 (ByteString)
+import Data.Default (def)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
@@ -44,27 +45,27 @@ import Facebook.Monad
 
 
 -- | A plain 'H.Request' to a Facebook API.  Use this instead of
--- 'H.def' when creating new 'H.Request'@s@ for Facebook.
+-- 'def' when creating new 'H.Request'@s@ for Facebook.
 fbreq :: Monad m =>
          Text                        -- ^ Path.
       -> Maybe (AccessToken anyKind) -- ^ Access token.
       -> HT.SimpleQuery              -- ^ Parameters.
-      -> FacebookT anyAuth m (H.Request n)
+      -> FacebookT anyAuth m H.Request
 fbreq path mtoken query =
     withTier $ \tier ->
       let host = case tier of
                    Production -> "graph.facebook.com"
                    Beta ->  "graph.beta.facebook.com"
-      in H.def { H.secure        = True
-               , H.host          = host
-               , H.port          = 443
-               , H.path          = TE.encodeUtf8 path
-               , H.redirectCount = 3
-               , H.queryString   =
-                   HT.renderSimpleQuery False $
-                   maybe id tsq mtoken query
-               , H.responseTimeout = Just 120000000 -- 2 minutes
-               }
+      in def { H.secure        = True
+             , H.host          = host
+             , H.port          = 443
+             , H.path          = TE.encodeUtf8 path
+             , H.redirectCount = 3
+             , H.queryString   =
+                 HT.renderSimpleQuery False $
+                 maybe id tsq mtoken query
+             , H.responseTimeout = Just 120000000 -- 2 minutes
+             }
 
 
 -- | Internal class for types that may be passed on queries to
@@ -140,7 +141,7 @@ instance E.Exception FacebookException where
 -- | Same as 'H.http', but tries to parse errors and throw
 -- meaningful 'FacebookException'@s@.
 fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
-          H.Request m
+          H.Request
        -> FacebookT anyAuth m (H.Response (C.ResumableSource m ByteString))
 fbhttp req = do
   manager <- getManager
@@ -148,7 +149,7 @@ fbhttp req = do
 
 fbhttpHelper :: (MonadBaseControl IO m, C.MonadResource m) =>
                 H.Manager
-             -> H.Request m
+             -> H.Request
              -> m (H.Response (C.ResumableSource m ByteString))
 fbhttpHelper manager req = do
   let req' = req { H.checkStatus = \_ _ _ -> Nothing }
@@ -192,7 +193,7 @@ wwwAuthenticateParser =
 -- | Send a @HEAD@ request just to see if the resposne status
 -- code is 2XX (returns @True@) or not (returns @False@).
 httpCheck :: (MonadBaseControl IO m, C.MonadResource m) =>
-             H.Request (C.ResourceT m)
+             H.Request
           -> FacebookT anyAuth m Bool
 
 httpCheck req = runResourceInFb $ do
