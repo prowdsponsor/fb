@@ -54,6 +54,7 @@ library
     Facebook.Pager
     Facebook.Graph
     Facebook.Object.Action
+    Facebook.Object.FriendList
     Facebook.Object.Checkin
     Facebook.Object.User
     Facebook.Object.Page

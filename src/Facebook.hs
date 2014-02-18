@@ -45,6 +45,7 @@ module Facebook
     , getUserCheckins
     , Friend(..)
     , getUserFriends
+    , getUserFriendLists
       -- ** Page
     , Page(..)
     , getPage
@@ -63,6 +64,10 @@ module Facebook
     , OrderApplication
     , OrderStatus
     , getOrder
+      -- ** Friend list
+    , FriendList(..)
+    , FriendListType(..)
+    , getFriendListMembers
 
       -- * Facebook's Graph API basic functionality
       -- ** Simple types
@@ -138,6 +143,7 @@ import Facebook.Object.User
 import Facebook.Object.Action
 import Facebook.Object.Checkin
 import Facebook.Object.Order
+import Facebook.Object.FriendList
 import Facebook.RealTime
 import Facebook.FQL
 import Facebook.TestUsers
