@@ -1,5 +1,5 @@
 name:              fb
-version:           0.14.11
+version:           0.15.0
 license:           BSD3
 license-file:      LICENSE
 author:            Felipe Lessa
@@ -65,7 +65,7 @@ library
       base                 >= 4       && < 5
     , lifted-base          >= 0.1     && < 0.3
     , bytestring           >= 0.9     && < 0.11
-    , text                 == 0.11.*
+    , text                 >= 0.11    && < 1.2
     , transformers         >= 0.2     && < 0.4
     , transformers-base
     , monad-control
@@ -73,17 +73,17 @@ library
     , conduit              == 1.0.*
     , data-default
     , http-types
-    , http-conduit         == 1.9.*
-    , attoparsec           == 0.10.*
+    , http-conduit         == 2.0.*
+    , attoparsec           == 0.11.*
     , attoparsec-conduit   == 1.0.*
     , unordered-containers
-    , aeson                >= 0.5     && < 0.7
+    , aeson                >= 0.5     && < 0.8
     , base16-bytestring    >= 0.1
     , base64-bytestring    >= 0.1.1
     , time                 >= 1.2     && < 1.5
     , old-locale
     , cereal               >= 0.3     && < 0.5
-    , crypto-api           >= 0.11    && < 0.13
+    , crypto-api           >= 0.11    && < 0.14
     , cryptohash           >= 0.7
     , cryptohash-cryptoapi == 0.1.*
     , monad-logger         >= 0.3

@@ -19,6 +19,7 @@ import Control.Monad (liftM, mzero, void)
 import Crypto.Hash.CryptoAPI (SHA1)
 import Data.ByteString.Char8 (ByteString)
 import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Typeable (Typeable)
 
 import qualified Crypto.Classes as Crypto
@@ -140,7 +141,7 @@ instance A.FromJSON RealTimeUpdateSubscription where
     RealTimeUpdateSubscription
       <$> v A..: "object"
       <*> v A..: "callback_url"
-      <*> v A..: "fields"
+      <*> fmap (map encodeUtf8) (v A..: "fields")
       <*> v A..: "active"
   parseJSON _ = mzero
 
@@ -234,6 +235,7 @@ instance A.FromJSON RealTimeUpdateNotificationUserEntry where
   parseJSON (A.Object v) =
     RealTimeUpdateNotificationUserEntry
       <$> v A..: "uid"
-      <*> v A..: "changed_fields"
+      <*> fmap (map encodeUtf8) (v A..: "changed_fields")
       <*> v A..: "time"
+
   parseJSON _ = mzero
