@@ -13,9 +13,8 @@ import Data.Aeson ((.:))
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
--- import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 
 
 import Facebook.Types
@@ -71,7 +70,7 @@ instance A.ToJSON FriendListType where
 
 -- | Get the friend lists of the given user.
 getUserFriendLists ::
-     (C.MonadResource m, MonadBaseControl IO m) =>
+     (R.MonadResource m, MonadBaseControl IO m) =>
      UserId          -- ^ User ID or @\"me\"@.
   -> [Argument]      -- ^ Arguments to be passed to Facebook.
   -> UserAccessToken -- ^ User access token.
@@ -81,11 +80,10 @@ getUserFriendLists id_ query token =
 
 -- | Get the members of a friend list.
 getFriendListMembers ::
-     (C.MonadResource m, MonadBaseControl IO m) =>
+     (R.MonadResource m, MonadBaseControl IO m) =>
      Id              -- ^ List ID.
   -> [Argument]      -- ^ Arguments to be passed to Facebook.
   -> UserAccessToken -- ^ User access token.
   -> FacebookT anyAuth m (Pager Friend)
 getFriendListMembers id_ query token =
   getObject ("/" <> idCode id_ <> "/members") query (Just token)
-

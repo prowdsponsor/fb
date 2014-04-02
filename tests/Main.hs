@@ -22,6 +22,7 @@ import System.IO.Error (isDoesNotExistError)
 
 
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
 import qualified Data.ByteString.Char8 as B
@@ -100,14 +101,14 @@ main = H.withManager $ \manager -> liftIO $ do
     facebookTests "Production tier: "
                   creds
                   manager
-                  (C.runResourceT . FB.runFacebookT creds manager)
-                  (C.runResourceT . FB.runNoAuthFacebookT manager)
+                  (R.runResourceT . FB.runFacebookT creds manager)
+                  (R.runResourceT . FB.runNoAuthFacebookT manager)
     -- ...and the other in Facebook's beta tier.
     facebookTests "Beta tier: "
                   creds
                   manager
-                  (C.runResourceT . FB.beta_runFacebookT creds manager)
-                  (C.runResourceT . FB.beta_runNoAuthFacebookT manager)
+                  (R.runResourceT . FB.beta_runFacebookT creds manager)
+                  (R.runResourceT . FB.beta_runNoAuthFacebookT manager)
 
     -- Tests that don't depend on which tier is chosen.
     libraryTests manager
@@ -115,8 +116,8 @@ main = H.withManager $ \manager -> liftIO $ do
 facebookTests :: String
               -> FB.Credentials
               -> H.Manager
-              -> (forall a. FB.FacebookT FB.Auth   (C.ResourceT IO) a -> IO a)
-              -> (forall a. FB.FacebookT FB.NoAuth (C.ResourceT IO) a -> IO a)
+              -> (forall a. FB.FacebookT FB.Auth   (R.ResourceT IO) a -> IO a)
+              -> (forall a. FB.FacebookT FB.NoAuth (R.ResourceT IO) a -> IO a)
               -> Spec
 facebookTests pretitle creds manager runAuth runNoAuth = do
   let describe' = describe . (pretitle ++)
@@ -127,7 +128,7 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
         token <- FB.getAppAccessToken
         FB.isValid token #?= True
     it "throws a FacebookException on invalid credentials" $
-      C.runResourceT $
+      R.runResourceT $
       FB.runFacebookT invalidCredentials manager $ do
         ret <- E.try $ FB.getAppAccessToken
         case ret  of
@@ -162,7 +163,7 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
           case FB.dtAccessToken ret of
             Nothing -> fail "dtAccessToken is Nothing"
             Just t -> do
-              let f :: FB.UserAccessToken -> FB.FacebookT FB.Auth (C.ResourceT IO) ()
+              let f :: FB.UserAccessToken -> FB.FacebookT FB.Auth (R.ResourceT IO) ()
                   f (FB.UserAccessToken uid dt exps) = do
                     uid &?= FB.tuId testUser
                     dt  &?= testUserAccessTokenData
@@ -220,7 +221,7 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
         length val `seq` return ()
 
   describe' "fetchNextPage" $ do
-    let fetchNextPageWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (C.ResourceT IO) ()
+    let fetchNextPageWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (R.ResourceT IO) ()
         fetchNextPageWorks pager
           | isNothing (FB.pagerNext pager) = return ()
           | otherwise = FB.fetchNextPage pager >>= maybe not_ (\_ -> return ())
@@ -234,7 +235,7 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
         fetchNextPageWorks =<< FB.getObject "/app/insights" [] (Just token)
 
   describe' "fetchNextPage/fetchPreviousPage" $ do
-    let backAndForthWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (C.ResourceT IO) ()
+    let backAndForthWorks :: FB.Pager A.Value -> FB.FacebookT anyAuth (R.ResourceT IO) ()
         backAndForthWorks pager = do
           Just pager2 <- FB.fetchNextPage     pager
           Just pager3 <- FB.fetchPreviousPage pager2
@@ -323,7 +324,7 @@ facebookTests pretitle creds manager runAuth runNoAuth = do
         token   <- FB.getAppAccessToken
         pager   <- FB.getTestUsers token
         src     <- FB.fetchAllNextPages pager
-        oldList <- liftIO $ C.runResourceT $ src C.$$ CL.consume
+        oldList <- liftIO $ R.runResourceT $ src C.$$ CL.consume
         withTestUser D.def $ \testUser -> do
           let (%?=) = (&?=) `on` fmap FB.tuId
               (//)  = S.difference `on` S.fromList
@@ -395,8 +396,8 @@ libraryTests manager = do
         exampleSig  = "vlXgu64BQGFSQrY0ZcJBZASMvYvTHu9GQ0YM9rjPSso"
         exampleData = "eyJhbGdvcml0aG0iOiJITUFDLVNIQTI1NiIsIjAiOiJwYXlsb2FkIn0"
         exampleCreds = FB.Credentials "name" "id" "secret"
-        runExampleAuth :: FB.FacebookT FB.Auth (C.ResourceT IO) a -> IO a
-        runExampleAuth = C.runResourceT . FB.runFacebookT exampleCreds manager
+        runExampleAuth :: FB.FacebookT FB.Auth (R.ResourceT IO) a -> IO a
+        runExampleAuth = R.runResourceT . FB.runFacebookT exampleCreds manager
     it "works for Facebook example" $ do
       runExampleAuth $ do
         ret <- FB.parseSignedRequest (B.concat [exampleSig, ".", exampleData])
@@ -481,7 +482,7 @@ instance QC.Arbitrary Text where
 
 -- | Perform an action with a new test user. Remove the new test user
 -- after the action is performed.
-withTestUser :: (C.MonadResource m, MonadBaseControl IO m)
+withTestUser :: (R.MonadResource m, MonadBaseControl IO m)
                 => FB.CreateTestUser
                 -> (FB.TestUser -> FB.FacebookT FB.Auth m a)
                 -> FB.FacebookT FB.Auth m a

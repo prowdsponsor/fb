@@ -22,6 +22,7 @@ import Data.Typeable (Typeable)
 import qualified Control.Exception.Lifted as E
 import Control.Monad.Trans.Class (MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
 import qualified Data.Attoparsec.Char8 as AT
 import qualified Data.ByteString as B
@@ -86,12 +87,12 @@ instance ToSimpleQuery (AccessToken anyKind) where
 
 -- | Converts a plain 'H.Response' coming from 'H.http' into a
 -- JSON value.
-asJson :: (MonadIO m, MonadTrans t, C.MonadThrow m, A.FromJSON a) =>
+asJson :: (MonadIO m, MonadTrans t, R.MonadThrow m, A.FromJSON a) =>
           H.Response (C.ResumableSource m ByteString)
        -> t m a
 asJson = lift . asJsonHelper
 
-asJsonHelper :: (MonadIO m, C.MonadThrow m, A.FromJSON a) =>
+asJsonHelper :: (MonadIO m, R.MonadThrow m, A.FromJSON a) =>
                 H.Response (C.ResumableSource m ByteString)
              -> m a
 asJsonHelper response = do
@@ -140,14 +141,14 @@ instance E.Exception FacebookException where
 
 -- | Same as 'H.http', but tries to parse errors and throw
 -- meaningful 'FacebookException'@s@.
-fbhttp :: (MonadBaseControl IO m, C.MonadResource m) =>
+fbhttp :: (MonadBaseControl IO m, R.MonadResource m) =>
           H.Request
        -> FacebookT anyAuth m (H.Response (C.ResumableSource m ByteString))
 fbhttp req = do
   manager <- getManager
   lift (fbhttpHelper manager req)
 
-fbhttpHelper :: (MonadBaseControl IO m, C.MonadResource m) =>
+fbhttpHelper :: (MonadBaseControl IO m, R.MonadResource m) =>
                 H.Manager
              -> H.Request
              -> m (H.Response (C.ResumableSource m ByteString))
@@ -192,7 +193,7 @@ wwwAuthenticateParser =
 
 -- | Send a @HEAD@ request just to see if the resposne status
 -- code is 2XX (returns @True@) or not (returns @False@).
-httpCheck :: (MonadBaseControl IO m, C.MonadResource m) =>
+httpCheck :: (MonadBaseControl IO m, R.MonadResource m) =>
              H.Request
           -> FacebookT anyAuth m Bool
 

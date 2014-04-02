@@ -1,4 +1,11 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE DeriveDataTypeable,
+             FlexibleContexts,
+             FlexibleInstances,
+             GeneralizedNewtypeDeriving,
+             MultiParamTypeClasses,
+             StandaloneDeriving,
+             TypeFamilies,
+             UndecidableInstances #-}
 module Facebook.Monad
     ( FacebookT
     , Auth
@@ -33,7 +40,6 @@ import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Typeable (Typeable)
 import qualified Control.Monad.Trans.Resource as R
 
-import qualified Data.Conduit as C
 import qualified Network.HTTP.Conduit as H
 
 import Facebook.Types
@@ -45,9 +51,10 @@ import Facebook.Types
 -- have supplied your 'Credentials') or 'NoAuth' (you have not
 -- supplied any 'Credentials').
 newtype FacebookT auth m a = F { unF :: ReaderT FbData m a }
-    deriving ( Functor, Applicative, Alternative, Monad
-             , MonadFix, MonadPlus, MonadIO, MonadTrans
-             , R.MonadThrow, R.MonadActive, R.MonadResource )
+    deriving ( Functor, Applicative, Alternative, Monad, MonadFix
+             , MonadPlus, MonadIO, MonadTrans, R.MonadThrow )
+
+deriving instance (R.MonadResource m, MonadBase IO m) => R.MonadResource (FacebookT auth m)
 
 instance MonadBase b m => MonadBase b (FacebookT auth m) where
     liftBase = lift . liftBase
@@ -136,10 +143,10 @@ withTier = flip liftM getTier
 
 
 -- | Run a 'ResourceT' inside a 'FacebookT'.
-runResourceInFb :: (C.MonadResource m, MonadBaseControl IO m) =>
-                   FacebookT anyAuth (C.ResourceT m) a
+runResourceInFb :: (R.MonadResource m, MonadBaseControl IO m) =>
+                   FacebookT anyAuth (R.ResourceT m) a
                 -> FacebookT anyAuth m a
-runResourceInFb (F inner) = F $ ask >>= lift . C.runResourceT . runReaderT inner
+runResourceInFb (F inner) = F $ ask >>= lift . R.runResourceT . runReaderT inner
 
 
 -- | Transform the computation inside a 'FacebookT'.

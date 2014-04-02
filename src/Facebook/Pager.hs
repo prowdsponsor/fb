@@ -15,6 +15,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Resource (MonadResourceBase)
 import Data.Typeable (Typeable)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
 import qualified Data.Conduit as C
 import qualified Network.HTTP.Conduit as H
@@ -66,7 +67,7 @@ instance A.FromJSON a => A.FromJSON (Pager a) where
 -- | Tries to fetch the next page of a 'Pager'.  Returns
 -- 'Nothing' whenever the current @Pager@ does not have a
 -- 'pagerNext'.
-fetchNextPage :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+fetchNextPage :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                  Pager a -> FacebookT anyAuth m (Maybe (Pager a))
 fetchNextPage = fetchHelper pagerNext
 
@@ -74,13 +75,13 @@ fetchNextPage = fetchHelper pagerNext
 -- | Tries to fetch the previous page of a 'Pager'.  Returns
 -- 'Nothing' whenever the current @Pager@ does not have a
 -- 'pagerPrevious'.
-fetchPreviousPage :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+fetchPreviousPage :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                      Pager a -> FacebookT anyAuth m (Maybe (Pager a))
 fetchPreviousPage = fetchHelper pagerPrevious
 
 
 -- | (Internal) See 'fetchNextPage' and 'fetchPreviousPage'.
-fetchHelper :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+fetchHelper :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                (Pager a -> Maybe String) -> Pager a -> FacebookT anyAuth m (Maybe (Pager a))
 fetchHelper pagerRef pager =
   case pagerRef pager of
@@ -121,6 +122,6 @@ fetchAllHelper pagerRef pager = do
       go [] (Just next) = do
         req <- liftIO (H.parseUrl next)
         let get = fbhttpHelper manager req { H.redirectCount = 3 }
-        start =<< lift (C.runResourceT $ asJsonHelper =<< get)
+        start =<< lift (R.runResourceT $ asJsonHelper =<< get)
       start p = go (pagerData p) $! pagerRef p
   return (start pager)

@@ -40,6 +40,8 @@ flag debug
   default: False
   description: Print debugging info.
 
+flag conduit11
+  description: Use conduit >= 1.1.
 
 library
   hs-source-dirs: src
@@ -71,12 +73,10 @@ library
     , transformers-base
     , monad-control
     , resourcet
-    , conduit              == 1.0.*
     , data-default
     , http-types
-    , http-conduit         == 2.0.*
+    , http-conduit         >= 2.0     && < 2.2
     , attoparsec           >= 0.10.4  && < 0.12
-    , attoparsec-conduit   == 1.0.*
     , unordered-containers
     , aeson                >= 0.5     && < 0.8
     , base16-bytestring    >= 0.1
@@ -88,6 +88,14 @@ library
     , cryptohash           >= 0.7
     , cryptohash-cryptoapi == 0.1.*
     , monad-logger         >= 0.3
+  if flag(conduit11)
+    build-depends:
+        conduit              == 1.1.*
+      , conduit-extra        == 1.1.*
+  else
+    build-depends:
+        conduit              == 1.0.*
+      , attoparsec-conduit   == 1.0.*
   extensions:
     DeriveDataTypeable
     EmptyDataDecls
@@ -111,7 +119,7 @@ test-suite runtests
   build-depends:
       -- Library dependencies used on the tests.  No need to
       -- specify versions since they'll use the same as above.
-      base, lifted-base, transformers, bytestring,
+      base, lifted-base, transformers, bytestring, resourcet,
       conduit, http-conduit, text, time, aeson, monad-control
 
       -- Test-only dependencies
@@ -119,7 +127,7 @@ test-suite runtests
     , data-default
     , HUnit
     , QuickCheck
-    , hspec == 1.8.*
+    , hspec == 1.9.*
     , fb
   extensions:
     TypeFamilies

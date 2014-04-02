@@ -14,8 +14,8 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Typeable (Typeable)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 
 
 import Facebook.Types
@@ -68,7 +68,7 @@ instance A.FromJSON CheckinFrom where
 -- | Get a checkin from its ID.  The user access token is
 -- optional, but when provided more information can be returned
 -- back by Facebook.
-getCheckin :: (C.MonadResource m, MonadBaseControl IO m) =>
+getCheckin :: (R.MonadResource m, MonadBaseControl IO m) =>
               Id                    -- ^ Checkin ID.
            -> [Argument]            -- ^ Arguments to be passed to Facebook.
            -> Maybe UserAccessToken -- ^ Optional user access token.
@@ -78,7 +78,7 @@ getCheckin id_ query mtoken = getObject ("/" <> idCode id_) query mtoken
 
 -- | Creates a 'check-in' and returns its ID. Place and
 -- coordinates are both required by Facebook.
-createCheckin :: (C.MonadResource m, MonadBaseControl IO m)  =>
+createCheckin :: (R.MonadResource m, MonadBaseControl IO m)  =>
                  Id               -- ^ Place ID.
               -> GeoCoordinates   -- ^ Coordinates.
               -> [Argument]       -- ^ Other arguments of the action.

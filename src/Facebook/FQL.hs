@@ -13,8 +13,8 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 import qualified Data.HashMap.Strict as HMS
 
 import Facebook.Types
@@ -25,7 +25,7 @@ import Facebook.Pager
 
 
 -- | Query the Facebook Graph using FQL.
-fqlQuery :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+fqlQuery :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
             Text                        -- ^ FQL Query
          -> Maybe (AccessToken anyKind) -- ^ Optional access token
          -> FacebookT anyAuth m (Pager a)

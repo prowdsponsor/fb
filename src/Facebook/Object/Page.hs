@@ -12,8 +12,8 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
@@ -61,7 +61,7 @@ instance A.FromJSON Page where
 
 
 -- | Get a page using its ID. The user access token is optional.
-getPage :: (C.MonadResource m, MonadBaseControl IO m)
+getPage :: (R.MonadResource m, MonadBaseControl IO m)
         => Id                    -- ^ Page ID
         -> [Argument]            -- ^ Arguments to be passed to Facebook
         -> Maybe UserAccessToken -- ^ Optional user access token
@@ -70,7 +70,7 @@ getPage id_ = getObject $ "/" <> idCode id_
 
 
 -- | Search pages by keyword. The user access token is optional.
-searchPages :: (C.MonadResource m, MonadBaseControl IO m)
+searchPages :: (R.MonadResource m, MonadBaseControl IO m)
             => Text                  -- ^ Keyword to search for
             -> [Argument]            -- ^ Arguments to pass to Facebook
             -> Maybe UserAccessToken -- ^ Optional user access token

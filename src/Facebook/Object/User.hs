@@ -16,9 +16,8 @@ import Data.Aeson ((.:), (.:?))
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 
--- import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 
 
 import Facebook.Types
@@ -86,7 +85,7 @@ instance A.ToJSON Gender where
 -- back by Facebook.  The user ID may be @\"me\"@, in which
 -- case you must provide an user access token and information
 -- about the token's owner is given.
-getUser :: (C.MonadResource m, MonadBaseControl IO m) =>
+getUser :: (R.MonadResource m, MonadBaseControl IO m) =>
            UserId         -- ^ User ID or @\"me\"@.
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
@@ -95,7 +94,7 @@ getUser id_ query mtoken = getObject ("/" <> idCode id_) query mtoken
 
 
 -- | Search users by keyword.
-searchUsers :: (C.MonadResource m, MonadBaseControl IO m)
+searchUsers :: (R.MonadResource m, MonadBaseControl IO m)
             => Text
             -> [Argument]
             -> Maybe UserAccessToken
@@ -105,7 +104,7 @@ searchUsers = searchObjects "user"
 
 -- | Get a list of check-ins made by a given user.
 getUserCheckins ::
-     (C.MonadResource m, MonadBaseControl IO m) =>
+     (R.MonadResource m, MonadBaseControl IO m) =>
      UserId          -- ^ User ID or @\"me\"@.
   -> [Argument]      -- ^ Arguments to be passed to Facebook.
   -> UserAccessToken -- ^ User access token.
@@ -130,7 +129,7 @@ instance A.FromJSON Friend where
 
 -- | Get the list of friends of the given user.
 getUserFriends ::
-     (C.MonadResource m, MonadBaseControl IO m) =>
+     (R.MonadResource m, MonadBaseControl IO m) =>
      UserId          -- ^ User ID or @\"me\"@.
   -> [Argument]      -- ^ Arguments to be passed to Facebook.
   -> UserAccessToken -- ^ User access token.

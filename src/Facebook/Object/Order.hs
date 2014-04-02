@@ -15,8 +15,8 @@ import Data.Aeson ((.:), (.:?))
 import Data.Typeable (Typeable)
 import Data.Time.LocalTime (ZonedTime)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Conduit as C
 
 import Facebook.Types
 import Facebook.Monad
@@ -84,7 +84,7 @@ instance A.FromJSON OrderStatus where
 
 -- | Get an 'Order' using its 'OrderId'.  The user access token
 -- is mandatory.
-getOrder :: (C.MonadResource m, MonadBaseControl IO m) =>
+getOrder :: (R.MonadResource m, MonadBaseControl IO m) =>
            OrderId         -- ^ Order ID.
         -> UserAccessToken -- ^ User access token.
         -> FacebookT anyAuth m Order

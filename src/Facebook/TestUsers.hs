@@ -21,9 +21,9 @@ import Data.Typeable (Typeable)
 
 
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Char8 as B
-import qualified Data.Conduit as C
 
 
 import Facebook.Auth
@@ -98,7 +98,7 @@ createTestUserQueryArgs (CreateTestUser installed name locale) =
 
 
 -- | Create a new test user.
-createTestUser :: (C.MonadResource m, MonadBaseControl IO m)
+createTestUser :: (R.MonadResource m, MonadBaseControl IO m)
                   => CreateTestUser -- ^ How the test user should be
                                     -- created.
                   -> AppAccessToken -- ^ Access token for your app.
@@ -110,7 +110,7 @@ createTestUser userInfo token = do
 
 
 -- | Get a list of test users.
-getTestUsers :: (C.MonadResource m, MonadBaseControl IO m)
+getTestUsers :: (R.MonadResource m, MonadBaseControl IO m)
                 => AppAccessToken      -- ^ Access token for your app.
                 -> FacebookT Auth m (Pager TestUser)
 getTestUsers token = do
@@ -119,7 +119,7 @@ getTestUsers token = do
 
 
 -- | Remove an existing test user.
-removeTestUser :: (C.MonadResource m, MonadBaseControl IO m)
+removeTestUser :: (R.MonadResource m, MonadBaseControl IO m)
                   => TestUser       -- ^ The TestUser to be removed.
                   -> AppAccessToken -- ^ Access token for your app (ignored since fb 0.14.7).
                   -> FacebookT Auth m Bool
@@ -136,7 +136,7 @@ removeTestUser testUser _token =
 -- format: \"\/userB_id\/friends\/userA_id\" with the access token of
 -- user B as query parameter. The first call creates a friend request
 -- and the second call accepts the friend request.
-makeFriendConn :: (C.MonadResource m, MonadBaseControl IO m)
+makeFriendConn :: (R.MonadResource m, MonadBaseControl IO m)
                   => TestUser
                   -> TestUser
                   -> FacebookT Auth m ()
@@ -171,7 +171,7 @@ incompleteTestUserAccessToken t = do
 -- | Same as 'getObject', but instead of parsing the result
 -- as a JSON, it tries to parse either as "true" or "false".
 -- Used only by the Test User API bindings.
-getObjectBool :: (C.MonadResource m, MonadBaseControl IO m)
+getObjectBool :: (R.MonadResource m, MonadBaseControl IO m)
                  => Text
                  -- ^ Path (should begin with a slash @\/@).
                  -> [Argument]

@@ -24,10 +24,10 @@ import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
 import System.Locale (defaultTimeLocale)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Encode as AE (fromValue)
 import qualified Data.ByteString.Char8 as B
-import qualified Data.Conduit as C
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Builder as TLB
@@ -44,7 +44,7 @@ import Facebook.Pager
 
 
 -- | Make a raw @GET@ request to Facebook's Graph API.
-getObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+getObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              Text           -- ^ Path (should begin with a slash @\/@)
           -> [Argument]     -- ^ Arguments to be passed to Facebook
           -> Maybe (AccessToken anyKind) -- ^ Optional access token
@@ -55,7 +55,7 @@ getObject path query mtoken =
 
 
 -- | Make a raw @POST@ request to Facebook's Graph API.
-postObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+postObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
               Text                -- ^ Path (should begin with a slash @\/@)
            -> [Argument]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
@@ -64,7 +64,7 @@ postObject = methodObject HT.methodPost
 
 
 -- | Make a raw @DELETE@ request to Facebook's Graph API.
-deleteObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+deleteObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                 Text                -- ^ Path (should begin with a slash @\/@)
              -> [Argument]          -- ^ Arguments to be passed to Facebook
              -> AccessToken anyKind -- ^ Access token
@@ -73,7 +73,7 @@ deleteObject = methodObject HT.methodDelete
 
 
 -- | Helper function used by 'postObject' and 'deleteObject'.
-methodObject :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+methodObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                 HT.Method
              -> Text                -- ^ Path (should begin with a slash @\/@)
              -> [Argument]          -- ^ Arguments to be passed to Facebook
@@ -87,7 +87,7 @@ methodObject method path query token =
 
 -- | Make a raw @GET@ request to the /search endpoint of Facebook’s
 -- Graph API.  Returns a raw JSON 'A.Value'.
-searchObjects :: (C.MonadResource m, MonadBaseControl IO m, A.FromJSON a)
+searchObjects :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a)
               => Text                  -- ^ A Facebook object type to search for
               -> Text                  -- ^ The keyword to search for
               -> [Argument]            -- ^ Additional arguments to pass

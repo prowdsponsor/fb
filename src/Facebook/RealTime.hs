@@ -22,6 +22,7 @@ import Data.Text (Text)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Typeable (Typeable)
 
+import qualified Control.Monad.Trans.Resource as R
 import qualified Crypto.Classes as Crypto
 import qualified Crypto.HMAC as Crypto
 import qualified Data.Aeson as A
@@ -92,7 +93,7 @@ type RealTimeUpdateToken = ByteString
 -- If there was any previous subscription for the given
 -- 'RealTimeUpdateObject', it's overriden by this one (even if
 -- the other subscription had a different callback URL).
-modifySubscription :: (C.MonadResource m, MonadBaseControl IO m) =>
+modifySubscription :: (R.MonadResource m, MonadBaseControl IO m) =>
                       RealTimeUpdateObject
                       -- ^ Type of objects whose subscription you
                       -- and to add or modify.
@@ -148,7 +149,7 @@ instance A.FromJSON RealTimeUpdateSubscription where
 
 -- | List current real-time update subscriptions.
 listSubscriptions ::
-  (C.MonadResource m, MonadBaseControl IO m) =>
+  (R.MonadResource m, MonadBaseControl IO m) =>
   AppAccessToken -> FacebookT Auth m [RealTimeUpdateSubscription]
 listSubscriptions apptoken = do
   path <- getSubscriptionsPath

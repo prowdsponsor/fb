@@ -10,7 +10,7 @@ import Data.Function (on)
 import Data.String (IsString(..))
 import Data.Text (Text)
 
-import qualified Data.Conduit as C
+import qualified Control.Monad.Trans.Resource as R
 
 import Facebook.Types
 import Facebook.Monad
@@ -25,7 +25,7 @@ import Facebook.Graph
 -- >              [ "recipe" #= "http://example.com/cookie.html"
 -- >              , "when"   #= now ]
 -- >              token
-createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
+createAction :: (R.MonadResource m, MonadBaseControl IO m)  =>
                 Action     -- ^ Action kind to be created.
              -> [Argument] -- ^ Arguments of the action.
              -> Maybe AppAccessToken
@@ -37,7 +37,7 @@ createAction :: (C.MonadResource m, MonadBaseControl IO m)  =>
              -> FacebookT Auth m Id
 createAction (Action action) query mapptoken usertoken = do
   creds <- getCreds
-  let post :: (C.MonadResource m, MonadBaseControl IO m)  => Text -> AccessToken anyKind -> FacebookT Auth m Id
+  let post :: (R.MonadResource m, MonadBaseControl IO m)  => Text -> AccessToken anyKind -> FacebookT Auth m Id
       post prepath = postObject (prepath <> appName creds <> ":" <> action) query
   case mapptoken of
     Nothing       -> post "/me/" usertoken

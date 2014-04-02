@@ -32,6 +32,7 @@ import Data.Typeable (Typeable)
 import Data.String (IsString(..))
 
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as AE
 import qualified Data.Aeson.Types as AE
 import qualified Data.Attoparsec.Char8 as AB
@@ -58,7 +59,7 @@ import Facebook.Monad
 
 -- | Get an app access token from Facebook using your
 -- credentials.
-getAppAccessToken :: (C.MonadResource m, MonadBaseControl IO m) =>
+getAppAccessToken :: (R.MonadResource m, MonadBaseControl IO m) =>
                      FacebookT Auth m AppAccessToken
 getAppAccessToken =
   runResourceInFb $ do
@@ -104,7 +105,7 @@ getUserAccessTokenStep1 redirectUrl perms = do
 -- request query parameters passed to your 'RedirectUrl' and give
 -- to this function that will complete the user authentication
 -- flow and give you an @'UserAccessToken'@.
-getUserAccessTokenStep2 :: (MonadBaseControl IO m, C.MonadResource m) =>
+getUserAccessTokenStep2 :: (MonadBaseControl IO m, R.MonadResource m) =>
                            RedirectUrl -- ^ Should be exactly the same
                                        -- as in 'getUserAccessTokenStep1'.
                         -> [Argument]  -- ^ Query parameters.
@@ -236,7 +237,7 @@ hasExpired token =
 -- access token may not be valid as well.  For example, in the
 -- case of an user access token, they may have changed their
 -- password, logged out from Facebook or blocked your app.
-isValid :: (MonadBaseControl IO m, C.MonadResource m) =>
+isValid :: (MonadBaseControl IO m, R.MonadResource m) =>
            AccessToken anyKind
         -> FacebookT anyAuth m Bool
 isValid token = do
@@ -270,7 +271,7 @@ isValid token = do
 -- have the same data and expiration time as before, but you
 -- can't assume this).  Note that expired access tokens can't be
 -- extended, only valid tokens.
-extendUserAccessToken :: (MonadBaseControl IO m, C.MonadResource m) =>
+extendUserAccessToken :: (MonadBaseControl IO m, R.MonadResource m) =>
                          UserAccessToken
                       -> FacebookT Auth m (Either FacebookException UserAccessToken)
 extendUserAccessToken token@(UserAccessToken uid data_ _)
@@ -354,7 +355,7 @@ addBase64Padding bs
 
 
 -- | Get detailed information about an access token.
-debugToken :: (MonadBaseControl IO m, C.MonadResource m) =>
+debugToken :: (MonadBaseControl IO m, R.MonadResource m) =>
               AppAccessToken  -- ^ Your app access token.
            -> AccessTokenData -- ^ The access token you want to debug.
            -> FacebookT Auth m DebugToken
