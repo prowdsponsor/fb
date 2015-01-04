@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveDataTypeable,
+{-# LANGUAGE CPP,
+             DeriveDataTypeable,
              FlexibleContexts,
              FlexibleInstances,
              GeneralizedNewtypeDeriving,
@@ -60,14 +61,26 @@ instance MonadBase b m => MonadBase b (FacebookT auth m) where
     liftBase = lift . liftBase
 
 instance MonadTransControl (FacebookT auth) where
+#if MIN_VERSION_monad_control(1,0,0)
+    type StT (FacebookT auth) a = StT (ReaderT FbData) a
+    liftWith f = F $ liftWith (\run -> f (run . unF))
+    restoreT   = F . restoreT
+#else
     newtype StT (FacebookT auth) a = FbStT { unFbStT :: StT (ReaderT FbData) a }
     liftWith f = F $ liftWith (\run -> f (liftM FbStT . run . unF))
     restoreT   = F . restoreT . liftM unFbStT
+#endif
 
 instance MonadBaseControl b m => MonadBaseControl b (FacebookT auth m) where
+#if MIN_VERSION_monad_control(1,0,0)
+    type StM (FacebookT auth m) a = ComposeSt (FacebookT auth) m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM     = defaultRestoreM
+#else
     newtype StM (FacebookT auth m) a = StMT {unStMT :: ComposeSt (FacebookT auth) m a}
     liftBaseWith = defaultLiftBaseWith StMT
     restoreM     = defaultRestoreM   unStMT
+#endif
 
 -- | Since @fb-0.14.8@.
 instance MonadLogger m => MonadLogger (FacebookT auth m) where
