@@ -35,7 +35,8 @@ import Control.Monad.Logger (MonadLogger(..))
 import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
-                                   , defaultRestoreM )
+                                   , defaultLiftWith, defaultRestoreM
+                                   , defaultRestoreT )
 import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Typeable (Typeable)
 import qualified Control.Monad.Trans.Resource as R
@@ -60,14 +61,14 @@ instance MonadBase b m => MonadBase b (FacebookT auth m) where
     liftBase = lift . liftBase
 
 instance MonadTransControl (FacebookT auth) where
-    newtype StT (FacebookT auth) a = FbStT { unFbStT :: StT (ReaderT FbData) a }
-    liftWith f = F $ liftWith (\run -> f (liftM FbStT . run . unF))
-    restoreT   = F . restoreT . liftM unFbStT
+    type StT (FacebookT auth) a = StT (ReaderT FbData) a
+    liftWith = defaultLiftWith F unF
+    restoreT = defaultRestoreT F
 
 instance MonadBaseControl b m => MonadBaseControl b (FacebookT auth m) where
-    newtype StM (FacebookT auth m) a = StMT {unStMT :: ComposeSt (FacebookT auth) m a}
-    liftBaseWith = defaultLiftBaseWith StMT
-    restoreM     = defaultRestoreM   unStMT
+    type StM (FacebookT auth m) a = ComposeSt (FacebookT auth) m a
+    liftBaseWith = defaultLiftBaseWith
+    restoreM     = defaultRestoreM
 
 -- | Since @fb-0.14.8@.
 instance MonadLogger m => MonadLogger (FacebookT auth m) where
