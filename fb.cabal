@@ -72,7 +72,7 @@ library
     , text                 >= 0.11    && < 1.3
     , transformers         >= 0.2     && < 0.5
     , transformers-base
-    , monad-control
+    , monad-control        == 1.0.*
     , resourcet
     , data-default
     , http-types
