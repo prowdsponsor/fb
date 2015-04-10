@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE ConstraintKinds, CPP, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Graph
     ( getObject
     , postObject
@@ -22,7 +22,11 @@ import Data.List (intersperse)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.Word (Word, Word8, Word16, Word32, Word64)
+#if MIN_VERSION_time(1,5,0)
+import Data.Time (defaultTimeLocale)
+#else
 import System.Locale (defaultTimeLocale)
+#endif
 
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A

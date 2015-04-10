@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, GADTs, StandaloneDeriving #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, GADTs, StandaloneDeriving #-}
 module Facebook.Types
     ( Credentials(..)
     , appIdBS
@@ -29,7 +29,11 @@ import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Typeable (Typeable, Typeable1)
+#if MIN_VERSION_time(1,5,0)
+import Data.Time (defaultTimeLocale)
+#else
 import System.Locale (defaultTimeLocale)
+#endif
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Types as A
