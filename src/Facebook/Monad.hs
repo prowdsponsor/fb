@@ -37,6 +37,9 @@ import Control.Monad.Trans.Class (MonadTrans(lift))
 import Control.Monad.Trans.Control ( MonadTransControl(..), MonadBaseControl(..)
                                    , ComposeSt, defaultLiftBaseWith
                                    , defaultRestoreM )
+#if MIN_VERSION_monad_control(1,0,0)
+import Control.Monad.Trans.Control (defaultLiftWith, defaultRestoreT)
+#endif
 import Control.Monad.Trans.Reader (ReaderT(..), ask, mapReaderT)
 import Data.Typeable (Typeable)
 import qualified Control.Monad.Trans.Resource as R
@@ -63,8 +66,8 @@ instance MonadBase b m => MonadBase b (FacebookT auth m) where
 instance MonadTransControl (FacebookT auth) where
 #if MIN_VERSION_monad_control(1,0,0)
     type StT (FacebookT auth) a = StT (ReaderT FbData) a
-    liftWith f = F $ liftWith (\run -> f (run . unF))
-    restoreT   = F . restoreT
+    liftWith = defaultLiftWith F unF
+    restoreT = defaultRestoreT F
 #else
     newtype StT (FacebookT auth) a = FbStT { unFbStT :: StT (ReaderT FbData) a }
     liftWith f = F $ liftWith (\run -> f (liftM FbStT . run . unF))
