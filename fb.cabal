@@ -77,7 +77,7 @@ library
     , data-default
     , http-types
     , http-conduit         >= 2.0     && < 2.2
-    , attoparsec           >= 0.10.4  && < 0.13
+    , attoparsec           >= 0.10.4  && < 0.14
     , unordered-containers
     , aeson                >= 0.5     && < 0.9
     , base16-bytestring    >= 0.1
