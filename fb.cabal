@@ -49,6 +49,15 @@ library
   ghc-options: -Wall
   exposed-modules:
     Facebook
+    Facebook.Object.Marketing.AdUser
+    Facebook.Object.Marketing.AdAccount
+    Facebook.Object.Marketing.AdCampaign
+    Facebook.Object.Marketing.AdCreative
+    Facebook.Object.Marketing.AdGroup
+    Facebook.Object.Marketing.AdImage
+    Facebook.Object.Marketing.ImageCrop
+    Facebook.Object.Marketing.Utility
+    Facebook.Object.Marketing.Types
   other-modules:
     Facebook.Types
     Facebook.Monad

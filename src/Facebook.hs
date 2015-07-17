@@ -36,6 +36,7 @@ module Facebook
     , parseSignedRequest
 
       -- * Facebook's Graph API
+      -- ** Marketing api
       -- ** User
     , User(..)
     , UserId
