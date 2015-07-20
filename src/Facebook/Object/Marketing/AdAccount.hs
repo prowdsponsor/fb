@@ -18,24 +18,11 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
 import Facebook.Pager
-import Facebook.Object.Checkin
 import Facebook.Object.Marketing.AdUser (AdUser)
+import qualified Facebook.Object.Marketing.AdAccountGroup as AAG
 
 import Facebook.Object.Marketing.Types
 import Facebook.Object.Marketing.Utility
-
-data AccountGroup =
-  AccountGroup
-    { accg_account_group_id :: Id
-    , accg_name :: Text
-    , accg_status :: Text
-    } deriving (Eq, Ord, Show, Read, Typeable, Generic)
-
-instance A.FromJSON AccountGroup where
-  parseJSON = parseJSONWithPrefix "ag_"
-
-instance A.ToJSON AccountGroup where
-  toJSON = toJSONWithPrefix "ag_"
 
 data TaxStatus = Unknown
                | VATNotRequiredUSOrCA
@@ -46,10 +33,10 @@ data TaxStatus = Unknown
                  deriving (Eq, Ord, Enum, Show, Read, Typeable, Generic)
 
 instance A.FromJSON TaxStatus where
-  parseJSON = parseJSONCamel
+  parseJSON = parseJSONPascal
 
 instance A.ToJSON TaxStatus where
-  toJSON = toJSONCamel
+  toJSON = toJSONPascal
 
 
 data AccountStatus = Active | Disabled | Unsettled | PendingReview |
@@ -98,10 +85,10 @@ data Capabilities = BulkAccount
                   deriving (Eq, Ord, Show, Read, Typeable, Generic)
 
 instance A.FromJSON Capabilities where
-  parseJSON = parseJSONCamel
+  parseJSON = parseJSONPascal
 
 instance A.ToJSON Capabilities where
-  toJSON = toJSONCamel
+  toJSON = toJSONPascal
 
 data FundingSource = Id
                    | Coupon
@@ -114,20 +101,17 @@ data FundingSource = Id
                    deriving (Eq, Ord, Show, Read, Typeable, Generic)
 
 instance A.FromJSON FundingSource where
- parseJSON = parseJSONCamel
+ parseJSON = parseJSONPascal
 
 instance A.ToJSON FundingSource where
- toJSON = toJSONCamel
+ toJSON = toJSONPascal
 
 newtype AdAccountId =
   AdAccountId {unAdAcccountId :: Integer}
   deriving (Eq, Show)
 
-class ToFbText a where
-  toFbText :: a -> Text
-
 instance ToFbText AdAccountId where
-  toFbText (AdAccountId id)= "act_" <> (pack $ show id)
+  toFbText (AdAccountId aid)= "act_" <> pack (show aid)
 
 instance A.ToJSON AdAccountId where
   toJSON =  A.String . toFbText
@@ -141,47 +125,62 @@ instance A.FromJSON AdAccountId where
         in AdAccountId <$> (idParser :: A.Parser Integer)
   parseJSON _ = mzero
 
-data AdAccount =
-    AdAccount {
-           aa_account_groups             :: [AccountGroup]
-         , aa_account_id                 :: AdAccountId
-         , aa_account_status             :: Maybe AccountStatus
-         , aa_age                        :: Maybe Float
-         , aa_agency_client_declaraion   :: Maybe A.Object
-         , aa_account_spend              :: Maybe Money
-         , aa_balance                    :: Maybe Money
-         , aa_business                   :: Maybe A.Value
-         , aa_business_city              :: Maybe Text
-         , aa_business_country_code      :: Maybe Text
-         , aa_business_name              :: Maybe Text
-         , aa_business_state             :: Maybe Text
-         , aa_business_street            :: Maybe Text
-         , aa_business_street2           :: Maybe Text
-         , aa_business_zip               :: Maybe Text
-         , aa_capabilities               :: Maybe [Capabilities]
-         , aa_created_time               :: Maybe UTCTime
-         , aa_currency                   :: Maybe Text
-         , aa_end_advertiser             :: Maybe Integer
-         , aa_funding_source             :: Maybe Id
-         , aa_funding_source_details     :: Maybe Text
-         , aa_id                         :: Maybe Text
-         , aa_is_personal                :: Maybe Int
-         , aa_media_agency               :: Maybe Integer
-         , aa_name                       :: Maybe Text
-         , aa_offsite_pixels_tos_accepted:: Maybe Bool
-         , aa_partner                    :: Maybe Integer
-         , aa_rf_spec                    :: Maybe A.Value
-         , aa_spend_cap                  :: Maybe Money
-         , aa_tax_id_status              :: Maybe TaxStatus
-         , aa_timezone_id                :: Maybe Int
-         , aa_timezone_name              :: Maybe Text
-         , aa_timezone_offset_hours_utc  :: Maybe Int
-         , aa_tos_accepted               :: Maybe A.Value
-         , aa_users                      :: [AdUser]
-         } deriving (Eq, Show, Typeable, Generic)
+data AdAccount = AdAccount
+  { aa_account_groups             :: Maybe [AAG.AdAccountGroup]
+  , aa_account_id                 :: AdAccountId
+  , aa_account_status             :: Maybe AccountStatus
+  , aa_age                        :: Maybe Float
+  , aa_agency_client_declaraion   :: Maybe A.Object
+  , aa_account_spend              :: Maybe Money
+  , aa_balance                    :: Maybe Money
+  , aa_business                   :: Maybe A.Value
+  , aa_business_city              :: Maybe Text
+  , aa_business_country_code      :: Maybe Text
+  , aa_business_name              :: Maybe Text
+  , aa_business_state             :: Maybe Text
+  , aa_business_street            :: Maybe Text
+  , aa_business_street2           :: Maybe Text
+  , aa_business_zip               :: Maybe Text
+  , aa_capabilities               :: Maybe [Capabilities]
+  , aa_created_time               :: Maybe UTCTime
+  , aa_currency                   :: Maybe Text
+  , aa_end_advertiser             :: Maybe Integer
+  , aa_funding_source             :: Maybe Id
+  , aa_funding_source_details     :: Maybe Text
+  , aa_id                         :: Maybe Text
+  , aa_is_personal                :: Maybe Int
+  , aa_media_agency               :: Maybe Integer
+  , aa_name                       :: Maybe Text
+  , aa_offsite_pixels_tos_accepted:: Maybe Bool
+  , aa_partner                    :: Maybe Integer
+  , aa_rf_spec                    :: Maybe A.Value
+  , aa_spend_cap                  :: Maybe Money
+  , aa_tax_id_status              :: Maybe TaxStatus
+  , aa_timezone_id                :: Maybe Int
+  , aa_timezone_name              :: Maybe Text
+  , aa_timezone_offset_hours_utc  :: Maybe Int
+  , aa_tos_accepted               :: Maybe A.Value
+  , aa_users                      :: Maybe [AdUser]
+  } deriving (Eq, Show, Typeable, Generic)
 
 instance A.FromJSON AdAccount
 instance A.ToJSON AdAccount
+
+data AdAccountIdDetails = AccountIdDeatails
+  { aaid_account_id :: Integer
+  , aaid_id         :: AdAccountId
+  } deriving (Eq, Show, Typeable, Generic)
+
+instance A.FromJSON AdAccountIdDetails where
+  parseJSON = parseJSONWithPrefix "aaid_"
+
+instance A.ToJSON AdAccountIdDetails where
+  toJSON = toJSONWithPrefix "aaid_"
+
+getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
+          UserAccessToken -- ^ User access token.
+        -> FacebookT anyAuth m AdAccountIdDetails
+getAdAccountId token = getObject "/me/adaccounts" [] (Just token)
 
 getAdAccount :: (R.MonadResource m, MonadBaseControl IO m) =>
            AdAccountId    -- ^ Ad Account Id

@@ -17,7 +17,6 @@ import Facebook.Types
 import Facebook.Monad
 import Facebook.Graph
 import Facebook.Pager
-import Facebook.Object.Checkin
 
 data Permission =  AcccountAdmin | AdManagerRead | AdManagerWrite |
                    BillingRead |BillingWrite | Reports

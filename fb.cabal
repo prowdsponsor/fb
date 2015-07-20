@@ -49,15 +49,23 @@ library
   ghc-options: -Wall
   exposed-modules:
     Facebook
+    Facebook.Object.Marketing.Ad
     Facebook.Object.Marketing.AdUser
     Facebook.Object.Marketing.AdAccount
     Facebook.Object.Marketing.AdCampaign
     Facebook.Object.Marketing.AdCreative
-    Facebook.Object.Marketing.AdGroup
+    Facebook.Object.Marketing.AdAccountGroup
+    Facebook.Object.Marketing.AdSet
     Facebook.Object.Marketing.AdImage
     Facebook.Object.Marketing.ImageCrop
     Facebook.Object.Marketing.Utility
     Facebook.Object.Marketing.Types
+    Facebook.Object.Marketing.TargetingSpecs
+    Facebook.Object.Marketing.TargetingSpecs.Demographies
+    Facebook.Object.Marketing.TargetingSpecs.Location
+    Facebook.Object.Marketing.TargetingSpecs.Mobile
+    Facebook.Object.Marketing.TargetingSpecs.Placement
+    Facebook.Object.Marketing.GettingStarted
   other-modules:
     Facebook.Types
     Facebook.Monad
@@ -86,6 +94,7 @@ library
     , data-default
     , http-types
     , http-conduit         >= 2.0     && < 2.2
+    , http-client
     , attoparsec           >= 0.10.4  && < 0.14
     , unordered-containers
     , aeson                >= 0.5     && < 0.10
