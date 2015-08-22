@@ -40,6 +40,7 @@ module Facebook
     , User(..)
     , UserId
     , Gender(..)
+    , Picture(..)
     , getUser
     , searchUsers
     , getUserCheckins

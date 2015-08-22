@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Object.User
-    ( User(..)
+    ( Picture(..)
+    , User(..)
     , Gender(..)
     , getUser
     , searchUsers
@@ -18,7 +19,6 @@ import Data.Typeable (Typeable)
 
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-
 
 import Facebook.Types
 import Facebook.Monad
@@ -42,6 +42,7 @@ data User =
          , userGender     :: Maybe Gender
          , userLocale     :: Maybe Text
          , userUsername   :: Maybe Text
+         , userPicture    :: Maybe Picture
          , userVerified   :: Maybe Bool
          , userEmail      :: Maybe Text
          , userLocation   :: Maybe Place
@@ -49,7 +50,7 @@ data User =
     deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON User where
-    parseJSON (A.Object v) =
+    parseJSON (A.Object v) = do
       User <$> v .:  "id"
            <*> v .:? "name"
            <*> v .:? "first_name"
@@ -58,9 +59,29 @@ instance A.FromJSON User where
            <*> v .:? "gender"
            <*> v .:? "locale"
            <*> v .:? "username"
+           <*> v .:? "picture"
            <*> v .:? "verified"
            <*> v .:? "email"
            <*> v .:? "location"
+    parseJSON _ = mzero
+
+
+-- | General picture record
+data Picture =
+    Picture { pictureHeight        :: Maybe Int
+            , pictureIs_silhouette :: Bool
+            , pictureUrl           :: Text
+            , pictureWidth         :: Maybe Int
+            }
+    deriving (Eq, Ord, Show, Read, Typeable)
+
+instance A.FromJSON Picture where
+    parseJSON (A.Object o) = do
+      v <- o .: "data"
+      Picture <$> v .:? "height"
+              <*> v .:  "is_silhouette"
+              <*> v .:  "url"
+              <*> v .:? "width"
     parseJSON _ = mzero
 
 
