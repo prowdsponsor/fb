@@ -5,7 +5,7 @@ module Facebook.Object.Marketing.AdAccount where
 import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Text (Text, pack, stripPrefix)
+import Data.Text (Text, pack, stripPrefix, unpack)
 import Data.Typeable (Typeable)
 import GHC.Generics
 
@@ -121,17 +121,18 @@ instance A.FromJSON AdAccountId where
     case stripPrefix "act_" t of
       Nothing -> mzero
       Just idTxt ->
-        let idParser = A.parseJSON (A.String idTxt)
+        let idParser = return $ read $ unpack idTxt
         in AdAccountId <$> (idParser :: A.Parser Integer)
+
   parseJSON _ = mzero
 
 data AdAccount = AdAccount
   { aa_account_groups             :: Maybe [AAG.AdAccountGroup]
-  , aa_account_id                 :: AdAccountId
+  , aa_account_id                 :: Maybe Text
   , aa_account_status             :: Maybe AccountStatus
   , aa_age                        :: Maybe Float
   , aa_agency_client_declaraion   :: Maybe A.Object
-  , aa_account_spend              :: Maybe Money
+  , aa_amount_spend               :: Maybe Money
   , aa_balance                    :: Maybe Money
   , aa_business                   :: Maybe A.Value
   , aa_business_city              :: Maybe Text
@@ -147,7 +148,7 @@ data AdAccount = AdAccount
   , aa_end_advertiser             :: Maybe Integer
   , aa_funding_source             :: Maybe Id
   , aa_funding_source_details     :: Maybe Text
-  , aa_id                         :: Maybe Text
+  , aa_id                         :: Maybe AdAccountId
   , aa_is_personal                :: Maybe Int
   , aa_media_agency               :: Maybe Integer
   , aa_name                       :: Maybe Text
@@ -163,11 +164,14 @@ data AdAccount = AdAccount
   , aa_users                      :: Maybe [AdUser]
   } deriving (Eq, Show, Typeable, Generic)
 
-instance A.FromJSON AdAccount
-instance A.ToJSON AdAccount
+instance A.FromJSON AdAccount where
+  parseJSON = parseJSONWithPrefix "aa_"
 
-data AdAccountIdDetails = AccountIdDeatails
-  { aaid_account_id :: Integer
+instance A.ToJSON AdAccount where
+  toJSON = toJSONWithPrefix "aa_"
+
+data AdAccountIdDetails = AccountIdDetails
+  { aaid_account_id :: Text
   , aaid_id         :: AdAccountId
   } deriving (Eq, Show, Typeable, Generic)
 
@@ -179,12 +183,12 @@ instance A.ToJSON AdAccountIdDetails where
 
 getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
           UserAccessToken -- ^ User access token.
-        -> FacebookT anyAuth m AdAccountIdDetails
-getAdAccountId token = getObject "/me/adaccounts" [] (Just token)
+        -> FacebookT anyAuth m (Pager AdAccountIdDetails)
+getAdAccountId token = getObject "/v2.5/me/adaccounts" [] (Just token)
 
 getAdAccount :: (R.MonadResource m, MonadBaseControl IO m) =>
            AdAccountId    -- ^ Ad Account Id
         -> [Argument]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
         -> FacebookT anyAuth m AdAccount
-getAdAccount id_ query mtoken = getObject ("/" <> toFbText id_) query mtoken
+getAdAccount id_ query mtoken = getObject ("/v2.5/" <> toFbText id_) query mtoken

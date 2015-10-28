@@ -7,6 +7,7 @@ import Facebook
 import           Control.Monad.Trans.Resource
 import Data.Time
 import Control.Monad.Trans
+import Facebook.Object.Marketing.AdAccount hiding (Id)
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -22,4 +23,8 @@ main = do
   runResourceT $ runFacebookT creds man $ do
     u <- getUser "me" [] (Just tok)
     liftIO $ print u
+    Pager adaccids _ _ <- getAdAccountId tok
+    liftIO $ print adaccids
+    adAcc <- getAdAccount (aaid_id $ head adaccids) [("fields", "balance,amount_spent")] (Just tok)
+    liftIO $ print adAcc
     return ()
