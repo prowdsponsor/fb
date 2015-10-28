@@ -129,6 +129,17 @@ library
   if flag(debug)
     cpp-options: -DDEBUG
 
+executable facebook-marketing-test
+  main-is:             MarketingTests.hs
+  default-language:    Haskell2010
+  build-depends:     base >=4.6 && <5
+                     , fb
+                     , http-conduit ==2.1.*
+                     , resourcet
+                     , mtl
+                     , text
+                     , time
+
 
 test-suite runtests
   type: exitcode-stdio-1.0
