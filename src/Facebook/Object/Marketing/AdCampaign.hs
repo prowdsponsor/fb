@@ -56,18 +56,18 @@ instance A.ToJSON CampaignStatus where
 
 data AdCampaign = AdCampaign
   { acamp_id :: Id
-  , acamp_account_id :: AdAccountId
-  , acamp_buying_type :: Text
-  , acamp_campaign_group_status :: CampaignStatus
-  , acamp_can_use_spend_cap :: Bool
-  , acamp_created_time :: UTCTime
-  , acamp_name :: Text
-  , acamp_objective :: Integer
-  , acamp_start_time :: UTCTime
-  , acamp_stop_time :: UTCTime
+  , acamp_account_id :: Maybe AdAccountId
+  , acamp_buying_type :: Maybe Text
+  , acamp_campaign_group_status :: Maybe CampaignStatus
+  , acamp_can_use_spend_cap :: Maybe Bool
+  , acamp_created_time :: Maybe UTCTime
+  , acamp_name :: Maybe Text
+  , acamp_objective :: Maybe Integer
+  , acamp_start_time :: Maybe UTCTime
+  , acamp_stop_time :: Maybe UTCTime
   , acamp_topline_id :: Maybe Text
-  , acamp_updated_time :: UTCTime
-  , acamp_spend_cap :: Money
+  , acamp_updated_time :: Maybe UTCTime
+  , acamp_spend_cap :: Maybe Money
   } deriving (Show, Generic)
 
 instance A.FromJSON AdCampaign where
@@ -86,3 +86,10 @@ createCampaign :: (R.MonadResource m, MonadBaseControl IO m)  =>
               -> FacebookT Auth m FBMObjectCreated
 createCampaign aid campaign usertoken = do
   postObject ("/" <> toFbText aid  <>"/adcampaign_groups") [("campaign" #= campaign)] usertoken
+
+getAccountCampaigns :: (R.MonadResource m, MonadBaseControl IO m)  =>
+                       AdAccountId  -- ^ Ad Account ID.
+                    -> [Argument]
+                    -> UserAccessToken
+                    -> FacebookT Auth m (Pager AdCampaign)
+getAccountCampaigns id_ query tok = getObject ("/v2.5/" <> toFbText id_ <> "/campaigns") query (Just tok)

@@ -22,8 +22,8 @@ gettingStarted :: (MonadResource m, Monad m, Applicative m, MonadBaseControl IO 
 gettingStarted = do
    myAccId <- id <$> getAdAccountId undefined
    let myCampaign = AdCampaign
-         { acamp_name = "Test facebook campaign"
-         , acamp_campaign_group_status = ACAMP.Paused
+         { acamp_name = Just "Test facebook campaign"
+         , acamp_campaign_group_status = Just ACAMP.Paused
          , acamp_objective = undefined --Just "To test the Haskell Facebook Api"
          }
    myCampaignId <- oc_id <$> createCamapign myCampaign
