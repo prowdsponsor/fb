@@ -9,6 +9,7 @@ import Data.Time
 import Control.Monad.Trans
 import Facebook.Object.Marketing.AdAccount hiding (Id)
 import Facebook.Object.Marketing.AdCampaign
+import Facebook.Object.Marketing.AdSet
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -30,4 +31,6 @@ main = do
     liftIO $ print adAcc
     Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [] tok
     liftIO $ print adCamps
+    Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [] tok
+    liftIO $ print adSets
     return ()

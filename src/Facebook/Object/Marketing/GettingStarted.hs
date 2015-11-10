@@ -28,10 +28,10 @@ gettingStarted = do
          }
    myCampaignId <- oc_id <$> createCamapign myCampaign
    let myAdset = AdSet
-         { as_name= "My Ad Set"
-         , as_campaign_status  = ACAMP.Paused
-         , as_daily_budget = Money 5
-         , as_bid_amount = Money 1
+         { as_name= Just "My Ad Set"
+         , as_campaign_status  = Just ACAMP.Paused
+         , as_daily_budget = Just $ Money 5
+         , as_bid_amount = Just $ Money 1
          , as_billing_event = undefined
          , as_optimization_goal = undefined
          , as_targeting = undefined

@@ -51,32 +51,32 @@ instance A.FromJSON AdBehaviour
 instance A.ToJSON AdBehaviour
 
 data AdSet = AdSet
-  { as_optimization_goal       :: UserEvent
-  , as_bid_amount              :: Money
-  , as_campaign_group_id       :: FbNumeric
-  , as_campaign_schedule       :: A.Value
-  , as_campaign_status         :: CampaignStatus
-  , as_creative_sequence       :: [FbNumeric]
-  , as_daily_budget            :: Money
-  , as_daily_imps              :: Integer
-  , as_date_format             :: Text
-  , as_end_time                :: UTCTime
-  , as_execution_options       :: ExecutionOption
-  , as_io_number               :: Integer
-  , as_is_autobid              :: Bool
-  , as_lifetime_budget         :: Integer
-  , as_lifetime_frequency_cap  :: Integer
-  , as_lifetime_imps           :: Integer
-  , as_name                    :: Text
-  , as_redownload              :: Bool
-  , as_rf_prediction_id        :: FbNumeric
-  , as_start_time              :: UTCTime
-  , as_targeting               :: A.Value
-  , as_time_start              :: UTCTime
-  , as_time_stop               :: UTCTime
+  { as_optimization_goal       :: Maybe UserEvent
+  , as_bid_amount              :: Maybe Money
+  , as_campaign_group_id       :: Maybe FbNumeric
+  , as_campaign_schedule       :: Maybe A.Value
+  , as_campaign_status         :: Maybe CampaignStatus
+  , as_creative_sequence       :: Maybe [FbNumeric]
+  , as_daily_budget            :: Maybe Money
+  , as_daily_imps              :: Maybe Integer
+  , as_date_format             :: Maybe Text
+  , as_end_time                :: Maybe UTCTime
+  , as_execution_options       :: Maybe ExecutionOption
+  , as_io_number               :: Maybe Integer
+  , as_is_autobid              :: Maybe Bool
+  , as_lifetime_budget         :: Maybe Integer
+  , as_lifetime_frequency_cap  :: Maybe Integer
+  , as_lifetime_imps           :: Maybe Integer
+  , as_name                    :: Maybe Text
+  , as_redownload              :: Maybe Bool
+  , as_rf_prediction_id        :: Maybe FbNumeric
+  , as_start_time              :: Maybe UTCTime
+  , as_targeting               :: Maybe A.Value
+  , as_time_start              :: Maybe UTCTime
+  , as_time_stop               :: Maybe UTCTime
   , as_promoted_object         :: Maybe A.Value
-  , as_billing_event           :: UserEvent
-  , as_product_ad_behavior     :: AdBehaviour
+  , as_billing_event           :: Maybe UserEvent
+  , as_product_ad_behavior     :: Maybe AdBehaviour
   , as_id :: Text
   } deriving (Show, Generic)
 
@@ -96,3 +96,10 @@ createAdSet :: (R.MonadResource m, MonadBaseControl IO m)  =>
               -> FacebookT Auth m FBMObjectCreated
 createAdSet aid adset usertoken = do
   postObject ("/" <> toFbText aid  <>"/adcampaigns") [("adset" #= adset)] usertoken
+
+getCampaignAdSets :: (R.MonadResource m, MonadBaseControl IO m)  =>
+                     Id
+                  -> [Argument]
+                  -> UserAccessToken
+                  -> FacebookT Auth m (Pager AdSet)
+getCampaignAdSets (Id id_) query tok = getObject ("/v2.5/" <> id_ <> "/adsets") query (Just tok)
