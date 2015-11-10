@@ -29,6 +29,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime, parseTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Data.Typeable (Typeable, Typeable1)
+import Data.Data (Data)
 #if MIN_VERSION_time(1,5,0)
 import Data.Time (defaultTimeLocale)
 #else
@@ -51,7 +52,7 @@ data Credentials =
                 , appId     :: Text -- ^ Your application ID.
                 , appSecret :: Text -- ^ Your application secret key.
                 }
-    deriving (Eq, Ord, Show, Read, Typeable)
+    deriving (Eq, Ord, Show, Read, Typeable, Data)
 
 -- | 'appId' for 'ByteString'.
 appIdBS :: Credentials -> ByteString
