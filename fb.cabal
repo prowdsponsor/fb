@@ -58,6 +58,7 @@ library
     Facebook.Object.Marketing.AdSet
     Facebook.Object.Marketing.AdImage
     Facebook.Object.Marketing.ImageCrop
+    Facebook.Object.Marketing.Insights
     Facebook.Object.Marketing.Utility
     Facebook.Object.Marketing.Types
     Facebook.Object.Marketing.TargetingSpecs
