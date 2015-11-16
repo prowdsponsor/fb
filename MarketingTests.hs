@@ -32,7 +32,7 @@ main = do
     liftIO $ print adAcc
     Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [] tok
     liftIO $ print adCamps
-    Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [] tok
+    Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
     liftIO $ print adSets
     Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
     liftIO $ print insights

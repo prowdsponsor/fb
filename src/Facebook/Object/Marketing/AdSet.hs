@@ -55,7 +55,8 @@ data AdSet = AdSet
   , as_bid_amount              :: Maybe Money
   , as_campaign_group_id       :: Maybe FbNumeric
   , as_campaign_schedule       :: Maybe A.Value
-  , as_campaign_status         :: Maybe CampaignStatus
+  , as_configured_status       :: Maybe CampaignStatus
+  , as_effective_status       :: Maybe CampaignStatus
   , as_creative_sequence       :: Maybe [FbNumeric]
   , as_daily_budget            :: Maybe Money
   , as_daily_imps              :: Maybe Integer

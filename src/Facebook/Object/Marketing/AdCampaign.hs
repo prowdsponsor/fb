@@ -42,17 +42,18 @@ data CampaignObjective = None
                        | LeadGeneration
                          deriving (Show, Generic)
 
-data CampaignStatus = Active
-                    | Paused
-                    | Archived
-                    | Deleted
+data CampaignStatus = ACTIVE
+                    | PAUSED
+                    | ARCHIVED
+                    | DELETED
+                    | PENDING_REVIEW
+                    | DISAPPROVED
+                    | PREAPPROVED
                       deriving (Show, Generic)
 
-instance A.FromJSON CampaignStatus where
-  parseJSON = parseJSONPascal
+instance A.FromJSON CampaignStatus
 
-instance A.ToJSON CampaignStatus where
-  toJSON = toJSONPascal
+instance A.ToJSON CampaignStatus
 
 data AdCampaign = AdCampaign
   { acamp_id :: Id

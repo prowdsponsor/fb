@@ -23,13 +23,13 @@ gettingStarted = do
    myAccId <- id <$> getAdAccountId undefined
    let myCampaign = AdCampaign
          { acamp_name = Just "Test facebook campaign"
-         , acamp_campaign_group_status = Just ACAMP.Paused
+         , acamp_campaign_group_status = Just ACAMP.PAUSED
          , acamp_objective = undefined --Just "To test the Haskell Facebook Api"
          }
    myCampaignId <- oc_id <$> createCamapign myCampaign
    let myAdset = AdSet
          { as_name= Just "My Ad Set"
-         , as_campaign_status  = Just ACAMP.Paused
+         , as_configured_status  = Just ACAMP.PAUSED
          , as_daily_budget = Just $ Money 5
          , as_bid_amount = Just $ Money 1
          , as_billing_event = undefined
