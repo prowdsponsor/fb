@@ -14,18 +14,23 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text.Encoding as TE
 import Facebook.Object.Marketing.Utility
+import Text.Read (readMaybe)
+
 
 newtype Money = Money {getMoneyInPennies :: Integer} deriving (Eq, Ord, Show, Read, Typeable, Generic)
 
 instance FromJSON Money where
   parseJSON (String val) =
-    case (decode $ textToBSL val) of
+    case readMaybe $ unpack val of
       Just x -> return $ Money x
-      Nothing -> mzero
+      Nothing -> fail $ "Money parser string: "++show (unpack val)
     where
       textToBSL :: Text -> BSL.ByteString
       textToBSL = BSL.fromStrict . TE.encodeUtf8
-  parseJSON _ = mzero
+  parseJSON n@(Number _) = do
+    x <- parseJSON n
+    return $ Money x
+  parseJSON v = fail $ "Money parser value: "++show v
 
 instance ToJSON Money where
   toJSON (Money cents) = String $ pack $ show cents
