@@ -58,5 +58,5 @@ getInsights :: (R.MonadResource m, MonadBaseControl IO m)  =>
                      Id
                   -> [Argument]
                   -> UserAccessToken
-                  -> FacebookT Auth m (Pager Insights)
+                  -> FacebookT Auth m (Pager (WithJSON Insights))
 getInsights (Id id_) query tok = getObject ("/v2.5/" <> id_ <> "/insights") query (Just tok)

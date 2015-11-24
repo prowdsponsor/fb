@@ -34,3 +34,11 @@ toJSONPascal x = genericToJSON pascalOption x
 
 toBS :: Value -> ByteString
 toBS = TE.encodeUtf8 . TL.toStrict . TLB.toLazyText . AE.fromValue
+
+data WithJSON a = WithJSON { withJsonValue :: Value,
+                             unWithJson :: a }deriving Show
+
+instance FromJSON a => FromJSON (WithJSON a) where
+  parseJSON v = do
+    x <- parseJSON v
+    return $ WithJSON v x

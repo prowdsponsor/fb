@@ -10,6 +10,7 @@ import Control.Monad.Trans
 import Facebook.Object.Marketing.AdAccount hiding (Id)
 import Facebook.Object.Marketing.AdCampaign
 import Facebook.Object.Marketing.AdSet
+import Facebook.Object.Marketing.Utility
 import Facebook.Object.Marketing.Insights
 
 main = do
@@ -35,5 +36,5 @@ main = do
     Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
     liftIO $ print adSets
     Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
-    liftIO $ print insights
+    liftIO $ print (insights:: [WithJSON Insights])
     return ()
