@@ -17,7 +17,7 @@ import Facebook.Object.Marketing.Utility
 import Text.Read (readMaybe)
 
 
-newtype Money = Money {getMoneyInPennies :: Integer} deriving (Eq, Ord, Show, Read, Typeable, Generic)
+newtype Money = Money {getMoneyInPennies :: Int} deriving (Eq, Ord, Show, Read, Typeable, Generic, Num)
 
 instance FromJSON Money where
   parseJSON (String val) =

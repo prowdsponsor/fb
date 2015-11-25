@@ -63,6 +63,7 @@ data Ad = Ad
   , a_redownloadb         :: Bool
   , a_tracking_specs      :: Value
   , a_social_prefs        :: [SocialPreference]
+  , a_id                  :: Int
   } deriving (Eq, Show, Typeable, Generic)
 
 instance FromJSON Ad where
@@ -70,3 +71,10 @@ instance FromJSON Ad where
 
 instance ToJSON Ad where
   toJSON = toJSONWithPrefix "a_"
+
+getAdSetAds :: (R.MonadResource m, MonadBaseControl IO m)  =>
+                     Id
+                  -> [Argument]
+                  -> UserAccessToken
+                  -> FacebookT Auth m (Pager Ad)
+getAdSetAds (Id id_) query tok = getObject ("/v2.5/" <> id_ <> "/ads") query (Just tok)

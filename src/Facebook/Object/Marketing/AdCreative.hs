@@ -6,7 +6,7 @@ import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Control.Monad.Trans.Resource as R
-import qualified Data.Aeson as A
+import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
 
@@ -14,6 +14,9 @@ import Facebook.Graph
 import Facebook.Monad
 import Facebook.Types
 import Facebook.Pager
+
+import Facebook.Object.Marketing.Types
+import Facebook.Object.Marketing.Utility
 
 -- | A Facebook page (see
 -- <https://developers.facebook.com/docs/marketing-api/adcreative>).
@@ -26,15 +29,15 @@ import Facebook.Pager
 data AdTypes = LinkAd | PageLikeAd | EventAd | PhotoAd
                deriving (Eq, Ord, Show, Read, Generic)
 
-instance A.FromJSON AdTypes
-instance A.ToJSON AdTypes
+instance FromJSON AdTypes
+instance ToJSON AdTypes
 
 data CallToAction = OpenLink | BookTravel | ShopNow | PlayGame |
                     ListenMusic | WatchVideo | UseApp
                     deriving (Eq, Ord, Show, Read, Generic)
 
-instance A.FromJSON CallToAction
-instance A.ToJSON CallToAction
+instance FromJSON CallToAction
+instance ToJSON CallToAction
 
 data RunStatus = Pending
                | Active
@@ -50,15 +53,15 @@ data RunStatus = Pending
                | Archived
                  deriving (Eq, Ord, Show, Read, Generic)
 
-instance A.FromJSON RunStatus
-instance A.ToJSON RunStatus
+instance FromJSON RunStatus
+instance ToJSON RunStatus
 
 data AdCreative = AdCreative { ac_ad_actor_id             :: Id
                              , ac_ad_body                 :: Maybe Text
                              , ac_ad_follow_direct        :: Maybe Bool
                              , ac_ad_call_to_action_type  :: Maybe CallToAction
                              , ac_ad_image_crops          :: Maybe Bool
-                             , ac_image_crops             :: Maybe A.Value
+                             , ac_image_crops             :: Maybe Value
                              , ac_image_file              :: Maybe Text
                              , ac_image_hash              :: Maybe Text
                              , ac_image_url               :: Maybe Text
@@ -66,9 +69,25 @@ data AdCreative = AdCreative { ac_ad_actor_id             :: Id
                              , ac_name                    :: Maybe Text
                              , ac_object_id               :: Maybe Text
                              , ac_object_story_id         :: Maybe Text
-                             , ac_object_story_spec       :: Maybe A.Value
+                             , ac_object_story_spec       :: Maybe Value
                              , ac_object_url              :: Maybe Text
                              , ac_run_status              :: Maybe RunStatus
                              , ac_title                   :: Maybe Text
                              , ac_url_tags                :: Maybe Text
+                             , ac_id                      :: Int
                              } deriving (Eq, Show, Generic)
+
+
+instance FromJSON AdCreative where
+  parseJSON = parseJSONWithPrefix "ac_"
+
+instance ToJSON AdCreative where
+  toJSON = toJSONWithPrefix "ac_"
+
+
+getAdCreatives :: (R.MonadResource m, MonadBaseControl IO m)  =>
+                     Id
+                  -> [Argument]
+                  -> UserAccessToken
+                  -> FacebookT Auth m (Pager AdCreative)
+getAdCreatives (Id id_) query tok = getObject ("/v2.5/" <> id_ <> "/adcreatives") query (Just tok)
