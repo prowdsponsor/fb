@@ -55,15 +55,15 @@ instance ToJSON SocialPreference
 data Ad = Ad
   { a_name              :: Maybe Text
   , a_adgroup_status    :: Maybe Text
-  , a_bid_amount        :: Int
-  , a_campaign_id       :: Integer
-  , a_creative            :: Value
-  , a_engagement_audience :: Bool
-  , a_execution_options    :: [ExeceutionOption]
-  , a_redownloadb         :: Bool
-  , a_tracking_specs      :: Value
-  , a_social_prefs        :: [SocialPreference]
-  , a_id                  :: Int
+  , a_bid_amount        :: Maybe Int
+  , a_campaign_id       :: Maybe Integer
+  , a_creative            :: Maybe Value
+  , a_engagement_audience :: Maybe Bool
+  , a_execution_options    :: Maybe [ExeceutionOption]
+  , a_redownloadb         :: Maybe Bool
+  , a_tracking_specs      :: Maybe Value
+  , a_social_prefs        :: Maybe [SocialPreference]
+  , a_id                  :: Text
   } deriving (Eq, Show, Typeable, Generic)
 
 instance FromJSON Ad where

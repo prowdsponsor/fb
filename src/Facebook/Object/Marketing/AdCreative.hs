@@ -9,6 +9,7 @@ import qualified Control.Monad.Trans.Resource as R
 import Data.Aeson
 import Data.Text (Text)
 import GHC.Generics
+import Control.Monad.IO.Class
 
 import Facebook.Graph
 import Facebook.Monad
@@ -56,7 +57,7 @@ data RunStatus = Pending
 instance FromJSON RunStatus
 instance ToJSON RunStatus
 
-data AdCreative = AdCreative { ac_ad_actor_id             :: Id
+data AdCreative = AdCreative { ac_ad_actor_id             :: Maybe Id
                              , ac_ad_body                 :: Maybe Text
                              , ac_ad_follow_direct        :: Maybe Bool
                              , ac_ad_call_to_action_type  :: Maybe CallToAction
@@ -74,7 +75,7 @@ data AdCreative = AdCreative { ac_ad_actor_id             :: Id
                              , ac_run_status              :: Maybe RunStatus
                              , ac_title                   :: Maybe Text
                              , ac_url_tags                :: Maybe Text
-                             , ac_id                      :: Int
+                             , ac_id                      :: Text
                              } deriving (Eq, Show, Generic)
 
 
