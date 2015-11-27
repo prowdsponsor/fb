@@ -66,6 +66,7 @@ data AdCreative = AdCreative { ac_ad_actor_id             :: Maybe Id
                              , ac_image_file              :: Maybe Text
                              , ac_image_hash              :: Maybe Text
                              , ac_image_url               :: Maybe Text
+                             , ac_thumbnail_url           :: Maybe Text
                              , ac_link_url                :: Maybe Text
                              , ac_name                    :: Maybe Text
                              , ac_object_id               :: Maybe Text
