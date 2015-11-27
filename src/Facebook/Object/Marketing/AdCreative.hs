@@ -58,7 +58,7 @@ instance FromJSON RunStatus
 instance ToJSON RunStatus
 
 data AdCreative = AdCreative { ac_ad_actor_id             :: Maybe Id
-                             , ac_ad_body                 :: Maybe Text
+                             , ac_body                 :: Maybe Text
                              , ac_ad_follow_direct        :: Maybe Bool
                              , ac_ad_call_to_action_type  :: Maybe CallToAction
                              , ac_ad_image_crops          :: Maybe Bool
