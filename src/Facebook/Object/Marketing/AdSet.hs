@@ -104,3 +104,10 @@ getCampaignAdSets :: (R.MonadResource m, MonadBaseControl IO m)  =>
                   -> UserAccessToken
                   -> FacebookT Auth m (Pager AdSet)
 getCampaignAdSets (Id id_) query tok = getObject ("/v2.5/" <> id_ <> "/adsets") query (Just tok)
+
+setDailyBudget :: (R.MonadResource m, MonadBaseControl IO m)  =>
+                     Id
+                  -> Int
+                  -> UserAccessToken
+                  -> FacebookT Auth m (Pager AdSet)
+setDailyBudget (Id id_) amount tok = postObject ("/v2.5/" <> id_ ) [("daily_budget" #= amount)] tok
