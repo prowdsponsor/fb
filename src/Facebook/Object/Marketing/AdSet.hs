@@ -10,6 +10,7 @@ import GHC.Generics
 import Data.Time
 
 import qualified Control.Monad.Trans.Resource as R
+import Control.Monad.IO.Class (liftIO)
 import qualified Data.Aeson as A
 
 import Facebook.Types
@@ -109,5 +110,15 @@ setDailyBudget :: (R.MonadResource m, MonadBaseControl IO m)  =>
                      Id
                   -> Int
                   -> UserAccessToken
-                  -> FacebookT Auth m (Pager AdSet)
-setDailyBudget (Id id_) amount tok = postObject ("/v2.5/" <> id_ ) [("daily_budget" #= amount)] tok
+                  -> FacebookT Auth m ()
+setDailyBudget (Id id_) amount tok = do
+ let q = "/v2.5/" <> id_
+     args = [("daily_budget" #= amount)]
+ liftIO $ print ("setting", q, args)
+ Ignore <- postObject q args tok
+ return ()
+
+data Ignore = Ignore
+
+instance A.FromJSON Ignore where
+  parseJSON _ = return Ignore
