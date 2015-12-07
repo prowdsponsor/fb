@@ -46,9 +46,9 @@ flag conduit11
 
 library
   hs-source-dirs: src
-  ghc-options: -Wall
   exposed-modules:
     Facebook
+    Facebook.Records
     Facebook.Object.Marketing.Ad
     Facebook.Object.Marketing.AdUser
     Facebook.Object.Marketing.AdAccount
