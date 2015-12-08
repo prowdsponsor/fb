@@ -5,6 +5,8 @@ module Facebook.Records where
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Text
+import qualified Data.HashMap.Strict as Map
+
 data Nil = Nil
 
 infixr 5 :*:
@@ -37,6 +39,8 @@ myrec = (Name, "Tom") :*: (Age, 38) :*: Nil
 tomage = myrec `get` Age
 tomname = myrec `get` Name
 
+getter myrec = (myrec `get` Name, myrec `get` Age)
+
 instance FromJSON Nil where
   parseJSON _ = return Nil
 
@@ -49,6 +53,7 @@ parseJSONRec o@(Object v) = do
     v <- v .: fieldName flabel
     rest <- parseJSON o
     return $ (flabel, v) :*: rest
+parseJSONRec _ = fail "Parameter to parseJSONRec not of type Object"
 
 class Field f => Has f r where
   get :: r -> f -> FieldValue f
@@ -60,6 +65,14 @@ instance (Field f, Has f r) => Has f (g :*: r) where
   get (_ :*: r) f = get r f
 
 instance ToJSON Nil where
-  toJSON _ = toJSON ()
+  toJSON _ = emptyObject
 
---instance ToJSON ....
+instance (ToJSON a, Field f, ToJSON (FieldValue f)) => ToJSON (f :*: a) where
+  toJSON = toJSONRec
+
+toJSONRec :: forall f a. (ToJSON a, Field f, ToJSON (FieldValue f)) => (f :*: a) -> Value
+toJSONRec ((f, v) :*: rest) =
+    let curMap = Map.singleton (fieldName f) $ toJSON v
+    in case toJSON rest of -- will always be Object since we are representing records
+        Object hmap -> toJSON $ Map.union curMap hmap
+
