@@ -7,7 +7,7 @@ import Facebook
 import           Control.Monad.Trans.Resource
 import Data.Time
 import Control.Monad.Trans
-import Facebook.Object.Marketing.AdAccount hiding (Id)
+import Facebook.Object.Marketing.AdAccountPlayground hiding (Id)
 import Facebook.Object.Marketing.AdCampaign
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Utility
@@ -28,13 +28,14 @@ main = do
     u <- getUser "me" [] (Just tok)
     liftIO $ print u
     Pager adaccids _ _ <- getAdAccountId tok
-    liftIO $ print adaccids
-    adAcc <- getAdAccount (aaid_id $ head adaccids) [("fields", "balance,amount_spent")] (Just tok)
-    liftIO $ print adAcc
-    Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [("fields", "name")] tok
-    liftIO $ print adCamps
-    Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
-    liftIO $ print adSets
-    Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
-    liftIO $ print (insights:: [WithJSON Insights])
+    liftIO $ print $ accId $ head adaccids
+    --liftIO $ print adaccids
+    --adAcc <- getAdAccount (aaid_id $ head adaccids) [("fields", "balance,amount_spent")] (Just tok)
+    --liftIO $ print adAcc
+    --Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [("fields", "name")] tok
+    --liftIO $ print adCamps
+    --Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
+    --liftIO $ print adSets
+    --Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
+    --liftIO $ print (insights:: [WithJSON Insights])
     return ()

@@ -39,8 +39,7 @@ data FbNumeric = FbStringNumeric Text
                | FbIntegerNumeric Int
               deriving (Show, Read, Generic)
 
-instance FromJSON FbNumeric where
-
+instance FromJSON FbNumeric
 instance ToJSON FbNumeric
 
 data FBMObjectCreated = FBMObjectCreated
