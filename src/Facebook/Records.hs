@@ -19,6 +19,11 @@ class Field a where
   fieldName :: a -> Text
   fieldLabel :: a
 
+instance forall a b. (Show (FieldValue a), Show b) => Show (a :*: b) where
+    show ((f, v) :*: rest) = (unpack $ fieldName f) ++ ": " ++ show v ++ "\n" ++ show rest
+instance Show Nil where
+    show _ = ""
+
 data Name = Name
 
 instance Field Name where
