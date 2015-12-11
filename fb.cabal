@@ -52,6 +52,7 @@ library
     Facebook.Object.Marketing.Ad
     Facebook.Object.Marketing.AdUser
     Facebook.Object.Marketing.AdAccount
+    Facebook.Object.Marketing.AdAccountPlayground
     Facebook.Object.Marketing.AdCampaign
     Facebook.Object.Marketing.AdCreative
     Facebook.Object.Marketing.AdAccountGroup
@@ -126,6 +127,7 @@ library
     ScopedTypeVariables
     GeneralizedNewtypeDeriving
     TypeFamilies
+    TypeOperators
     FlexibleInstances
     FlexibleContexts
     MultiParamTypeClasses

@@ -92,7 +92,8 @@ instance ToJSON AdAccountGroupAdAccounts
 instance FromJSON AdAccountGroupAdAccounts
 
 type AdAccountGroup = AACG_Accounts :*: AACG_Status :*: AACG_Name :*: AACG_Users :*: Nil
-type AdAccountGroupId = AACG_Accounts :*: AACG_Status :*: AACG_Name :*: AACG_Users :*: AACG_Id :*: Nil
+
+data AdAccountGroupResult = AdAccountGroupResult AdAccountGroup
 
 testGroup :: AdAccountGroup
 testGroup = (AACG_Accounts, V.fromList [AdAccountGroupAdAccounts 1234 Active]) :*: (AACG_Status, Deleted)

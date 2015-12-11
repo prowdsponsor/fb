@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds, CPP, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Graph
     ( getObject
+    , getObjectRec
     , postObject
     , deleteObject
     , searchObjects
@@ -45,7 +46,23 @@ import Facebook.Base
 import Facebook.Monad
 import Facebook.Types
 import Facebook.Pager
+import Facebook.Records
 
+-- import Debug.Trace
+
+trace a b = b
+
+-- | Make a raw @GET@ request to Facebook's Graph API.
+getObjectRec :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON rec, ToBS rec) =>
+             Text           -- ^ Path (should begin with a slash @\/@)
+          -> [(ByteString, rec)]     -- ^ Arguments to be passed to Facebook
+          -> Maybe (AccessToken anyKind) -- ^ Optional access token
+          -> FacebookT anyAuth m rec
+getObjectRec path query mtoken =
+    let query' = map (\(bs, rec) -> (bs, toBS rec)) query
+    in trace (concat $ map show query') $ getObject path query' mtoken
+  --runResourceInFb $
+  --  asJson =<< fbhttp =<< fbreq path mtoken query
 
 -- | Make a raw @GET@ request to Facebook's Graph API.
 getObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
@@ -55,7 +72,7 @@ getObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
           -> FacebookT anyAuth m a
 getObject path query mtoken =
   runResourceInFb $
-    asJson =<< fbhttp =<< fbreq path mtoken query
+    asJson =<< fbhttp =<< ((trace $ show path) $ fbreq path mtoken query)
 
 
 -- | Make a raw @POST@ request to Facebook's Graph API.

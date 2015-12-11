@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric, FlexibleContexts, OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Facebook.Object.Marketing.AdAccountPlayground where
 
@@ -28,6 +28,8 @@ import Facebook.Records
 
 import qualified Data.Vector as V
 import qualified Facebook.Object.Marketing.AdAccountGroupPlayground as AAGP
+
+import qualified Data.ByteString as BS
 
 data TaxStatus = Unknown
                | VATNotRequiredUSOrCA
@@ -160,7 +162,7 @@ instance Field FSD where
 
 data AdAccountGroups = AdAccountGroups
 instance Field AdAccountGroups where
-    type FieldValue AdAccountGroups = V.Vector AAGP.AdAccountGroupResult :*: Nil -- inner ext. record
+    type FieldValue AdAccountGroups = (V.Vector AAGP.AdAccountGroupResult) :*: Nil -- inner ext. record
     fieldName _ = "account_groups"
     fieldLabel = AdAccountGroups
 
@@ -205,21 +207,53 @@ instance Field AdAccountBusName where
     type FieldValue AdAccountBusName = Text
     fieldName _ = "business_name"
     fieldLabel = AdAccountBusName
+
+data AdAccountBalance = AdAccountBalance
+instance Field AdAccountBalance where
+    type FieldValue AdAccountBalance = Text
+    fieldName _ = "balance"
+    fieldLabel = AdAccountBalance
+
+-- requests... first character in lower case... hide the ugliness
+adAccountBalance :: (AdAccountBalance, Text)
+adAccountBalance = (AdAccountBalance, "")
+
+adAccountSpent :: (AdAccountSpent, Text)
+adAccountSpent = (AdAccountSpent, "")
+
+adAccountAge :: (AdAccountAge, Float)
+adAccountAge = (AdAccountAge, 3.14159)
+
+adAccountId = (FId, Id "")
+adAccountAccId = (FAdAccountId, Id "")
+
+data AdAccountSpent = AdAccountSpent
+instance Field AdAccountSpent where
+    type FieldValue AdAccountSpent = Text
+    fieldName _ = "amount_spent"
+    fieldLabel = AdAccountSpent
 -- TODO
 
 testRec = (FId, "TEST_ID") :*: (FSD, FS_Coupon) :*: Nil
 getter rec = (rec `get` FId, rec `get` FSD)
+builder fid fsd = (FId, fid) :*: (FSD, fsd) :*: Nil
 
 getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
           UserAccessToken -- ^ User access token.
---        -> FacebookT anyAuth m (Pager AdAccountIdDetails)
         -> FacebookT anyAuth m (Pager (FId :*: FAdAccountId :*: Nil))
 getAdAccountId token = getObject "/v2.5/me/adaccounts" [] (Just token)
 
-accId rec = rec `get` FAdAccountId
---getAdAccount :: (R.MonadResource m, MonadBaseControl IO m) =>
---           AdAccountId    -- ^ Ad Account Id
---        -> [Argument]     -- ^ Arguments to be passed to Facebook.
---        -> Maybe UserAccessToken -- ^ Optional user access token.
---        -> FacebookT anyAuth m AdAccount
---getAdAccount id_ query mtoken = getObject ("/v2.5/" <> toFbText id_) query mtoken
+acc_id rec = rec `get` FId
+acc_acc_id rec = rec `get` FAdAccountId
+
+instance ToFbText Id where
+    toFbText (Id id) = id
+
+type AdAccC r = (Has FId r, Has FAdAccountId r)
+
+getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, AdAccC rec, ToBS rec, A.FromJSON rec) =>
+           Id -- AdAccountId    -- ^ Ad Account Id
+        -> [(BS.ByteString, rec)]     -- ^ Arguments to be passed to Facebook.
+        -> Maybe UserAccessToken -- ^ Optional user access token.
+        -> FacebookT anyAuth m rec
+getAdAccount id_ query mtoken = getObjectRec ("/v2.5/" <> toFbText id_) query mtoken
