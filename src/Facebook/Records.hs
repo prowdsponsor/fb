@@ -5,6 +5,8 @@ module Facebook.Records where
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Text
+import Data.Text.Encoding
+import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as Map
 
 data Nil = Nil
@@ -23,6 +25,23 @@ instance forall a b. (Show (FieldValue a), Show b) => Show (a :*: b) where
     show ((f, v) :*: rest) = (unpack $ fieldName f) ++ ": " ++ show v ++ "\n" ++ show rest
 instance Show Nil where
     show _ = ""
+
+-- in order to feed getObject in Facebook/Graph.hs
+class ToBS a where
+    toBS :: a -> BS.ByteString
+
+instance ToBS Nil where
+    toBS _ = ""
+
+instance (ToBS a, Field f) => ToBS (f :*: a) where
+    toBS ((f, _) :*: rest) =
+        let str = toBS rest
+        in if BS.null str -- TODO: Use Builder
+            then fieldToByteString f
+            else fieldToByteString f `BS.append` "," `BS.append` str
+
+fieldToByteString :: Field f => f -> BS.ByteString
+fieldToByteString f = encodeUtf8 $ fieldName f
 
 data Name = Name
 
