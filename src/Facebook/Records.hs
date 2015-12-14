@@ -4,10 +4,11 @@ module Facebook.Records where
 
 import Data.Aeson
 import Data.Aeson.Types
-import Data.Text
+import Data.Text hiding (foldr)
 import Data.Text.Encoding
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as Map
+import Prelude hiding (take, length)
 
 data Nil = Nil
 
@@ -42,28 +43,6 @@ instance (ToBS a, Field f) => ToBS (f :*: a) where
 
 fieldToByteString :: Field f => f -> BS.ByteString
 fieldToByteString f = encodeUtf8 $ fieldName f
-
-data Name = Name
-
-instance Field Name where
-  type FieldValue Name = String
-  fieldName _ = "name"
-  fieldLabel = Name
-
-data Age = Age
-
-instance Field Age where
-  type FieldValue Age = Int
-  fieldName _ = "age"
-  fieldLabel = Age
-
-myrec :: Name :*: Age :*: Nil
-myrec = (Name, "Tom") :*: (Age, 38) :*: Nil
-
-tomage = myrec `get` Age
-tomname = myrec `get` Name
-
-getter myrec = (myrec `get` Name, myrec `get` Age)
 
 instance FromJSON Nil where
   parseJSON _ = return Nil
@@ -116,3 +95,9 @@ instance FieldListToRec Nil Nil where
 
 instance (FieldListToRec l r, Field f) => FieldListToRec (f ::: l) (f :*: r) where
   fieldNameList (fld:::flds) = fieldName fld : fieldNameList flds
+
+textListToBS :: [Text] -> BS.ByteString
+textListToBS xs =
+    let xs' = foldr (\a b -> a `append` "," `append` b) "" xs
+        n = length xs'
+    in encodeUtf8 $ take (n - 1) xs' -- drop last comma

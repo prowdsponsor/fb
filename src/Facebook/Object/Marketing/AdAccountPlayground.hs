@@ -117,11 +117,11 @@ instance A.FromJSON AdAccountId where
 
   parseJSON _ = mzero
 
-data FAdAccountId = FAdAccountId
-instance Field FAdAccountId where
-    type FieldValue FAdAccountId = Id
+data AdId = AdId
+instance Field AdId where
+    type FieldValue AdId = Id
     fieldName _ = "id"
-    fieldLabel = FAdAccountId
+    fieldLabel = AdId
 
 --data FundingSourceDetails = -- this is not an enumeration, these are fields of a record!
 --      FS_Id
@@ -194,17 +194,17 @@ instance Field AdAccountGroups where
     fieldName _ = "account_groups"
     fieldLabel = AdAccountGroups
 
-data FAdAccountAccId = FAdAccountAccId
-instance Field FAdAccountAccId where
-    type FieldValue FAdAccountAccId = Id
+data AdAccId = AdAccId
+instance Field AdAccId where
+    type FieldValue AdAccId = Id
     fieldName _ = "account_id"
-    fieldLabel = FAdAccountAccId
+    fieldLabel = AdAccId
 
-data AdAccountAge = AdAccountAge
-instance Field AdAccountAge where
-    type FieldValue AdAccountAge = Double
+data Age = Age
+instance Field Age where
+    type FieldValue Age = Double
     fieldName _ = "age"
-    fieldLabel = AdAccountAge
+    fieldLabel = Age
 
 data AdAccountACD = AdAccountACD
 instance Field AdAccountACD where
@@ -236,51 +236,26 @@ instance Field AdAccountBusName where
     fieldName _ = "business_name"
     fieldLabel = AdAccountBusName
 
-data AdAccountBalance = AdAccountBalance
-instance Field AdAccountBalance where
-    type FieldValue AdAccountBalance = Text
+data Balance = Balance
+instance Field Balance where
+    type FieldValue Balance = Text
     fieldName _ = "balance"
-    fieldLabel = AdAccountBalance
+    fieldLabel = Balance
 
--- requests... first character in lower case... hide the ugliness
--- TODO: beautify!
-adAccountBalance :: (AdAccountBalance, Text)
-adAccountBalance = (AdAccountBalance, "")
-
-adAccountSpent :: (AdAccountSpent, Text)
-adAccountSpent = (AdAccountSpent, "")
-
-adAccountAge :: (AdAccountAge, Double)
-adAccountAge = (AdAccountAge, pi)
-
-adAccountId = (FAdAccountId, Id "")
-adAccountAccId = (FAdAccountAccId, Id "")
-
-adAccountGroups :: (AdAccountGroups, V.Vector AAGP.AdAccountGroupResult)
-adAccountGroups = (AdAccountGroups, V.fromList [AAGP.testGroup])
-
-adAccountFSD :: (FSD, FundingSourceDetails)
-adAccountFSD = (FSD, fsd)
-
-adAccountACD :: (AdAccountACD, AgencyClientDeclaration)
-adAccountACD = (AdAccountACD, AgencyClientDeclaration 0)
-
-fsd = (FSD_Id, Id "") :*: (FSD_Type, 0) :*: (FSD_DisplayString, "") :*: Nil
-
-data AdAccountSpent = AdAccountSpent
-instance Field AdAccountSpent where
-    type FieldValue AdAccountSpent = Text
+data AmountSpent = AmountSpent
+instance Field AmountSpent where
+    type FieldValue AmountSpent = Text
     fieldName _ = "amount_spent"
-    fieldLabel = AdAccountSpent
+    fieldLabel = AmountSpent
 -- TODO
 
 getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
           UserAccessToken -- ^ User access token.
-        -> FacebookT anyAuth m (Pager (FAdAccountId :*: FAdAccountAccId :*: Nil))
+        -> FacebookT anyAuth m (Pager (AdId :*: AdAccId :*: Nil))
 getAdAccountId token = getObject "/v2.5/me/adaccounts" [] (Just token)
 
-acc_id rec = rec `get` FAdAccountId
-acc_acc_id rec = rec `get` FAdAccountAccId
+acc_id rec = rec `get` AdId
+acc_acc_id rec = rec `get` AdAccId
 -- TODO: gen all other accesors
 
 instance ToFbText Id where
@@ -289,24 +264,24 @@ instance ToFbText Id where
 class IsAdAccountField rec
 instance (IsAdAccountField h, IsAdAccountField t) => IsAdAccountField (h :*: t)
 instance IsAdAccountField Nil
-instance IsAdAccountField FAdAccountId
-instance IsAdAccountField FAdAccountAccId
+instance IsAdAccountField AdId
+instance IsAdAccountField AdAccId
 instance IsAdAccountField AdAccountGroups
 instance IsAdAccountField FSD
-instance IsAdAccountField AdAccountBalance
-instance IsAdAccountField AdAccountSpent
-instance IsAdAccountField AdAccountAge
+instance IsAdAccountField Balance
+instance IsAdAccountField AmountSpent
+instance IsAdAccountField Age
 instance IsAdAccountField AdAccountACD
 -- TODO: add other fields + do for every ADT
 
-type GetAdAcc r = (Has FAdAccountId r, Has FAdAccountAccId r, ToBS r, A.FromJSON r, IsAdAccountField r)
+type GetAdAcc fl r = (Has AdId r, Has AdAccId r, A.FromJSON r, IsAdAccountField r, FieldListToRec fl r)
 -- TODO: - Different for creating, updating, and deleting an ad account
 --       - Different class for other operations, too? Want fewer, maybe rest are ignored?
 --       - write conversion class? GetAdAcc -> DelAdAcc???
 
-getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, GetAdAcc rec) =>
+getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, GetAdAcc fl rec) =>
            Id -- AdAccountId    -- ^ Ad Account Id
-        -> [(BS.ByteString, rec)]     -- ^ Arguments to be passed to Facebook.
+        -> fl     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
         -> FacebookT anyAuth m rec
-getAdAccount id_ query mtoken = getObjectRec ("/v2.5/" <> toFbText id_) query mtoken
+getAdAccount id_ fl mtoken = getObject ("/v2.5/" <> toFbText id_) [("fields", textListToBS $ fieldNameList fl)] mtoken

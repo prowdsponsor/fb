@@ -31,8 +31,8 @@ main = do
     liftIO $ print u
     Pager adaccids _ _ <- getAdAccountId tok
     liftIO $ print adaccids
-    adAcc <- getAdAccount (acc_id $ head adaccids) 
-                [("fields", adAccountBalance :*: adAccountSpent :*: adAccountAge :*: adAccountId :*: adAccountAccId :*: Nil)] 
+    adAcc <- getAdAccount (acc_id $ head adaccids)
+                (Balance ::: FSD ::: AmountSpent ::: Age ::: AdAccId ::: AdId ::: Nil)
                 (Just tok)
     liftIO $ print adAcc
     --Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [("fields", "name")] tok
