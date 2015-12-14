@@ -117,11 +117,11 @@ instance A.FromJSON AdAccountId where
 
   parseJSON _ = mzero
 
-data FId = FId
-instance Field FId where
-    type FieldValue FId = Id
+data FAdAccountId = FAdAccountId
+instance Field FAdAccountId where
+    type FieldValue FAdAccountId = Id
     fieldName _ = "id"
-    fieldLabel = FId
+    fieldLabel = FAdAccountId
 
 --data FundingSourceDetails = -- this is not an enumeration, these are fields of a record!
 --      FS_Id
@@ -194,11 +194,11 @@ instance Field AdAccountGroups where
     fieldName _ = "account_groups"
     fieldLabel = AdAccountGroups
 
-data FAdAccountId = FAdAccountId
-instance Field FAdAccountId where
-    type FieldValue FAdAccountId = Id
+data FAdAccountAccId = FAdAccountAccId
+instance Field FAdAccountAccId where
+    type FieldValue FAdAccountAccId = Id
     fieldName _ = "account_id"
-    fieldLabel = FAdAccountId
+    fieldLabel = FAdAccountAccId
 
 data AdAccountAge = AdAccountAge
 instance Field AdAccountAge where
@@ -253,8 +253,8 @@ adAccountSpent = (AdAccountSpent, "")
 adAccountAge :: (AdAccountAge, Double)
 adAccountAge = (AdAccountAge, pi)
 
-adAccountId = (FId, Id "")
-adAccountAccId = (FAdAccountId, Id "")
+adAccountId = (FAdAccountId, Id "")
+adAccountAccId = (FAdAccountAccId, Id "")
 
 adAccountGroups :: (AdAccountGroups, V.Vector AAGP.AdAccountGroupResult)
 adAccountGroups = (AdAccountGroups, V.fromList [AAGP.testGroup])
@@ -274,17 +274,13 @@ instance Field AdAccountSpent where
     fieldLabel = AdAccountSpent
 -- TODO
 
---testRec = (FId, "TEST_ID") :*: (FSD, FS_Coupon) :*: Nil
-getter rec = (rec `get` FId, rec `get` FSD)
-builder fid fsd = (FId, fid) :*: (FSD, fsd) :*: Nil
-
 getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
           UserAccessToken -- ^ User access token.
-        -> FacebookT anyAuth m (Pager (FId :*: FAdAccountId :*: Nil))
+        -> FacebookT anyAuth m (Pager (FAdAccountId :*: FAdAccountAccId :*: Nil))
 getAdAccountId token = getObject "/v2.5/me/adaccounts" [] (Just token)
 
-acc_id rec = rec `get` FId
-acc_acc_id rec = rec `get` FAdAccountId
+acc_id rec = rec `get` FAdAccountId
+acc_acc_id rec = rec `get` FAdAccountAccId
 -- TODO: gen all other accesors
 
 instance ToFbText Id where
@@ -293,18 +289,22 @@ instance ToFbText Id where
 class IsAdAccountField rec
 instance (IsAdAccountField h, IsAdAccountField t) => IsAdAccountField (h :*: t)
 instance IsAdAccountField Nil
-instance IsAdAccountField FId
 instance IsAdAccountField FAdAccountId
+instance IsAdAccountField FAdAccountAccId
 instance IsAdAccountField AdAccountGroups
 instance IsAdAccountField FSD
 instance IsAdAccountField AdAccountBalance
 instance IsAdAccountField AdAccountSpent
 instance IsAdAccountField AdAccountAge
--- TODO: add other fields
+instance IsAdAccountField AdAccountACD
+-- TODO: add other fields + do for every ADT
 
-type AdAcc r = (Has FId r, Has FAdAccountId r, ToBS r, A.FromJSON r, IsAdAccountField r)
+type GetAdAcc r = (Has FAdAccountId r, Has FAdAccountAccId r, ToBS r, A.FromJSON r, IsAdAccountField r)
+-- TODO: - Different for creating, updating, and deleting an ad account
+--       - Different class for other operations, too? Want fewer, maybe rest are ignored?
+--       - write conversion class? GetAdAcc -> DelAdAcc???
 
-getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, AdAcc rec) =>
+getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, GetAdAcc rec) =>
            Id -- AdAccountId    -- ^ Ad Account Id
         -> [(BS.ByteString, rec)]     -- ^ Arguments to be passed to Facebook.
         -> Maybe UserAccessToken -- ^ Optional user access token.
