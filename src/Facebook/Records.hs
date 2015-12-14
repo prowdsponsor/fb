@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, GADTs, InstanceSigs, OverloadedStrings, FlexibleContexts, OverlappingInstances #-}
+{-# LANGUAGE ScopedTypeVariables, TypeOperators, GADTs, InstanceSigs, OverloadedStrings, FlexibleContexts, OverlappingInstances, UndecidableInstances, FunctionalDependencies #-}
 
 module Facebook.Records where
 
@@ -100,3 +100,19 @@ toJSONRec ((f, v) :*: rest) =
     in case toJSON rest of -- will always be Object since we are representing records
         Object hmap -> toJSON $ Map.union curMap hmap
 
+
+-- List-level concatenation of Fields
+
+infixr 5 :::
+
+data f ::: b where
+  (:::) :: Field f => f -> b -> f ::: b
+
+class FieldListToRec l r | l -> r where
+  fieldNameList :: l -> [Text]
+
+instance FieldListToRec Nil Nil where
+  fieldNameList _ = []
+
+instance (FieldListToRec l r, Field f) => FieldListToRec (f ::: l) (f :*: r) where
+  fieldNameList (fld:::flds) = fieldName fld : fieldNameList flds
