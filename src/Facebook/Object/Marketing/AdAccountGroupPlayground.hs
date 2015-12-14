@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric, FlexibleContexts, OverloadedStrings, ConstraintKinds #-}
 
 module Facebook.Object.Marketing.AdAccountGroupPlayground where
 
@@ -71,6 +71,12 @@ instance Field AACG_Users where
     fieldName _ = "users"
     fieldLabel = AACG_Users
 
+data AACG_ACC_ID = AACG_ACC_ID
+instance Field AACG_ACC_ID where
+    type FieldValue AACG_ACC_ID = Id
+    fieldName _ = "account_group_id"
+    fieldLabel = AACG_ACC_ID
+
 data AdAccountGroupUsers = AdAccountGroupUsers {
       role  :: Int
     , uid   :: Id
@@ -91,11 +97,18 @@ data AdAccountGroupAdAccounts = AdAccountGroupAdAccounts {
 instance ToJSON AdAccountGroupAdAccounts
 instance FromJSON AdAccountGroupAdAccounts
 
-type AdAccountGroup = AACG_Accounts :*: AACG_Status :*: AACG_Name :*: AACG_Users :*: Nil
+type AdAccountGroupC r =
+    (Has AACG_Accounts r,
+     Has AACG_Users r,
+     Has AACG_Name r,
+     Has AACG_Status r,
+     Has AACG_ACC_ID r)
 
-data AdAccountGroupResult = AdAccountGroupResult AdAccountGroup
+type AdAccountGroupResult =
+    AACG_Accounts :*: AACG_Status :*: AACG_Name :*: AACG_Users :*: AACG_ACC_ID :*: Nil
 
-testGroup :: AdAccountGroup
+testGroup :: AdAccountGroupResult
 testGroup = (AACG_Accounts, V.fromList [AdAccountGroupAdAccounts 1234 Active]) :*: (AACG_Status, Deleted)
-                :*: (AACG_Name, "TEST_GROUP") :*: (AACG_Users, V.fromList [AdAccountGroupUsers 567 "ID"]) :*: Nil
+                :*: (AACG_Name, "TEST_GROUP") :*: (AACG_Users, V.fromList [AdAccountGroupUsers 567 "ID"])
+                :*: (AACG_ACC_ID, Id "testID") :*: Nil
 
