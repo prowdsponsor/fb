@@ -1,0 +1,53 @@
+Entity,InteractionMode,FieldName,FieldType,Description,Required,Maybe
+Campaign,Updating,objective,"enum{CANVAS_APP_ENGAGEMENT, CANVAS_APP_INSTALLS, CONVERSIONS, EVENT_RESPONSES, EXTERNAL, LEAD_GENERATION, LINK_CLICKS, LOCAL_AWARENESS, MOBILE_APP_ENGAGEMENT, MOBILE_APP_INSTALLS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, PRODUCT_CATALOG_SALES, VIDEO_VIEWS}",Campaign's objective. If it is specified the API will validate that any ad groups created under the campaign match that objective.,,
+Campaign,Deleting,before_date,datetime,Set a before date to delete campaigns before this date,,
+Campaign,Creating,adlabels,list&lt;Object&gt;,Ad Labels associated with this campaign,,
+Campaign,Deleting,id,numeric string,Campaign IDRequired,,
+Campaign,Reading,created_time,datetime,Created Time,,
+Campaign,Updating,name,string,Name for this campaign,,
+Campaign,Reading,updated_time,datetime,Updated Time,,
+Campaign,Reading,start_time,datetime,Start Time,,
+Campaign,Reading,effective_status,"enum {ACTIVE, PAUSED, DELETED, PENDING_REVIEW, DISAPPROVED, PREAPPROVED, PENDING_BILLING_INFO, CAMPAIGN_PAUSED, ARCHIVED, ADSET_PAUSED}",The effective status of this campaign.,,
+Campaign,Deleting,delete_strategy,"enum{DELETE_ANY, DELETE_OLDEST, DELETE_ARCHIVED_BEFORE}",Delete strategyRequired,,
+Campaign,Creating,promoted_object,Object,The object this campaign is promoting across all its ads. Only product_catalog_id is used at the ad campaign group level.,,
+Campaign,Deleting,id,string,Campaign ID,,
+Campaign,Deleting,object_count,integer,Default value: 1000Object count,,
+Campaign,Reading,name,string,Campaign's name,,
+Campaign,Reading,stop_time,datetime,Stop Time,,
+Campaign,Reading,id,numeric string,Campaign's IDDefault,,
+Campaign,Reading,adlabels,list&lt;AdLabel&gt;,Ad Labels associated with this campaign,,
+Campaign,Creating,objective,"enum{CANVAS_APP_ENGAGEMENT, CANVAS_APP_INSTALLS, CONVERSIONS, EVENT_RESPONSES, EXTERNAL, LEAD_GENERATION, LINK_CLICKS, LOCAL_AWARENESS, MOBILE_APP_ENGAGEMENT, MOBILE_APP_INSTALLS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, PRODUCT_CATALOG_SALES, VIDEO_VIEWS}",Campaign's objective. If it is specified the API will validate that any ad groups created under the campaign match that objective.,,
+Campaign,Reading,can_use_spend_cap,bool,Whether the campaign can set the spend cap,,
+Campaign,Creating,page_id,int,The ID of a Facebook Page,,
+Campaign,Updating,adlabels,list&lt;Object&gt;,Ad Labels associated with this campaign,,
+Campaign,Updating,status,"enum{ACTIVE, PAUSED, ARCHIVED, DELETED}","Only ACTIVE and PAUSED are valid during
+        creation. Other statuses can be used for update. If it is set to
+        PAUSED, its active child objects will be paused and have an effective
+        status CAMPAIGN_PAUSED.",,
+Campaign,Reading,objective,string,Campaign's objective,,
+Campaign,Updating,spend_cap,unsigned int32,"A spend cap for the campaign, such that it will not spend more than this cap. Defined as integer value of subunit in your currency with a minimum value of $100 USD (or approximate local equivalent). Leave blank for unlimited spend. Not available for Reach and Frequency or Premium Self Serve campaigns",,
+Campaign,Reading,buying_type,string,"Buying type, possible values are: AUCTION: defaultRESERVED: for reach and frequency ads",,
+Campaign,Creating,name,string,Name for this campaign,,
+Campaign,Creating,spend_cap,unsigned int32,"A spend cap for the campaign, such that it will not spend more than this cap. Defined as integer value of subunit in your currency with a minimum value of $100 USD (or approximate local equivalent). Leave blank for unlimited spend. Not available for Reach and Frequency or Premium Self Serve campaigns",,
+Campaign,Creating,pixel_id,numeric string or integer,The ID of a Facebook conversion pixel.  Used with offsite conversion campaigns.,,
+Campaign,Creating,offer_id,id,The ID of an Offer from a Facebook Page.,,
+Campaign,Reading,configured_status,"enum {ACTIVE, PAUSED, DELETED, ARCHIVED}","If this status is PAUSED, all its active ad sets and ads will
+        be paused and have an effective status CAMPAIGN_PAUSED.",,
+Campaign,Reading,account_id,numeric string,ID of the ad account that owns this campaign,,
+Campaign,Creating,product_catalog_id,id,"The ID of a Product Catalog. Used with
+      Dynamic Product Ads.",,
+Campaign,Creating,product_set_id,id,"The ID of a Product Set within a Campaign Group level Product
+      Catalog. Used with
+      Dynamic Product Ads.",,
+Campaign,Creating,object_store_url,URL,"The uri of the mobile / digital store where an application can be bought / downloaded. This is platform specific. When combined with the ""application_id"" this uniquely specifies an object which can be the subject of a Facebook advertising campaign.",,
+Campaign,Creating,custom_event_type,"enum{ACTIVATE_APP, COMPLETE_REGISTRATION, CONTENT_VIEW, SEARCH, RATE, TUTORIAL_COMPLETION, ADD_TO_CART, ADD_TO_WISHLIST, INITIATED_CHECKOUT, ADD_PAYMENT_INFO, PURCHASE, LEAD, LEVEL_ACHIEVED, ACHIEVEMENT_UNLOCKED, SPENT_CREDITS, OTHER}","The event from an App Event of a mobile app, or tag of an
+    conversion pixel.",,
+Campaign,Creating,buying_type,string,"Default value: AUCTIONThis field will help Facebook make optimizations to delivery, pricing, and limits. All ad sets in this campaign must match the buying type. Possible values are: AUCTION (default)RESERVED (for reach and frequency ads).",,
+Campaign,Creating,status,"enum{ACTIVE, PAUSED, ARCHIVED, DELETED}","Only ACTIVE and PAUSED are valid during
+        creation. Other statuses can be used for update. If it is set to
+        PAUSED, its active child objects will be paused and have an effective
+        status CAMPAIGN_PAUSED.",,
+Campaign,Creating,application_id,int,The ID of a Facebook Application. Usually related to mobile or canvas games being promoted on Facebook for installs or engagement,,
+Campaign,Creating,execution_options,"list&lt;enum{VALIDATE_ONLY, INCLUDE_WARNINGS}&gt;","Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
+Campaign,Reading,spend_cap,numeric string,"A spend cap for the campaign, such that it will not spend more than this cap. Expressed as integer value of the subunit in your currency.",,
+Campaign,Updating,execution_options,"list&lt;enum{VALIDATE_ONLY, INCLUDE_WARNINGS}&gt;","Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
