@@ -4,18 +4,24 @@ where
 
 import Data.Text hiding (length)
 import Data.Csv
+import Data.Coerce
 import Control.Monad
 
 newtype Entity = Entity Text deriving (Show, Ord, Eq)
 newtype InteractionMode = InteractionMode Text deriving (Show, Ord, Eq)
 newtype Boolean = Boolean Bool deriving Show
+
 data FieldInfo = FieldInfo {
       name        :: !Text
     , type_       :: !Text
     , desc        :: !Text -- TODO: Can contain enum definitions --> change CSV files?
-    , required    :: Maybe Boolean
-    , maybe       :: Maybe Boolean -- when response does not contain requested field
+    , required    :: Boolean
+    , inResp      :: Boolean -- when response does not contain requested field
     } deriving Show
+
+isRequired :: FieldInfo -> Bool
+isRequired (FieldInfo _ _ _ (Boolean True) _) = True
+isRequired _ = False
 
 instance Eq FieldInfo where
     -- in order to find duplicate field names for a single entity

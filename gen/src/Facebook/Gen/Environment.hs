@@ -8,14 +8,15 @@ import qualified Data.Map.Strict as Map
 import Data.Vector hiding (map, length, head, tail, (++))
 import qualified Data.Vector as V
 import Data.Text hiding (map, length, head, tail)
+import qualified Data.Text as T
 import Data.Coerce
 import Data.Maybe
 
 import Facebook.Gen.Csv
 import Facebook.Gen.Types
 
-
 -- mapping from FB types to Haskell types
+typesMap :: Map.Map Text Text
 typesMap =
     Map.fromList [("string", "Text")
                 , ("unsigned int32", "Word32")
@@ -25,6 +26,9 @@ typesMap =
                 , ("datetime", "UTCTime") -- ???
                 , ("numeric string", "Text")
                 , ("integer", "Integer")
+                , ("list<unsigned int32>", "Vector Word32")
+                , ("list<string>", "Vector Text")
+                , ("map<string, int32>", "Map.Map Text Int")
                 , ("dictionary", "Map")] -- ???
 
 type MapInEnv = Map.Map Entity (Map.Map InteractionMode (Vector FieldInfo))
@@ -35,7 +39,12 @@ envsToMaps = coerce
 
 buildEnv :: Vector (Vector CsvLine) -> Either Text Env
 buildEnv csvs = do
-    let envs = V.map buildEnvCsv (join csvs :: Vector CsvLine)
+    --let csvs' = join csvs :: Vector CsvLine
+    let ignore = V.fromList ["rf_spec", "account_groups", "agency_client_declaration", "funding_source_details",
+                             "owner_business", "business", "failed_delivery_checks"]
+    let csvs' = V.filter (\(CsvLine _ mode _) -> mode == InteractionMode "Reading") (join csvs :: Vector CsvLine)
+    let csvs'' = V.filter (\(CsvLine _ _ (FieldInfo name _ _ _ _ )) -> not $ V.elem name ignore) csvs'
+    let envs = V.map buildEnvCsv csvs''
     let merged = merge envs
     --let uni = unify envs
     Right merged
@@ -73,5 +82,15 @@ merge envs = go Map.empty $ envsToMaps envs
 
 buildEnvCsv :: CsvLine -> Env
 
-buildEnvCsv (CsvLine ent mode info) =
-    Env $ Map.insert ent (Map.insert mode (V.singleton info) Map.empty) Map.empty
+buildEnvCsv (CsvLine (Entity ent) mode info) =
+    let ent'  = (Entity $ T.concat $ splitOn " " ent)
+        info' = insertHsType info
+    in Env $ Map.insert ent' (Map.insert mode (V.singleton info') Map.empty) Map.empty
+
+insertHsType :: FieldInfo -> FieldInfo
+insertHsType fi =
+    let fiType = type_ fi
+        err = error $ "Could not find Haskell type for " ++ unpack fiType
+                      ++ " for field " ++ unpack (name fi)
+    in fi {type_ = Map.findWithDefault err fiType typesMap}
+

@@ -1,23 +1,32 @@
 module Main where
 
-import Facebook.Gen.Csv
-import Facebook.Gen.Environment
 import Data.Csv
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Vector as V
 import Data.Either hiding (rights)
 import Data.Text
-import Data.Map.Strict
+import qualified Data.Text as T
+import qualified Data.Map.Strict as Map
 
-csvFiles = V.fromList ["data/adaccount.csv", "data/adcampaign.csv"] -- TODO
+import Facebook.Gen.Csv
+import Facebook.Gen.Environment
+import Facebook.Gen.Types
+import Facebook.Gen.CodeGenStr
+
+csvFiles = V.fromList ["data/adaccount.csv"] --, "data/adcampaign.csv", "data/insights.csv", "data/adset.csv"] -- TODO
 
 main :: IO ()
 main = do
     inps <- V.mapM BS.readFile csvFiles
     let csvs = V.map (decode HasHeader) inps :: V.Vector (Either String (V.Vector CsvLine))
     --print $ V.head csvs
-    let (Right (Env m)) = buildEnv $ rights csvs
-    putStrLn $ showTree m
+    let (Right e@(Env m)) = buildEnv $ rights csvs
+    --let out = (Map.!) ((Map.!) (genFiles e) (Entity "AdAccount")) $ InteractionMode "Reading"
+    --writeFile "Test.hs" $ unpack $ V.foldl' append "" out
+    --putStrLn $ Map.showTree m
+    let (fp, out) = Prelude.head $ genFiles e
+    writeFile "Test.hs" $ unpack out
+    print $ genFiles e
     --let env = buildEnv csvs
     --print $ V.head csvs
 
