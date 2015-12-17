@@ -1,0 +1,138 @@
+Entity,InteractionMode,FieldName,FieldType,Description,error
+Ad Set,Reading,account_id,numeric string,Ad Account ID,
+Ad Set,Creating,page_id,int,The ID of a Facebook Page,
+Ad Set,Updating,id,numeric string,"Ad set ID, inferred from pathRequired",
+Ad Set,Updating,page_id,int,The ID of a Facebook Page,
+Ad Set,Deleting,account_id,numeric string,Ad account ID,
+Ad Set,Updating,time_start,datetime,Time start,
+Ad Set,Creating,time_stop,datetime,Time stop,
+Ad Set,Deleting,id,numeric string,Ad set IDRequired,
+Ad Set,Reading,id,numeric string,Ad set IDDefault,
+Ad Set,Reading,updated_time,datetime,Updated time,
+Ad Set,Updating,product_ad_behavior,"enum{REQUIRE_LAST_SEEN_PRODUCTS, REQUIRE_AVAILABLE_LAST_SEEN_PRODUCTS, FALL_BACK_TO_FB_RECOMMENDATIONS}",Option to choose between prospecting and retargeting for dynamic ads.,
+Ad Set,Updating,account_id,numeric string,Ad Account ID,
+Ad Set,Updating,time_stop,datetime,Time stop,
+Ad Set,Reading,created_time,datetime,Created time,
+Ad Set,Creating,time_start,datetime,Time start,
+Ad Set,Reading,frequency_cap,unsigned int32,Frequency cap,
+Ad Set,Updating,targeting,Targeting object,"An ad set's targeting structure.  ""countries"" is required. See targeting.",
+Ad Set,Reading,name,string,Name of ad set,
+Ad Set,Updating,creative_sequence,list&lt;numeric string or integer&gt;,Order of the adgroup sequence to be shown to users,
+Ad Set,Reading,targeting,Targeting,Targeting,
+Ad Set,Updating,start_time,datetime,"The start time of the set, e.g. 2015-03-12 23:59:59-07:00 or 2015-03-12 23:59:59 PDT. UTC UNIX timestamp",
+Ad Set,Updating,product_catalog_id,id,"The ID of a Product Catalog. Used with
+      Dynamic Product Ads.",
+Ad Set,Updating,rf_prediction_id,numeric string or integer,Reach and frequency prediction ID,
+Ad Set,Reading,campaign_id,numeric string,Campaign ID,
+Ad Set,Updating,status,"enum{ACTIVE, PAUSED, ARCHIVED, DELETED}","Only ACTIVE and PAUSED are valid for creation. The other statuses
+        can be used for update. If it is set to PAUSED, all its active ads
+        will be paused and have an effective status ADSET_PAUSED.",
+Ad Set,Updating,lifetime_frequency_cap,unsigned int32,Lifetime Frequency cap,
+Ad Set,Creating,targeting,Targeting object,"An ad set's targeting structure.  ""countries"" is required. See targeting.",
+Ad Set,Updating,product_set_id,id,"The ID of a Product Set within a Campaign Group level Product
+      Catalog. Used with
+      Dynamic Product Ads.",
+Ad Set,Updating,adlabels,list&lt;Object&gt;,Specifies list of labels to be associated with this object. This field is optional,
+Ad Set,Updating,object_store_url,URL,"The uri of the mobile / digital store where an application can be bought / downloaded. This is platform specific. When combined with the ""application_id"" this uniquely specifies an object which can be the subject of a Facebook advertising campaign.",
+Ad Set,Updating,redownload,boolean,Allows you to specify that you would like to retrieve all fields of the set in your response. Default value: false.,
+Ad Set,Updating,custom_event_type,"enum{ACTIVATE_APP, COMPLETE_REGISTRATION, CONTENT_VIEW, SEARCH, RATE, TUTORIAL_COMPLETION, ADD_TO_CART, ADD_TO_WISHLIST, INITIATED_CHECKOUT, ADD_PAYMENT_INFO, PURCHASE, LEAD, LEVEL_ACHIEVED, ACHIEVEMENT_UNLOCKED, SPENT_CREDITS, OTHER}","The event from an App Event of a mobile app, or tag of an
+    conversion pixel.",
+Ad Set,Creating,product_set_id,id,"The ID of a Product Set within a Campaign Group level Product
+      Catalog. Used with
+      Dynamic Product Ads.",
+Ad Set,Updating,lifetime_budget,unsigned int32,"Lifetime budget, defined in  your account currency. If specified, you must also specify an end_time.Either a daily_budget or a lifetime_budget must be specified.",
+Ad Set,Creating,custom_event_type,"enum{ACTIVATE_APP, COMPLETE_REGISTRATION, CONTENT_VIEW, SEARCH, RATE, TUTORIAL_COMPLETION, ADD_TO_CART, ADD_TO_WISHLIST, INITIATED_CHECKOUT, ADD_PAYMENT_INFO, PURCHASE, LEAD, LEVEL_ACHIEVED, ACHIEVEMENT_UNLOCKED, SPENT_CREDITS, OTHER}","The event from an App Event of a mobile app, or tag of an
+    conversion pixel.",
+Ad Set,Updating,offer_id,id,The ID of an Offer from a Facebook Page.,
+Ad Set,Creating,lifetime_imps,unsigned int32,Lifetime impressions. Available only for campaigns with buying_type=FIXED_CPM,
+Ad Set,Updating,daily_budget,unsigned int32,"The daily budget defined in your account currency, allowed only for ad sets with a duration (difference between end_time and start_time) longer than 24 hours. Either a daily_budget or a lifetime_budget must be specified.",
+Ad Set,Updating,lifetime_imps,unsigned int32,Lifetime impressions. Available only for campaigns with buying_type=FIXED_CPM,
+Ad Set,Updating,name,string,"Ad set name, max length of 100 characters.",
+Ad Set,Creating,product_catalog_id,id,"The ID of a Product Catalog. Used with
+      Dynamic Product Ads.",
+Ad Set,Updating,end_time,datetime,"End time, required when lifetime_budget is specified. e.g. 2015-03-12 23:59:59-07:00 or 2015-03-12 23:59:59 PDT. When creating a set with a daily budget, specify end_time=0 to set the set to be ongoing and have no end date. UTC UNIX timestamp",
+Ad Set,Creating,daily_imps,unsigned int32,Daily impressions. Available only for campaigns with buying_type=FIXED_CPM,
+Ad Set,Updating,pixel_id,numeric string or integer,The ID of a Facebook conversion pixel.  Used with offsite conversion campaigns.,
+Ad Set,Creating,daily_budget,unsigned int32,"The daily budget defined in your account currency, allowed only for ad sets with a duration (difference between end_time and start_time) longer than 24 hours. Either a daily_budget or a lifetime_budget must be specified.",
+Ad Set,Updating,days,list&lt;unsigned int32&gt;,"Array of ints representing which days the schedule is active. Valid values are 0-6 with 0 representing Sunday, 1 representing Monday, ... and 6 representing Saturday.Required",
+Ad Set,Updating,start_minute,unsigned int32,A 0 based minute of the day representing when the schedule startsRequired,
+Ad Set,Updating,is_autobid,boolean,If autobid is set. Either bid_amount or is_autobid is required. Cannot be used when optimization_goal=APP_INSTALLS,
+Ad Set,Creating,object_store_url,URL,"The uri of the mobile / digital store where an application can be bought / downloaded. This is platform specific. When combined with the ""application_id"" this uniquely specifies an object which can be the subject of a Facebook advertising campaign.",
+Ad Set,Updating,billing_event,"enum{APP_INSTALLS, CLICKS, IMPRESSIONS, LINK_CLICKS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, VIDEO_VIEWS}",The billing event that this adset is using:APP_INSTALLS: Pay when people install your app.CLICKS: Deprecated.IMPRESSIONS: Pay when the ads are shown to people.LINK_CLICKS: Pay when people click on the link of the ad.OFFER_CLAIMS: Pay when people claim the offer.PAGE_LIKES: Pay when people like your page.POST_ENGAGEMENT: Pay when people engage with your post.VIDEO_VIEWS: Pay when people watch videos.,
+Ad Set,Creating,adlabels,list&lt;Object&gt;,Specifies list of labels to be associated with this object. This field is optional,
+Ad Set,Updating,application_id,int,The ID of a Facebook Application. Usually related to mobile or canvas games being promoted on Facebook for installs or engagement,
+Ad Set,Creating,days,list&lt;unsigned int32&gt;,"Array of ints representing which days the schedule is active. Valid values are 0-6 with 0 representing Sunday, 1 representing Monday, ... and 6 representing Saturday.Required",
+Ad Set,Creating,rtb_flag,boolean,Whether this adset is using RTB or not,
+Ad Set,Updating,adset_schedule,list&lt;Object&gt;,"Ad set schedule, representing a delivery schedule for a single day",
+Ad Set,Updating,end_minute,unsigned int32,A 0 based minute of the day representing when the schedule endsRequired,
+Ad Set,Creating,pixel_id,numeric string or integer,The ID of a Facebook conversion pixel.  Used with offsite conversion campaigns.,
+Ad Set,Creating,application_id,int,The ID of a Facebook Application. Usually related to mobile or canvas games being promoted on Facebook for installs or engagement,
+Ad Set,Reading,rtb_flag,bool,Whether this adset is using RTB or not,
+Ad Set,Updating,daily_imps,unsigned int32,Daily impressions. Available only for campaigns with buying_type=FIXED_CPM,
+Ad Set,Reading,pacing_type,list&lt;string&gt;,"Defines the pacing type, standard or using ad scheduling",
+Ad Set,Creating,redownload,boolean,Allows you to specify that you would like to retrieve all fields of the set in your response. Default value: false.,
+Ad Set,Creating,product_ad_behavior,"enum{REQUIRE_LAST_SEEN_PRODUCTS, REQUIRE_AVAILABLE_LAST_SEEN_PRODUCTS, FALL_BACK_TO_FB_RECOMMENDATIONS}",Option to choose between prospecting and retargeting for dynamic ads.,
+Ad Set,Updating,bid_amount,integer,"Bid amount for this adset, defined as your true value bid based on optimization_goal. Either bid_amount or is_autobid is required.",
+Ad Set,Creating,lifetime_frequency_cap,unsigned int32,Lifetime Frequency cap,
+Ad Set,Creating,status,"enum{ACTIVE, PAUSED, ARCHIVED, DELETED}","Only ACTIVE and PAUSED are valid for creation. The other statuses
+        can be used for update. If it is set to PAUSED, all its active ads
+        will be paused and have an effective status ADSET_PAUSED.",
+Ad Set,Reading,end_time,datetime,"End time, in UTC UNIX timestamp",
+Ad Set,Creating,start_time,datetime,"The start time of the set, e.g. 2015-03-12 23:59:59-07:00 or 2015-03-12 23:59:59 PDT. UTC UNIX timestamp",
+Ad Set,Reading,rf_prediction_id,id,Reach and frequency prediction ID,
+Ad Set,Creating,offer_id,id,The ID of an Offer from a Facebook Page.,
+Ad Set,Creating,lifetime_budget,unsigned int32,"Lifetime budget, defined in  your account currency. If specified, you must also specify an end_time.Either a daily_budget or a lifetime_budget must be specified.",
+Ad Set,Creating,rf_prediction_id,numeric string or integer,Reach and frequency prediction ID,
+Ad Set,Creating,creative_sequence,list&lt;numeric string or integer&gt;,Order of the adgroup sequence to be shown to users,
+Ad Set,Reading,product_ad_behavior,enum,Option to choose between prospecting and retargeting,
+Ad Set,Reading,effective_status,"enum {ACTIVE, PAUSED, DELETED, PENDING_REVIEW, DISAPPROVED, PREAPPROVED, PENDING_BILLING_INFO, CAMPAIGN_PAUSED, ARCHIVED, ADSET_PAUSED}","The effective status of the ad set, which can be either its own status
+        or caused by its parent campaign.",
+Ad Set,Reading,lifetime_budget,numeric string,The lifetime budget of the set defined in your account currency.,
+Ad Set,Reading,lifetime_frequency_cap,unsigned int32,Lifetime frequency cap,
+Ad Set,Creating,end_time,datetime,"End time, required when lifetime_budget is specified. e.g. 2015-03-12 23:59:59-07:00 or 2015-03-12 23:59:59 PDT. When creating a set with a daily budget, specify end_time=0 to set the set to be ongoing and have no end date. UTC UNIX timestamp",
+Ad Set,Creating,end_minute,unsigned int32,A 0 based minute of the day representing when the schedule endsRequired,
+Ad Set,Creating,name,string,"Ad set name, max length of 100 characters.Required",
+Ad Set,Creating,campaign_id,numeric string or integer,The ad campaign you wish to add this ad set to.,
+Ad Set,Reading,is_autobid,bool,Did the advertiser express the intent to bid automatically. This field is not available if bid_info or bid_amount is returned.,
+Ad Set,Reading,configured_status,"enum {ACTIVE, PAUSED, DELETED, ARCHIVED}","The status set at the ad set level. It can be different from the
+        effective status due to its parent campaign.",
+Ad Set,Reading,campaign,AdCampaignGroup,The campaign that contains this ad set,
+Ad Set,Creating,billing_event,"enum{APP_INSTALLS, CLICKS, IMPRESSIONS, LINK_CLICKS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, VIDEO_VIEWS}",The billing event that this adset is using:APP_INSTALLS: Pay when people install your app.CLICKS: Deprecated.IMPRESSIONS: Pay when the ads are shown to people.LINK_CLICKS: Pay when people click on the link of the ad.OFFER_CLAIMS: Pay when people claim the offer.PAGE_LIKES: Pay when people like your page.POST_ENGAGEMENT: Pay when people engage with your post.VIDEO_VIEWS: Pay when people watch videos.,
+Ad Set,Creating,start_minute,unsigned int32,A 0 based minute of the day representing when the schedule startsRequired,
+Ad Set,Creating,is_autobid,boolean,If autobid is set. Either bid_amount or is_autobid is required. Cannot be used when optimization_goal=APP_INSTALLS,
+Ad Set,Reading,start_time,datetime,"Start time, in UTC UNIX timestamp",
+Ad Set,Reading,frequency_cap_reset_period,unsigned int32,Frequency cap reset period,
+Ad Set,Reading,bid_info,"map&lt;string, unsigned int32&gt;",Map of bid objective to bid value. This field is not available if is_autobid is true.,
+Ad Set,Updating,promoted_object,Object,"The object this ad set is promoting across all its ads.
+       Required with certain campaign objectives.CONVERSIONS
+       pixel_id (Conversion pixel ID)
+       pixel_id (Facebook pixel ID) and custom_event_type
+       pixel_id (Facebook pixel ID) and pixel_rule and custom_event_type
+       PAGE_LIKESpage_idOFFER_CLAIMSoffer_idMOBILE_APP_INSTALLSapplication_id and object_store_urlMOBILE_APP_ENGAGEMENTapplication_id and object_store_url
+       or application_id, object_store_url, and custom_event_type
+       if the optimization_goal is OFFSITE_CONVERSIONSCANVAS_APP_INSTALLS or CANVAS_APP_ENGAGEMENTapplication_id and object_store_urlPRODUCT_CATALOG_SALESproduct_set_id, 
+       or product_set_id and custom_event_type",
+Ad Set,Creating,bid_amount,integer,"Bid amount for this adset, defined as your true value bid based on optimization_goal. Either bid_amount or is_autobid is required.",
+Ad Set,Reading,daily_budget,numeric string,The daily budget of the set defined in your account currency.,
+Ad Set,Creating,adset_schedule,list&lt;Object&gt;,"Ad set schedule, representing a delivery schedule for a single day",
+Ad Set,Reading,promoted_object,AdPromotedObject,The object this ad set is promoting across all its ads.,
+Ad Set,Creating,optimization_goal,"enum{NONE, APP_INSTALLS, BRAND_AWARENESS, CLICKS, ENGAGED_USERS, EXTERNAL, EVENT_RESPONSES, IMPRESSIONS, LEAD_GENERATION, LINK_CLICKS, OFFER_CLAIMS, OFFSITE_CONVERSIONS, PAGE_ENGAGEMENT, PAGE_LIKES, POST_ENGAGEMENT, REACH, SOCIAL_IMPRESSIONS, VIDEO_VIEWS}",What the ad set is optimizing for. APP_INSTALLS: Will optimize for people more likely to install your app. CLICKS: Deprecated ENGAGED_USER: Will optimize for people more likely to take a particular action in your app EXTERNAL: FBX only EVENT_RESPONSES: Will optimize for people more likely to attend your event. IMPRESSIONS: Will show the ads as many times as possible LINK_CLICKS: Will optimize for people more likely to click in the link of the ad. OFFER_CLAIMS: Will optimize for people more likely to claim the offer. OFFSITE_CONVERSION: Will optimize for people more likely to make a conversion in the site PAGE_LIKES: Will optimize for people more likely to like your page.PAGE_ENGAGEMENT: Will optimize for people more likely to engage with your page. POST_ENGAGEMENT: Will optimize for people more likely toengage with your post. REACH: Will optimize to reach daily unique users. SOCIAL_IMPRESSIONS: Increase the number of impressions with social context. I.e. with the names of one or more of the user's friends attached to the ad who have already liked the page or installed the app. VIDEO_VIEWS: Will optimize for people more likely to watch videos.LEAD_GENERATION: Will optimize for people more likely to fill out a lead generation form.,
+Ad Set,Updating,optimization_goal,"enum{NONE, APP_INSTALLS, BRAND_AWARENESS, CLICKS, ENGAGED_USERS, EXTERNAL, EVENT_RESPONSES, IMPRESSIONS, LEAD_GENERATION, LINK_CLICKS, OFFER_CLAIMS, OFFSITE_CONVERSIONS, PAGE_ENGAGEMENT, PAGE_LIKES, POST_ENGAGEMENT, REACH, SOCIAL_IMPRESSIONS, VIDEO_VIEWS}",What the ad set is optimizing for. APP_INSTALLS: Will optimize for people more likely to install your app. CLICKS: Deprecated ENGAGED_USER: Will optimize for people more likely to take a particular action in your app EXTERNAL: FBX only EVENT_RESPONSES: Will optimize for people more likely to attend your event. IMPRESSIONS: Will show the ads as many times as possible LINK_CLICKS: Will optimize for people more likely to click in the link of the ad. OFFER_CLAIMS: Will optimize for people more likely to claim the offer. OFFSITE_CONVERSION: Will optimize for people more likely to make a conversion in the site PAGE_LIKES: Will optimize for people more likely to like your page.PAGE_ENGAGEMENT: Will optimize for people more likely to engage with your page. POST_ENGAGEMENT: Will optimize for people more likely toengage with your post. REACH: Will optimize to reach daily unique users. SOCIAL_IMPRESSIONS: Increase the number of impressions with social context. I.e. with the names of one or more of the user's friends attached to the ad who have already liked the page or installed the app. VIDEO_VIEWS: Will optimize for people more likely to watch videos.LEAD_GENERATION: Will optimize for people more likely to fill out a lead generation form.,
+Ad Set,Updating,execution_options,"list&lt;enum{VALIDATE_ONLY, INCLUDE_WARNINGS}&gt;","Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",
+Ad Set,Reading,budget_remaining,numeric string,Remaining budget,
+Ad Set,Reading,adset_schedule,list&lt;DayPart&gt;,"Ad set schedule, representing a delivery schedule for a single day",
+Ad Set,Reading,lifetime_imps,int32,Lifetime impressions. Available only for campaigns with buying_type=FIXED_CPM,
+Ad Set,Reading,optimization_goal,"enum {NONE, APP_INSTALLS, BRAND_AWARENESS, CLICKS, ENGAGED_USERS, EXTERNAL, EVENT_RESPONSES, IMPRESSIONS, LEAD_GENERATION, LINK_CLICKS, OFFER_CLAIMS, OFFSITE_CONVERSIONS, PAGE_ENGAGEMENT, PAGE_LIKES, POST_ENGAGEMENT, REACH, SOCIAL_IMPRESSIONS, VIDEO_VIEWS}",Which optimization goal this ad set is using:NONE: Only available in read mode for campaigns created pre v2.4APP_INSTALLS: Optimize for people more likely to install your app.CLICKS: Optimize for people more likely to click anywhere in the ad. ENGAGED_USER: Optimize for people more likely to take a particular action in your app EXTERNAL: FBX only EVENT_RESPONSES: Optimize for people more likely to attend your event IMPRESSIONS: Show the ads as many times as possible LINK_CLICKS: Optimize for people more likely to click in the link of the ad. OFFER_CLAIMS: Optimize for people more likely to claim the offer.OFFSITE_CONVERSION: Optimize for people more likely to make a  conversion in the site PAGE_LIKES: Optimize for people more likely to like your page. PAGE_ENGAGEMENT: Optimize for people more likely to engage with your page. POST_ENGAGEMENT: Optimize for people more likely to engage with your post. REACH: Optimize to reach daily unique users. SOCIAL_IMPRESSIONS: Increase the number of impressions with social context. I.e. with the names of one or more of the user's friends attached to the ad who have already liked the page or installed the app. VIDEO_VIEWS: Optimize for people more likely to watch videos.LEAD_GENERATION: Optimize for people more likely to fill out a lead generation form.,
+Ad Set,Reading,billing_event,"enum {APP_INSTALLS, CLICKS, IMPRESSIONS, LINK_CLICKS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, VIDEO_VIEWS}",The billing event that this adset is using:APP_INSTALLS: Pay when people install your app.CLICKS: Pay when people click anywhere in the ad. IMPRESSIONS: Pay when the ads are shown to people.LINK_CLICKS: Pay when people click on the link of the ad.OFFER_CLAIMS: Pay when people claim the offer.PAGE_LIKES: Pay when people like your page.POST_ENGAGEMENT: Pay when people engage with your post.VIDEO_VIEWS: Pay when people watch videos.,
+Ad Set,Reading,bid_amount,int32,"Bid amount for this ad set, defined as your true value bid based on optimization_goal. This field is not available if is_autobid is true or when bid_info is returned.",
+Ad Set,Reading,adlabels,list&lt;AdLabel&gt;,Ad Labels associated with this ad set,
+Ad Set,Creating,promoted_object,Object,"The object this ad set is promoting across all its ads.
+       Required with certain campaign objectives.CONVERSIONS
+       pixel_id (Conversion pixel ID)
+       pixel_id (Facebook pixel ID) and custom_event_type
+       pixel_id (Facebook pixel ID) and pixel_rule and custom_event_type
+       PAGE_LIKESpage_idOFFER_CLAIMSoffer_idMOBILE_APP_INSTALLSapplication_id and object_store_urlMOBILE_APP_ENGAGEMENTapplication_id and object_store_url
+       or application_id, object_store_url, and custom_event_type
+       if the optimization_goal is OFFSITE_CONVERSIONSCANVAS_APP_INSTALLS or CANVAS_APP_ENGAGEMENTapplication_id and object_store_urlPRODUCT_CATALOG_SALESproduct_set_id, 
+       or product_set_id and custom_event_type",
+Ad Set,Creating,execution_options,"list&lt;enum{VALIDATE_ONLY, INCLUDE_WARNINGS}&gt;","Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",

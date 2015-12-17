@@ -1,0 +1,19 @@
+Entity,InteractionMode,FieldName,Description,error
+Ad User,Reading,role,"The role the user has on the account.
+
+1001 =  Administrator access
+1002 = Advertiser (ad manager) access
+1003 = Analyst access
+1004 = Direct sales access (For a small number of directly managed accounts)",
+Ad User,Updating,role,"Role to grant to the user, from the values listed above",
+Ad User,Reading,id,The User ID of the user,
+Ad User,Updating,uid,User ID to add to the account.,
+Ad User,Reading,permissions,"The permissions that user has to view or update the account details:
+
+1: ACCOUNT_ADMIN: modify the set of users associated with the given account.
+2: ADMANAGER_READ: view campaigns and ads
+3: ADMANAGER_WRITE: manage campaigns and ads
+4: BILLING_READ: view account billing information
+5: BILLING_WRITE: modify the account billing information
+7: REPORTS: run reports
+9, 10 - These apply to some directly managed accounts and are not currently needed for any API calls in the Marketing API",
