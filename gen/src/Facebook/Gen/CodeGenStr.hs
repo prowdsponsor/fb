@@ -2,7 +2,7 @@ module Facebook.Gen.CodeGenStr
     --(genFiles)
 where
 
-import Control.Monad
+import Data.Monoid ((<>))
 import Data.Text
 import qualified Data.Text as T
 import Data.Vector hiding (singleton)
@@ -12,7 +12,21 @@ import qualified Data.Map.Strict as Map
 import Facebook.Gen.Environment
 import Facebook.Gen.Types
 
-imports = V.fromList ["import Facebook.Records", "import qualified Data.Aeson as A", "import Data.Thyme.Clock"]
+imports =
+    V.fromList ["import Facebook.Records",
+                "import Facebook.Types hiding (Id)",
+                "import Facebook.Pager",
+                "import Facebook.Monad",
+                "import Facebook.Graph",
+                "import qualified Data.Aeson as A",
+                "import Data.Time.Clock",
+                "import Data.Text (Text)",
+                "import Data.Word (Word32)",
+                "import GHC.Generics (Generic)",
+                "import qualified Data.Map.Strict as Map",
+                "import Data.Vector (Vector)",
+                "import qualified Control.Monad.Trans.Resource as R",
+                "import Control.Monad.Trans.Control (MonadBaseControl)"]
 langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts", "OverloadedStrings",
                        "ConstraintKinds"]
 
@@ -26,33 +40,36 @@ genFiles (Env env) =
 
 --genEntity :: MapInEnv ->
 genEntity (Entity name) map =
-    let modName = modPrefix `append` name
+    let modName = modPrefix <> name
         path = modNameToPath modName
         head = header modName
-        top = genLangExts `append` head `append` genImports
-    in (path, Prelude.head $ Map.elems $ Map.mapWithKey (\mode elem -> top `append` genMode name mode elem) map)
+        top = genLangExts <> head <> genImports
+    in (path, Prelude.head $ Map.elems $ Map.mapWithKey (\mode elem -> top <> genMode name mode elem) map)
 
 genMode :: Text -> InteractionMode -> V.Vector FieldInfo -> Text
 genMode entity mode fis = -- source code for one entity(/mode ?)
     let source = V.foldl' append "" $ V.map dataAndFieldInstance fis
+        isOfClass = isFieldClass entity
+        isOfInstances = concat $ V.map (\fi -> instanceFct $ fieldToAdt $ name fi) fis
+        nilIsOfInstance = isFieldClassInstance (entityToIsField entity) "Nil"
+        instanceFct field = isFieldClassInstance (entityToIsField entity) field
+        getter = concat $ V.map getterFct fis
+        getterFct fi = getterField (name fi) (fieldToAdt $ name fi)
         constr = genConstraint mode (genReqFields fis) entity
-    in source `append` constr
+        concat = V.foldl' append ""
+    in source <> isOfClass <> nilIsOfInstance <> isOfInstances <> getter
+       <> constr <> adAccIdDetails <> genGetId <> genGetFct entity
 
 genReqFields :: Vector FieldInfo -> Vector Text
 genReqFields fis =
-    V.map (fieldNameToAdtName . name) $ V.filter isRequired fis
+    V.map (fieldToAdt . name) $ V.filter isRequired fis
 
-header modName = "module " `append` modName `append` " where\n\n"
+header modName = "module " <> modName <> " where\n\n"
 
-concatNewline xs = V.foldl' append "" $ V.map (\x -> x `append` "\n") xs
+concatNewline xs = V.foldl' append "" $ V.map (\x -> x <> "\n") xs
 
 genImports  = concatNewline imports
-genLangExts = concatNewline $ V.map (\x -> "{-# LANGUAGE " `append` x `append` " #-}") langExts
-
---getAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>
---          UserAccessToken -- ^ User access token.
---        -> FacebookT anyAuth m (Pager (AdId :*: AdAccId :*: Nil))
---getAdAccountId token = getObject "/v2.5/me/adaccounts" [] (Just token)
+genLangExts = concatNewline $ V.map (\x -> "{-# LANGUAGE " <> x <> " #-}") langExts
 
 genConstraint :: InteractionMode -> Vector Text -> Text -> Text
 genConstraint (InteractionMode "Reading") r e = genConstraintGet r e
@@ -60,56 +77,85 @@ genConstraint _ _ _ = error "Only InteractionMode Reading supported"
 
 genConstraintGet :: Vector Text -> Text -> Text
 genConstraintGet reqs entity =
-    let reqsHas = V.foldl' append "" $ V.map (\req -> "Has " `append` req `append` " r, ") reqs
-    in "type Get" `append` entity `append` " fl r = (" `append` reqsHas
-       `append` "A.fromJSON r, " `append` entityToIsField entity `append` " r, FieldListToRec fl r)\n\n"
+    let reqsHas = V.foldl' append "" $ V.map (\req -> "Has " <> req <> " r, ") reqs
+    in "\ntype Get" <> entity <> " fl r = (" <> reqsHas
+       <> "A.FromJSON r, " <> entityToIsField entity <> " r, FieldListToRec fl r)\n\n"
 
---getAdAccount :: (R.MonadResource m, MonadBaseControl IO m, GetAdAcc fl rec) =>
---           Id -- AdAccountId    -- ^ Ad Account Id
---        -> fl     -- ^ Arguments to be passed to Facebook.
---        -> Maybe UserAccessToken -- ^ Optional user access token.
---        -> FacebookT anyAuth m rec
---getAdAccount id_ fl mtoken = getObject ("/v2.5/" <> toFbText id_) [("fields", textListToBS $ fieldNameList fl)] mtoken
-
--- "acc_id" and "Id" turn into:
+-- "acc_id" and Text turn into:
 --
 -- data AccId = AccId
 -- instance Field AccId where
---  type FieldValue AccId = Id
+--  type FieldValue AccId = Text
 --  fieldName _ = "acc_id"
 --  fieldLabel  = AccId
 dataAndFieldInstance :: FieldInfo -> Text
 dataAndFieldInstance (FieldInfo fieldName fieldType _ _ _) =
-    let adtName = fieldNameToAdtName fieldName
-    in "data "  `append` adtName `append` " = " `append` adtName `append` "\n"
-        `append` "instance Field " `append` adtName `append` " where\n\t"
-        `append` "type FieldValue " `append` adtName `append` " = " `append` fieldType `append` "\n\t"
-        `append` "fieldName _ = \"" `append` fieldName `append` "\"\n\t"
-        `append` "fieldLabel = " `append` adtName `append` "\n\n"
+    let adtName = fieldToAdt fieldName
+        newtypeName = adtName <> "_"
+    in "\ndata "  <> adtName <> " = " <> adtName <> "\n"
+        <> "newtype " <> newtypeName <> " = " <> newtypeName
+        <> " " <> fieldTypeParan fieldType <> " deriving " <> derivings fieldType <> "\n"
+        <> newtypeJSON newtypeName
+        <> "instance Field " <> adtName <> " where\n\t"
+        <> "type FieldValue " <> adtName <> " = " <> newtypeName <> "\n\t"
+        <> "fieldName _ = \"" <> fieldName <> "\"\n\t"
+        <> "fieldLabel = " <> adtName <> "\n"
 
-entityToIsField entity = "Is" `append` entity `append` "Field"
+fieldTypeParan :: Text -> Text
+fieldTypeParan ft =
+    if Prelude.length (split (==' ') ft) > 1
+        then "(" <> ft <> ")"
+        else ft
+
+derivings :: Text -> Text
+derivings "UTCTime" = "Generic"
+derivings _ = "(Show, Generic)"
+
+newtypeJSON :: Text -> Text
+newtypeJSON nt =
+    "instance A.FromJSON " <> nt <> "\n"
+    <> "instance A.ToJSON " <> nt <> "\n"
+
+entityToIsField entity = "Is" <> entity <> "Field"
 
 isFieldClass entity =
     let className = entityToIsField entity
-    in "class " `append` className `append` " rec\n"
-       `append` "instance (" `append` className `append` " h, "
-       `append` className `append` " t) => " `append` className
-       `append` " (h :*: t)\n"
+    in "\nclass " <> className <> " r\n"
+       <> "instance (" <> className <> " h, "
+       <> className <> " t) => " <> className
+       <> " (h :*: t)\n"
 
 isFieldClassInstance className instName =
-    "instance " `append` className `append` " " `append` instName `append` "\n"
+    "instance " <> className <> " " <> instName <> "\n"
 
 getterField fieldName adtName =
-    fieldName `append` " rec = rec `get` " `append` adtName `append` "\n"
+    "\n" <> fieldName <> " r = r `get` " <> adtName
 
-fieldNameToAdtName :: Text -> Text
-fieldNameToAdtName str
+adAccIdDetails = "type AdAccountIdDetails = Id :*: AccountId :*: Nil\n"
+
+genGetId :: Text
+genGetId =
+    "\ngetAdAccountId :: (R.MonadResource m, MonadBaseControl IO m) =>\n\t\
+              \UserAccessToken -- ^ User access token.\n\t\
+            \-> FacebookT anyAuth m (Pager AdAccountIdDetails)\n\
+    \getAdAccountId token = getObject \"/v2.5/me/adaccounts\" [] (Just token)\n"
+
+genGetFct ent =
+    "\nget" <> ent <> " :: (R.MonadResource m, MonadBaseControl IO m, Get" <> ent <> " fl r) =>\n\t\
+               \Id_    -- ^ Ad Account Id\n\t\
+            \-> fl     -- ^ Arguments to be passed to Facebook.\n\t\
+            \-> Maybe UserAccessToken -- ^ Optional user access token.\n\t\
+            \-> FacebookT anyAuth m r\n\
+    \get" <> ent <> " (Id_ id) fl mtoken = getObject (\"/v2.5/\" <> id) [(\"fields\", textListToBS $ fieldNameList fl)] mtoken\n"
+
+fieldToAdt :: Text -> Text
+fieldToAdt str
     | T.null $ dropUnderscore str = str
     | otherwise =
         let str' = dropUnderscore str
             first = charToUpper $ T.head str'
             camel = toCamelCase "" $ T.tail str'
-        in first `append` camel
+        in first <> camel
     where
         dropUnderscore = T.dropWhile (=='_')
         charToUpper = toUpper . singleton
@@ -120,5 +166,5 @@ fieldNameToAdtName str
                     b' = dropUnderscore b
                     first =  charToUpper $ T.head b'
                 in if T.null b'
-                    then toCamelCase (acc `append` a) b'
-                    else toCamelCase (acc `append` a `append` first) $ T.tail b'
+                    then toCamelCase (acc <> a) b'
+                    else toCamelCase (acc <> a <> first) $ T.tail b'
