@@ -3,13 +3,15 @@
 import System.Environment
 import Network.HTTP.Conduit
 import qualified Data.Text as T
-import Facebook
+import Facebook hiding (Id)
+import qualified Facebook as FB
 import Facebook.Records
 import           Control.Monad.Trans.Resource
 import Data.Time
 import Control.Monad.Trans
-import Facebook.Object.Marketing.AdAccountPlayground hiding (Id, Active)
-import Facebook.Object.Marketing.AdAccountGroupPlayground hiding (Id)
+import Facebook.Object.Marketing.AdAccountGen hiding (Active)
+import qualified Facebook.Object.Marketing.AdAccountGen as Gen
+--import Facebook.Object.Marketing.AdAccountGroupPlayground hiding (Id)
 import Facebook.Object.Marketing.AdCampaign
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Utility
@@ -23,7 +25,7 @@ main = do
   man <- newManager conduitManagerSettings
   now <- getCurrentTime
   let creds = Credentials "bdpromo" (T.pack appId) (T.pack appSecret)
-      fbuser = Id (T.pack fbUid)
+      fbuser = FB.Id (T.pack fbUid)
       tokExpires = addUTCTime 1000 now
       tok = UserAccessToken fbuser (T.pack tokenBody) now
   runResourceT $ runFacebookT creds man $ do
@@ -31,11 +33,11 @@ main = do
     liftIO $ print u
     Pager adaccids _ _ <- getAdAccountId tok
     liftIO $ print adaccids
-    adAcc <- getAdAccount (acc_id $ head adaccids)
-                (Balance ::: FSD ::: AmountSpent ::: Age ::: AdAccId ::: AdId ::: Nil)
+    adAcc <- getAdAccount (Gen.id $ head adaccids)
+                (Balance ::: AmountSpent ::: AccountId ::: Id ::: Age ::: Nil)
                 (Just tok)
     liftIO $ print adAcc
-    --Pager adCamps _ _ <- getAccountCampaigns (aaid_id $ head adaccids) [("fields", "name")] tok
+    --Pager adCamps _ _ <- getAccountCampaigns (Gen.id $ head adaccids) [("fields", "name")] tok
     --liftIO $ print adCamps
     --Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
     --liftIO $ print adSets
