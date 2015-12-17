@@ -15,6 +15,7 @@ import Facebook.Gen.Types
 imports =
     V.fromList ["import Facebook.Records",
                 "import Facebook.Types hiding (Id)",
+                --"import Facbook.Object.Marketing.Types", -- this file is generated
                 "import Facebook.Pager",
                 "import Facebook.Monad",
                 "import Facebook.Graph",
