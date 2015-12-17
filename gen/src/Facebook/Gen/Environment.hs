@@ -30,18 +30,19 @@ typesMap =
                 , ("list<string>", "Vector Text")
                 , ("map<string, int32>", "Map.Map Text Int")
                 , ("dictionary", "Map")] -- ???
+type ModeFieldInfoMap = Map.Map InteractionMode (Vector FieldInfo)
+type EntityModeMap = Map.Map Entity ModeFieldInfoMap
+newtype Env = Env EntityModeMap deriving Show
 
-type MapInEnv = Map.Map Entity (Map.Map InteractionMode (Vector FieldInfo))
-newtype Env = Env MapInEnv deriving Show
-
-envsToMaps :: Vector Env -> Vector MapInEnv
+envsToMaps :: Vector Env -> Vector EntityModeMap
 envsToMaps = coerce
 
 buildEnv :: Vector (Vector CsvLine) -> Either Text Env
 buildEnv csvs = do
     --let csvs' = join csvs :: Vector CsvLine
-    let ignore = V.fromList ["rf_spec", "account_groups", "agency_client_declaration", "funding_source_details",
-                             "owner_business", "business", "failed_delivery_checks"]
+    let ignore = V.fromList $ ["rf_spec", "account_groups", "agency_client_declaration", "funding_source_details",
+                               "owner_business", "business", "failed_delivery_checks"] -- Ad Account
+                               ++ ["effective_status", "adlabels", "configured_status"] -- Campaign
     let csvs' = V.filter (\(CsvLine _ mode _) -> mode == InteractionMode "Reading") (join csvs :: Vector CsvLine)
     let csvs'' = V.filter (\(CsvLine _ _ (FieldInfo name _ _ _ _ )) -> not $ V.elem name ignore) csvs'
     let envs = V.map buildEnvCsv csvs''
@@ -59,38 +60,45 @@ merge envs = go Map.empty $ envsToMaps envs
             | otherwise =
                 let map = V.head maps
                 in go (merge2 acc map) $ V.tail maps
-        merge2 acc map
-            | length (Map.keys map) == 1 -- since every line in the CSV file is turned into an Env
-                = let key = head $ Map.keys map
-                  in case acc ^.at key of
-                        Nothing -> acc & at key ?~ (fromJust $ map ^.at key)
-                        Just acc' -> let val = updateMap acc' $ fromJust $ map ^.at key
-                                     in acc & at key ?~ val
+        merge2 acc entToModeMap
+            | length (Map.keys entToModeMap) == 1 -- since every line in the CSV file is turned into an Env
+                = let key = head $ Map.keys entToModeMap
+                  in case acc ^.at key of -- is current entity elem of final env?
+                        Nothing -> acc & at key ?~ (fromJust $ entToModeMap ^.at key)
+                        Just acc' -> let modeMap = updateModeMap acc' $ fromJust $ entToModeMap ^.at key
+                                     in acc & at key ?~ modeMap
             | otherwise = error "merge2"
-        updateMap acc val
-            | length (Map.keys val) == 1
-                = let key = head $ Map.keys val
-                  in case acc ^.at key of
-                        Nothing -> acc & at key ?~ (fromJust $ val ^.at key)
-                        Just acc' ->
-                            let newElemV = fromJust $ val ^.at key
-                                newElem  = V.head newElemV
-                            in if V.elem newElem acc' -- duplicate field?
-                                then error $ "Duplicate field: " ++ show newElem
-                                else acc & at key ?~ (newElemV V.++ acc')
-            | otherwise = error "updateMap"
+
+updateModeMap :: ModeFieldInfoMap -> ModeFieldInfoMap -> ModeFieldInfoMap
+updateModeMap acc modeMap
+    | length (Map.keys modeMap) == 1
+        = let key = head $ Map.keys modeMap
+          in case acc ^.at key of
+                Nothing  -> acc & at key ?~ (fromJust $ modeMap ^.at key) -- mode is not in map
+                Just fis -> acc & at key ?~ (updateFieldInfo fis $ fromJust $ modeMap ^.at key)
+    | otherwise = error "updateModeMap"
+
+-- updateFieldInfo :: V n Fi -> V 1 Fi -> V (n+1) Fi
+updateFieldInfo :: Vector FieldInfo -> Vector FieldInfo -> Vector FieldInfo
+updateFieldInfo fis fiV =
+    let fi = V.head fiV
+    in case V.find (==fi) fis of -- duplicate field?
+        Nothing -> fiV V.++ fis
+        Just a -> error $ "Duplicate fields: " ++ show fi ++ " and " ++ show a -- unify
+            --if type_ a == type_ fi
+            --    then ...
+            --    else error $ "Duplicate fields with different types: " ++ show fi ++ " and " ++ show a -- unify
 
 buildEnvCsv :: CsvLine -> Env
-
 buildEnvCsv (CsvLine (Entity ent) mode info) =
     let ent'  = (Entity $ T.concat $ splitOn " " ent)
-        info' = insertHsType info
+        info' = insertHsType info (Entity ent) mode
     in Env $ Map.insert ent' (Map.insert mode (V.singleton info') Map.empty) Map.empty
 
-insertHsType :: FieldInfo -> FieldInfo
-insertHsType fi =
+insertHsType :: FieldInfo -> Entity -> InteractionMode -> FieldInfo
+insertHsType fi ent mode =
     let fiType = type_ fi
         err = error $ "Could not find Haskell type for " ++ unpack fiType
-                      ++ " for field " ++ unpack (name fi)
+                      ++ " for field " ++ unpack (name fi) ++ " in " ++ show ent
+                      ++ ", mode " ++ show mode
     in fi {type_ = Map.findWithDefault err fiType typesMap}
-
