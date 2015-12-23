@@ -20,7 +20,7 @@ import Facebook.Pager
 import Facebook.Object.Checkin
 import Facebook.Object.Marketing.AdUser (AdUser)
 
-import Facebook.Object.Marketing.Types
+import Facebook.Object.Marketing.Types hiding (Id)
 import Facebook.Object.Marketing.Utility
 
 -- | A Facebook user profile (see

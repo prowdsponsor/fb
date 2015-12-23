@@ -9,10 +9,8 @@ import Facebook.Records
 import           Control.Monad.Trans.Resource
 import Data.Time
 import Control.Monad.Trans
-import Facebook.Object.Marketing.AdAccount -- Gen hiding (Active)
-import Facebook.Object.Marketing.Types -- Gen hiding (Active)
-import qualified Facebook.Object.Marketing.AdAccount as Gen --Gen as Gen
---import Facebook.Object.Marketing.AdAccountGroupPlayground hiding (Id)
+import Facebook.Object.Marketing.AdAccount
+import Facebook.Object.Marketing.Types
 import Facebook.Object.Marketing.AdCampaign
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Utility
