@@ -18,7 +18,7 @@ import Facebook.Monad
 import Facebook.Graph
 import Facebook.Pager
 
-import Facebook.Object.Marketing.Types
+import Facebook.Object.Marketing.Types hiding (Id)
 import Facebook.Object.Marketing.Utility
 
 data Action a = Action { action_action_type :: Text,
