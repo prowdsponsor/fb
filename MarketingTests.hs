@@ -9,13 +9,15 @@ import Facebook.Records
 import           Control.Monad.Trans.Resource
 import Data.Time
 import Control.Monad.Trans
-import Facebook.Object.Marketing.AdAccountGen hiding (Active)
-import qualified Facebook.Object.Marketing.AdAccountGen as Gen
+import Facebook.Object.Marketing.AdAccount -- Gen hiding (Active)
+import Facebook.Object.Marketing.Types -- Gen hiding (Active)
+import qualified Facebook.Object.Marketing.AdAccount as Gen --Gen as Gen
 --import Facebook.Object.Marketing.AdAccountGroupPlayground hiding (Id)
 import Facebook.Object.Marketing.AdCampaign
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Utility
 import Facebook.Object.Marketing.Insights
+import Prelude hiding (id)
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -31,16 +33,18 @@ main = do
   runResourceT $ runFacebookT creds man $ do
     u <- getUser "me" [] (Just tok)
     liftIO $ print u
-    Pager adaccids _ _ <- getAdAccountId tok
+    Pager adaccids _ _ <- getAdAccountId $ Just tok
     liftIO $ print adaccids
-    adAcc <- getAdAccount (Gen.id $ head adaccids)
+    adAcc <- getAdAccount (id $ head adaccids)
                 (Balance ::: AmountSpent ::: AccountId ::: Id ::: Age ::: Nil)
                 (Just tok)
     liftIO $ print adAcc
-    --Pager adCamps _ _ <- getAccountCampaigns (Gen.id $ head adaccids) [("fields", "name")] tok
-    --liftIO $ print adCamps
+    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Id ::: Name ::: Nil) tok
+    liftIO $ print adCamps
     --Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
-    --liftIO $ print adSets
+    Pager adSets _ _ <- getAdSet (id $ head adCamps) (Id ::: ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
+    liftIO $ print adSets
     --Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
     --liftIO $ print (insights:: [WithJSON Insights])
+    -- TODO: Upload Image, create Ad; test here; then beautilitics
     return ()

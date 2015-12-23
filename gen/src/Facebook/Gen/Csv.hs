@@ -2,7 +2,8 @@
 module Facebook.Gen.Csv
 where
 
-import Control.Monad
+import Control.Applicative (pure)
+import Control.Monad (mzero)
 import Data.Csv
 import Data.Text hiding (length)
 import qualified Data.Text as T
@@ -19,7 +20,7 @@ instance FromRecord CsvLine where
     parseRecord v
         | length v == 7 =
             let ent = Entity <$> v .! 0
-                mode = InteractionMode <$> v .! 1
+                mode = v .! 1
                 fn = v .! 2
                 fntype = v .! 3
                 desc = v .! 4

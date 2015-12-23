@@ -8,7 +8,13 @@ import Data.Coerce
 import Control.Monad
 
 newtype Entity = Entity Text deriving (Show, Ord, Eq)
-newtype InteractionMode = InteractionMode Text deriving (Show, Ord, Eq)
+data InteractionMode =
+      Reading
+    | Creating
+    | Updating
+    | Deleting
+    | Types -- Used only for Types.hs
+    deriving (Show, Ord, Eq)
 newtype Boolean = Boolean Bool deriving Show
 
 data FieldInfo = FieldInfo {
@@ -32,3 +38,10 @@ instance FromField Boolean where
     parseField s
         | s == "Y" || s == "y" = pure $ Boolean True
         | otherwise = pure $ Boolean False
+
+instance FromField InteractionMode where
+    parseField "Reading"  = pure Reading
+    parseField "Creating" = pure Creating
+    parseField "Deleting" = pure Deleting
+    parseField "Updating" = pure Updating
+    parseField x = error $ "Don't know what to do with InteractionMode \"" ++ show x ++ "\""
