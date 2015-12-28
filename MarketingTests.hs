@@ -34,13 +34,13 @@ main = do
     Pager adaccids _ _ <- getAdAccountId $ Just tok
     liftIO $ print adaccids
     adAcc <- getAdAccount (id $ head adaccids)
-                (Balance ::: AmountSpent ::: AccountId ::: Id ::: Age ::: Nil)
+                --(Balance ::: AmountSpent ::: Age ::: Nil)
+                Nil
                 (Just tok)
     liftIO $ print adAcc
-    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Id ::: Name ::: Nil) tok
+    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Nil) tok
     liftIO $ print adCamps
-    --Pager adSets _ _ <- getCampaignAdSets (acamp_id $ head adCamps) [("fields", "configured_status,effective_status,daily_budget")] tok
-    Pager adSets _ _ <- getAdSet (id $ head adCamps) (Id ::: ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
+    Pager adSets _ _ <- getAdSet (id $ head adCamps) (ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
     liftIO $ print adSets
     --Pager insights _ _ <- getInsights (Id $ as_id $ head adSets) [] tok
     --liftIO $ print (insights:: [WithJSON Insights])

@@ -130,11 +130,34 @@ modeStr Creating = "Set"
 modeStr Types = error "FIXME"
 
 genFcts :: InteractionMode -> Entity -> V.Vector FieldInfo -> Text
+genFcts mode@Reading ent fis = 
+  let constr = genConstraint mode V.empty ent
+      retConstr = genRetConstraint mode ent fis <> " -- Default fields"
+      fctType = getFctType ent mode
+      fct = genFct ent mode $ genDefFields fis
+  in constr <> "\n" <> retConstr <> "\n" <> fctType <> "\n" <> fct
 genFcts mode ent fis =
     let constr = genConstraint mode fis ent
         fctType = getFctType ent mode
-        fct = genFct ent mode
+        fct = genFct ent mode "" -- quick and dirty
     in constr <> "\n" <> fctType <> "\n" <> fct
+
+genDefFields :: V.Vector FieldInfo -> Text
+genDefFields fis =
+  let ds = genReqFields fis
+      defs = V.foldr' append "" $ V.map (\req -> req <> " ::: ") ds
+  in defs
+
+genRetConstraintName :: InteractionMode -> Entity -> Text
+genRetConstraintName Reading ent =
+  genClassName ent Reading <> "Ret"
+
+genRetConstraint :: InteractionMode -> Entity -> V.Vector FieldInfo -> Text
+genRetConstraint Reading ent fis =
+  let ds = genReqFields fis
+      defs = V.foldr' append "r" $ V.map (\req -> req <> " :*: ") ds
+      synName = genRetConstraintName Reading ent
+  in "type " <> synName <> " r = " <> defs
 
 header modName = "module " <> modName <> " where\n\n"
 
@@ -153,7 +176,7 @@ genConstraintLabel mode fis ent@(Entity entity) =
     let reqs  = genReqFields fis
         reqsHas = V.foldl' append "" $ V.map (\req -> "Has " <> req <> " r, ") reqs
     in "\ntype " <> genClassName ent mode <> " fl r = (" <> reqsHas
-       <> "A.FromJSON r, " <> entityToIsField ent mode <> " r, FieldListToRec fl r)\n\n"
+       <> "A.FromJSON r, " <> entityToIsField ent mode <> " r, FieldListToRec fl r)"
 
 -- "acc_id" and Text turn into:
 --
@@ -242,6 +265,22 @@ genFctName (Entity ent) Updating = "upd" <> ent
 genFctName (Entity ent) Creating = "set" <> ent
 
 getFctType :: Entity -> InteractionMode -> Text
+getFctType ent mode@Reading =
+  let retType = genRetConstraintName mode ent
+      pager' = if Set.member (ent, mode) entityModePagerSet
+                  then "(Pager (" <> retType <> " r))"
+                  else "(" <> retType <> " r)"
+      maybeToken = if Set.member (ent, mode) isTokenNecessarySet
+                      then ""
+                      else "Maybe"
+      fctName = genFctName ent mode
+      className = genClassName ent mode
+  in
+  fctName <> " :: (R.MonadResource m, MonadBaseControl IO m, " <> className <> " fl r) =>\n\t\
+               \Id_    -- ^ Ad Account Id\n\t\
+            \-> fl     -- ^ Arguments to be passed to Facebook.\n\t\
+            \-> " <> maybeToken <> " UserAccessToken -- ^ Optional user access token.\n\t\
+            \-> FacebookT anyAuth m " <> pager'
 getFctType ent mode =
     let pager' = if Set.member (ent, mode) entityModePagerSet
                     then "(Pager r)"
@@ -256,17 +295,17 @@ getFctType ent mode =
                \Id_    -- ^ Ad Account Id\n\t\
             \-> fl     -- ^ Arguments to be passed to Facebook.\n\t\
             \-> " <> maybeToken <> " UserAccessToken -- ^ Optional user access token.\n\t\
-            \-> FacebookT anyAuth m " <> pager' <> "\n"
+            \-> FacebookT anyAuth m " <> pager'
 
-genFct :: Entity -> InteractionMode -> Text
-genFct ent mode =
+genFct :: Entity -> InteractionMode -> Text -> Text
+genFct ent mode defFields =
     let fctName = genFctName ent mode
         url  = Map.findWithDefault "" ent entityUrlPostfixMap
         maybeToken = if Set.member (ent, mode) isTokenNecessarySet
                         then "$ Just "
                         else ""
     in fctName <> " (Id_ id) fl mtoken = getObject (\"/v2.5/\" <> id <> \"" <> url
-       <> "\") [(\"fields\", textListToBS $ fieldNameList fl)] " <>  maybeToken <> "mtoken\n"
+       <> "\") [(\"fields\", textListToBS $ fieldNameList $ " <> defFields <> "fl)] " <>  maybeToken <> "mtoken\n\n"
 
 fieldToAdt :: FieldInfo -> Text
 fieldToAdt (FieldInfo str _ _ _ _)
