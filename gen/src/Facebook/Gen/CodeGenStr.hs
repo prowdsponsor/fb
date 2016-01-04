@@ -26,11 +26,16 @@ imports =
                 "import Facebook.Graph",
                 "import qualified Data.Aeson as A",
                 "import Data.Time.Clock",
+                "import Data.Aeson",
                 "import Data.Text (Text)",
+                "import qualified Data.Text.Encoding as TE",
                 "import Data.Word (Word32)",
                 "import GHC.Generics (Generic)",
                 "import qualified Data.Map.Strict as Map",
                 "import Data.Vector (Vector)",
+                "import qualified Data.ByteString as BS",
+                "import qualified Data.ByteString.Builder as BSB",
+                "import qualified Data.ByteString.Lazy as BSL",
                 "import qualified Control.Monad.Trans.Resource as R",
                 "import Control.Monad.Trans.Control (MonadBaseControl)"]
 langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts", "OverloadedStrings",
@@ -40,21 +45,34 @@ langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts"
 entityUrlPostfixMap =
     Map.fromList [(Entity "AdCampaign", "/campaigns"),
                   (Entity "Insights", "/insights"),
+                  (Entity "AdImage", "/adimages"),
                   (Entity "AdSet", "/adsets")]
 
 -- Does the generated function return a Pager?
 entityModePagerSet =
     Set.fromList [(Entity "AdCampaign", Reading),
                   (Entity "Insights", Reading),
+                  (Entity "AdImage", Reading),
                   (Entity "AdSet", Reading)]
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
     Set.fromList [(Entity "AdCampaign", Reading),
+                  (Entity "AdImage", Reading),
+                  (Entity "AdImage", Creating),
+                  (Entity "AdImage", Deleting),
                   (Entity "AdSet", Reading)]
 
 modPrefix = "Facebook.Object.Marketing."
 modNameToPath = replace "." "/"
+
+-- needed for POST 
+toBsInstances :: Text
+toBsInstances = 
+  "\ninstance ToBS Text where\n\
+    \\ttoBS w = toBS $ show w\n\
+   \instance ToBS String where\n\
+    \\ttoBS w = BSL.toStrict $ BSB.toLazyByteString $ BSB.stringUtf8 w\n"
 
 genFiles :: Env -> Vector (FilePath, Text)
 genFiles (Env env) =
@@ -83,7 +101,7 @@ genEntity ent@(Entity nameEnt) map types =
         top = genLangExts <> head <> genImports ent <>
                 if nameEnt /= "Types"
                     then typesImport <> "\n" -- FIXME
-                    else ""
+                    else toBsInstances
         fis = collectFieldInfosMode map
         filter x = if nameEnt == "Types"
                     then types
@@ -175,8 +193,14 @@ genConstraintLabel :: InteractionMode -> Vector FieldInfo -> Entity -> Text
 genConstraintLabel mode fis ent@(Entity entity) =
     let reqs  = genReqFields fis
         reqsHas = V.foldl' append "" $ V.map (\req -> "Has " <> req <> " r, ") reqs
-    in "\ntype " <> genClassName ent mode <> " fl r = (" <> reqsHas
-       <> "A.FromJSON r, " <> entityToIsField ent mode <> " r, FieldListToRec fl r)"
+        arg = if mode == Reading
+                then " fl r"
+                else " r"
+        constr = if mode == Reading
+                  then "FieldListToRec fl r)"
+                  else "ToParam r)"
+    in "\ntype " <> genClassName ent mode <> arg <> " = (" <> reqsHas
+       <> "A.FromJSON r, " <> entityToIsField ent mode <> " r, " <> constr
 
 -- "acc_id" and Text turn into:
 --
@@ -194,7 +218,7 @@ dataAndFieldInstance fi =
     in "\ndata "  <> adtName <> " = " <> adtName <> "\n"
         <> "newtype " <> newtypeName <> " = " <> newtypeName
         <> " " <> fieldTypeParan fieldType <> " deriving " <> derivings fieldType <> "\n"
-        <> newtypeJSON newtypeName
+        <> newtypeInstances newtypeName
         <> "instance Field " <> adtName <> " where\n\t"
         <> "type FieldValue " <> adtName <> " = " <> newtypeName <> "\n\t"
         <> "fieldName _ = \"" <> fieldName <> "\"\n\t"
@@ -210,10 +234,12 @@ derivings :: Text -> Text
 derivings "UTCTime" = "Generic"
 derivings _ = "(Show, Generic)"
 
-newtypeJSON :: Text -> Text
-newtypeJSON nt =
+newtypeInstances :: Text -> Text
+newtypeInstances nt =
     "instance A.FromJSON " <> nt <> "\n"
     <> "instance A.ToJSON " <> nt <> "\n"
+    <> "instance SimpleType " <> nt <> " where\n\t"
+    <> "encodeFbParam (" <> nt <> " a) = encodeFbParam a\n"
 
 entityToIsField :: Entity -> InteractionMode -> Text
 entityToIsField (Entity entity) mode = "Is" <> entity <> modeStr mode <> "Field"
@@ -290,22 +316,48 @@ getFctType ent mode =
                         else "Maybe"
         fctName = genFctName ent mode
         className = genClassName ent mode
+        auth = if mode == Reading
+                then "anyAuth"
+                else "Auth"
+        argName = if mode == Reading
+                    then "fl"
+                    else "r"
+        param = if mode == Reading
+                    then " fl r"
+                    else " r"
     in
-    fctName <> " :: (R.MonadResource m, MonadBaseControl IO m, " <> className <> " fl r) =>\n\t\
+    fctName <> " :: (R.MonadResource m, MonadBaseControl IO m, " <> className <> param <> ") =>\n\t\
                \Id_    -- ^ Ad Account Id\n\t\
-            \-> fl     -- ^ Arguments to be passed to Facebook.\n\t\
+            \-> " <> argName <> "     -- ^ Arguments to be passed to Facebook.\n\t\
             \-> " <> maybeToken <> " UserAccessToken -- ^ Optional user access token.\n\t\
-            \-> FacebookT anyAuth m " <> pager'
+            \-> FacebookT " <> auth <> " m " <> pager'
 
 genFct :: Entity -> InteractionMode -> Text -> Text
 genFct ent mode defFields =
     let fctName = genFctName ent mode
         url  = Map.findWithDefault "" ent entityUrlPostfixMap
-        maybeToken = if Set.member (ent, mode) isTokenNecessarySet
+        maybeToken = if Set.member (ent, mode) isTokenNecessarySet && mode == Reading
                         then "$ Just "
                         else ""
-    in fctName <> " (Id_ id) fl mtoken = getObject (\"/v2.5/\" <> id <> \"" <> url
-       <> "\") [(\"fields\", textListToBS $ fieldNameList $ " <> defFields <> "fl)] " <>  maybeToken <> "mtoken\n\n"
+        httpMethod = modeToMethod mode
+        args = modeToArgs mode
+        argName = if mode == Reading
+                    then "fl"
+                    else "r"
+    in fctName <> " (Id_ id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\" <> id <> \"" <> url
+       <> "\") " <> args defFields <> maybeToken <> "mtoken\n\n"
+
+modeToArgs Types _ = ""
+modeToArgs Reading defFields = "[(\"fields\", textListToBS $ fieldNameList $ " <> defFields <> "fl)] "
+modeToArgs Creating _ = "(toParam r) "
+modeToArgs Updating _ = "(toParam r) "
+modeToArgs Deleting _ = "(toParam r) "
+
+modeToMethod :: InteractionMode -> Text
+modeToMethod Reading = "getObject"
+modeToMethod Creating = "postObject"
+modeToMethod Updating = "postObject"
+modeToMethod Deleting = "deleteObject"
 
 fieldToAdt :: FieldInfo -> Text
 fieldToAdt (FieldInfo str _ _ _ _)

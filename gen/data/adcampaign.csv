@@ -15,11 +15,11 @@ Ad Campaign,Deleting,object_count,integer,Default value: 1000Object count,,
 Ad Campaign,Reading,name,string,Campaign's name,,
 Ad Campaign,Reading,stop_time,datetime,Stop Time,,
 Ad Campaign,Reading,id,numeric string,Campaign's IDDefault,Y,
-Ad Campaign,Reading,adlabels,list&lt;AdLabel&gt;,Ad Labels associated with this campaign,,
+Ad Campaign,Reading,adlabels,list&lt,AdLabel&gt,,Ad Labels associated with this campaign
 Ad Campaign,Creating,objective,"enum{CANVAS_APP_ENGAGEMENT, CANVAS_APP_INSTALLS, CONVERSIONS, EVENT_RESPONSES, EXTERNAL, LEAD_GENERATION, LINK_CLICKS, LOCAL_AWARENESS, MOBILE_APP_ENGAGEMENT, MOBILE_APP_INSTALLS, OFFER_CLAIMS, PAGE_LIKES, POST_ENGAGEMENT, PRODUCT_CATALOG_SALES, VIDEO_VIEWS}",Campaign's objective. If it is specified the API will validate that any ad groups created under the campaign match that objective.,,
 Ad Campaign,Reading,can_use_spend_cap,bool,Whether the campaign can set the spend cap,,
 Ad Campaign,Creating,page_id,int,The ID of a Facebook Page,,
-Ad Campaign,Updating,adlabels,list&lt;Object&gt;,Ad Labels associated with this campaign,,
+Ad Campaign,Updating,adlabels,list&lt,Object&gt,,Ad Labels associated with this campaign
 Ad Campaign,Updating,status,"enum{ACTIVE, PAUSED, ARCHIVED, DELETED}","Only ACTIVE and PAUSED are valid during
         creation. Other statuses can be used for update. If it is set to
         PAUSED, its active child objects will be paused and have an effective

@@ -15,7 +15,7 @@ oldTypesImport =
     \import qualified Data.ByteString as BS\n\
     \import qualified Data.ByteString.Lazy as BSL\n\
     \import qualified Data.Text.Encoding as TE\n\
-    \import Facebook.Object.Marketing.Utility\n\
+    \import Facebook.Object.Marketing.Utility hiding (toBS)\n\
     \import Text.Read (readMaybe)\n"
 
 newTypes :: Text
