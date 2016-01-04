@@ -3,6 +3,8 @@ module Facebook.Graph
     ( getObject
     , getObjectRec
     , postObject
+    , postForm
+    , deleteForm
     , deleteObject
     , searchObjects
     , (#=)
@@ -39,6 +41,7 @@ import qualified Data.Text.Lazy.Builder as TLB
 import qualified Data.Time as TI
 import qualified Network.HTTP.Conduit as H
 import qualified Network.HTTP.Types as HT
+import Network.HTTP.Client.MultipartFormData
 
 
 import Facebook.Auth
@@ -74,6 +77,33 @@ getObject path query mtoken =
   runResourceInFb $
     asJson =<< fbhttp =<< ((trace $ show path) $ fbreq path mtoken query)
 
+-- | Make a raw @POST@ request to Facebook's Graph API.
+postForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+              Text                -- ^ Path (should begin with a slash @\/@)
+           -> [Part]          -- ^ Arguments to be passed to Facebook
+           -> AccessToken anyKind -- ^ Access token
+           -> FacebookT Auth m a
+postForm = methodForm HT.methodPost
+
+-- | Make a raw @DELETE@ request to Facebook's Graph API.
+deleteForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+                Text                -- ^ Path (should begin with a slash @\/@)
+             -> [Part]          -- ^ Arguments to be passed to Facebook
+             -> AccessToken anyKind -- ^ Access token
+             -> FacebookT Auth m a
+deleteForm = methodForm HT.methodDelete
+
+-- | Make a raw @POST@ request to Facebook's Graph API.
+methodForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
+              HT.Method
+           -> Text                -- ^ Path (should begin with a slash @\/@)
+           -> [Part]          -- ^ Arguments to be passed to Facebook
+           -> AccessToken anyKind -- ^ Access token
+           -> FacebookT Auth m a
+methodForm method path parts token = runResourceInFb $ do
+    req <- fbreq path (Just token) []
+    req' <- formDataBody parts req -- [partFile "filename" "bridge.jpg"] req
+    asJson =<< fbhttp req' { H.method = method}
 
 -- | Make a raw @POST@ request to Facebook's Graph API.
 postObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
@@ -82,7 +112,6 @@ postObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
            -> AccessToken anyKind -- ^ Access token
            -> FacebookT Auth m a
 postObject = methodObject HT.methodPost
-
 
 -- | Make a raw @DELETE@ request to Facebook's Graph API.
 deleteObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
@@ -101,9 +130,9 @@ methodObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
              -> AccessToken anyKind -- ^ Access token
              -> FacebookT Auth m a
 methodObject method path query token =
-  runResourceInFb $ do
-    req <- fbreq path (Just token) query
-    asJson =<< fbhttp req { H.method = method }
+    runResourceInFb $ do
+      req <- fbreq path (Just token) query
+      asJson =<< fbhttp req { H.method = method }
 
 
 -- | Make a raw @GET@ request to the /search endpoint of Facebook’s

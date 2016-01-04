@@ -21,7 +21,6 @@ import Prelude hiding (id)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
-import Codec.Picture
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -50,22 +49,20 @@ main = do
     let (Id_ idText) = id $ head adSets
     Pager insights _ _ <- getInsights (FB.Id idText) [] tok
     liftIO $ print (insights:: [WithJSON Insights])
-    Pager images _ _ <- getAdImage (id $ head adaccids) 
-        (Id ::: Nil) tok
-    liftIO $ print images
+    Pager images _ _ <- getAdImage (id $ head adaccids)
+            (Id ::: Name ::: Nil) tok
+    liftIO $ print $ (id $ head adaccids)
     liftIO $ print $ length images
-    --(Right (ImageYCbCr8 img)) <- liftIO $ readJpeg "bridge.jpg"
-    --let bs = encodeJpegAtQuality 100 img
-    bs <- liftIO $ BS8.readFile "bridge.jpg"
-    let rec = (Bytes, Bytes_ bs) :*: Nil
-    --liftIO $ BS.writeFile "bridge2.jpg" $ BSL.toStrict bs
-    --liftIO $ print bs
-    --liftIO $ print $ toParam rec
+    let rec = (Filename, Filename_ "/home/alex/code/fb/bridge.jpg") :*: Nil
     adImg <- setAdImage (id $ head adaccids) rec tok
     liftIO $ print adImg
-    Pager images' _ _ <- getAdImage (id $ head adaccids) 
+    Pager images' _ _ <- getAdImage (id $ head adaccids)
         (Id ::: Nil) tok
-    liftIO $ print images'
     liftIO $ print $ length images'
+    delRet <- delAdImage (id $ head adaccids) ((Hash, Hash_ "5f73a7d1df0252ac7f012224dde315d0") :*: Nil) tok
+    liftIO $ print delRet
+    Pager images'' _ _ <- getAdImage (id $ head adaccids)
+        (Id ::: Nil) tok
+    liftIO $ print $ length images''
     -- TODO: Upload Image, create Ad; test here; then beautilitics
     return ()

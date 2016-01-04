@@ -55,6 +55,34 @@ entityModePagerSet =
                   (Entity "AdImage", Reading),
                   (Entity "AdSet", Reading)]
 
+-- Does the generated function return a Pager?
+entityModeRetType =
+    Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
+                  ((Entity "AdImage", Deleting), "DelSuc")]
+
+-- Does the generated function return a Pager?
+entityModeRetDefs :: Map.Map (Entity, InteractionMode) Text
+entityModeRetDefs =
+    Map.fromList [((Entity "AdImage", Creating), imgCreate),
+                  ((Entity "AdImage", Deleting), imgDelete)]
+
+imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
+                \\timages  :: Map.Map Text SetImg\n\
+                \\t} deriving (Show, Generic)\n\
+            \instance FromJSON SetImgs\n\
+            \data SetImg = SetImg {\n\
+                \\thash, url_ :: Text\n\
+            \\t} deriving Show\n\
+            \instance FromJSON SetImg where\n\
+                \\tparseJSON (Object v) =\n\
+                    \\t\tSetImg <$> v .: \"hash\"\n\
+                           \\t\t\t\t<*> v .: \"url\"\n"
+
+imgDelete =  "data DelSuc = DelSuc {\n\
+              \\tsuccess :: Bool\n\
+              \\t} deriving (Show, Generic)\n\
+              \instance FromJSON DelSuc"
+
 -- Doees the API call need a token?
 isTokenNecessarySet =
     Set.fromList [(Entity "AdCampaign", Reading),
@@ -66,11 +94,11 @@ isTokenNecessarySet =
 modPrefix = "Facebook.Object.Marketing."
 modNameToPath = replace "." "/"
 
--- needed for POST 
+-- needed for POST
 toBsInstances :: Text
-toBsInstances = 
+toBsInstances =
   "\ninstance ToBS Text where\n\
-    \\ttoBS w = toBS $ show w\n\
+    \\ttoBS = TE.encodeUtf8\n\
    \instance ToBS String where\n\
     \\ttoBS w = BSL.toStrict $ BSB.toLazyByteString $ BSB.stringUtf8 w\n"
 
@@ -108,9 +136,8 @@ genEntity ent@(Entity nameEnt) map types =
                     else V.filter (\fi -> not $ V.elem fi types) x
         filtered = filter fis
         dataDecl = V.foldl' append "" $ V.map dataAndFieldInstance filtered
-        getter = concat $ V.map getterFct filtered
+        getter = myConcat $ V.map getterFct filtered
         getterFct fi = getterField fi
-        concat = V.foldl' append ""
         -- gen all data fields + instances for records here TODO
     in (path, top <> dataDecl <> getter <> Prelude.foldl append "" (
             Map.elems $ Map.mapWithKey (\mode fis -> genMode ent mode fis) map))
@@ -120,21 +147,42 @@ genMode _ Types _ = T.empty -- Types.hs doesn't include any functions (except re
 genMode ent@(Entity nameEnt) mode unfiltered = -- source code for one entity(/mode ?)
     let -- source = V.foldl' append "" $ V.map dataAndFieldInstance fis -- TODO filter out globally defined ones
         doc = "\n-- Entity:" <> nameEnt <> ", mode:" <> T.pack (show mode)
+        retDef = getRetDef ent mode
+        toBS = if mode /= Reading
+                then genToBsInstances unfiltered
+                else ""
         m = genFcts mode ent unfiltered
         isInstances = genClassWitnesses ent mode unfiltered
-    in doc <> isInstances <> m <> if nameEnt == "AdAccount"
-                                      then adAccIdDetails <> genGetId
-                                      else ""
+    in doc <> toBS <> isInstances <> retDef <> m <>
+        if nameEnt == "AdAccount"
+            then adAccIdDetails <> genGetId
+            else ""
+
+myConcat :: V.Vector Text -> Text
+myConcat = V.foldl' append ""
+
+genToBsInstances :: V.Vector FieldInfo -> Text
+genToBsInstances fis = myConcat $ V.map go fis
+    where
+        go fi =
+         let nt = fieldToAdt fi <> "_"
+         in "\ninstance ToBS " <> nt <> " where\n\t"
+            <> "toBS (" <> nt <> " a) = toBS a\n"
+
+getRetDef :: Entity -> InteractionMode -> Text
+getRetDef ent mode =
+    case Map.lookup (ent, mode) entityModeRetDefs of
+        Nothing -> ""
+        Just code -> code
 
 genClassWitnesses :: Entity -> InteractionMode -> Vector FieldInfo -> Text
 genClassWitnesses _ Types _ = T.empty
 genClassWitnesses ent mode fis =
     let isOfClass = isFieldClass ent mode
-        isOfInstances = concat $ V.map (\fi -> instanceFct fi) fis
+        isOfInstances = myConcat $ V.map (\fi -> instanceFct fi) fis
         nilIsOfInstance = isFieldClassInstanceText (entityToIsField ent mode) "Nil" -- ugly hack
         instanceFct field = isFieldClassInstance ent mode field
         --constr = genConstraint mode fis entity
-        concat = V.foldl' append ""
     in isOfClass <> nilIsOfInstance <> isOfInstances
 
 genReqFields :: Vector FieldInfo -> Vector Text
@@ -148,7 +196,7 @@ modeStr Creating = "Set"
 modeStr Types = error "FIXME"
 
 genFcts :: InteractionMode -> Entity -> V.Vector FieldInfo -> Text
-genFcts mode@Reading ent fis = 
+genFcts mode@Reading ent fis =
   let constr = genConstraint mode V.empty ent
       retConstr = genRetConstraint mode ent fis <> " -- Default fields"
       fctType = getFctType ent mode
@@ -198,7 +246,7 @@ genConstraintLabel mode fis ent@(Entity entity) =
                 else " r"
         constr = if mode == Reading
                   then "FieldListToRec fl r)"
-                  else "ToParam r)"
+                  else "ToForm r)"
     in "\ntype " <> genClassName ent mode <> arg <> " = (" <> reqsHas
        <> "A.FromJSON r, " <> entityToIsField ent mode <> " r, " <> constr
 
@@ -238,8 +286,8 @@ newtypeInstances :: Text -> Text
 newtypeInstances nt =
     "instance A.FromJSON " <> nt <> "\n"
     <> "instance A.ToJSON " <> nt <> "\n"
-    <> "instance SimpleType " <> nt <> " where\n\t"
-    <> "encodeFbParam (" <> nt <> " a) = encodeFbParam a\n"
+    -- <> "instance ToBS " <> nt <> " where\n\t"
+    -- <> "toBS (" <> nt <> " a) = toBS a\n"
 
 entityToIsField :: Entity -> InteractionMode -> Text
 entityToIsField (Entity entity) mode = "Is" <> entity <> modeStr mode <> "Field"
@@ -308,9 +356,12 @@ getFctType ent mode@Reading =
             \-> " <> maybeToken <> " UserAccessToken -- ^ Optional user access token.\n\t\
             \-> FacebookT anyAuth m " <> pager'
 getFctType ent mode =
-    let pager' = if Set.member (ent, mode) entityModePagerSet
-                    then "(Pager r)"
-                    else "r"
+    let retType = case Map.lookup (ent, mode) entityModeRetType of
+                    Nothing -> "r"
+                    Just ret -> ret
+        pager' = if Set.member (ent, mode) entityModePagerSet
+                    then "(Pager " <> retType <> ")"
+                    else retType
         maybeToken = if Set.member (ent, mode) isTokenNecessarySet
                         then ""
                         else "Maybe"
@@ -349,15 +400,15 @@ genFct ent mode defFields =
 
 modeToArgs Types _ = ""
 modeToArgs Reading defFields = "[(\"fields\", textListToBS $ fieldNameList $ " <> defFields <> "fl)] "
-modeToArgs Creating _ = "(toParam r) "
-modeToArgs Updating _ = "(toParam r) "
-modeToArgs Deleting _ = "(toParam r) "
+modeToArgs Creating _ = "(toForm r) "
+modeToArgs Updating _ = "(toForm r) "
+modeToArgs Deleting _ = "(toForm r) "
 
 modeToMethod :: InteractionMode -> Text
 modeToMethod Reading = "getObject"
-modeToMethod Creating = "postObject"
+modeToMethod Creating = "postForm"
 modeToMethod Updating = "postObject"
-modeToMethod Deleting = "deleteObject"
+modeToMethod Deleting = "deleteForm"
 
 fieldToAdt :: FieldInfo -> Text
 fieldToAdt (FieldInfo str _ _ _ _)

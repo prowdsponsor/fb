@@ -5,9 +5,10 @@ module Facebook.Records where
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Text hiding (foldr)
+import Network.HTTP.Client.MultipartFormData
 import Data.Text.Encoding
-import Data.Coerce
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as B8
 import qualified Data.HashMap.Strict as Map
 import Prelude hiding (take, length)
 
@@ -46,17 +47,21 @@ fieldToByteString :: Field f => f -> BS.ByteString
 fieldToByteString f = encodeUtf8 $ fieldName f
 
 -- in order to post as parameters
-class ToParam a where
-  toParam :: a -> [(BS.ByteString, BS.ByteString)]
+class ToForm a where
+  toForm :: a -> [Part]
 
-instance ToParam Nil where
-  toParam _ = []
+instance ToForm Nil where
+  toForm _ = []
 
-instance (ToParam a, Field f, SimpleType (FieldValue f)) => ToParam (f :*: a) where
-  toParam ((f, val) :*: rest) =
-    let reqName = fieldToByteString f
+instance (ToForm a, Field f, ToBS (FieldValue f)) => ToForm (f :*: a) where
+  toForm ((f, val) :*: rest) =
+    let paramName = fieldToByteString f
+        fName = fieldName f
         val' = toBS val
-    in (reqName, val') : toParam rest
+        part = if isPrefixOf "file" fName -- dirty hack...
+                then partFile fName $ B8.unpack val'
+                else partBS fName val'
+    in part : toForm rest
 
 instance FromJSON Nil where
   parseJSON _ = return Nil

@@ -59,15 +59,16 @@ buildEnv csvs = do
                               ["adlabels"] -- Campaign
                               ++
                               ["billing_event", "optimization_goal", "adset_schedule", "promoted_object", "campaign",
-                              "product_ad_behavior", "rf_prediction_id", "pacing_type", "targeting"] 
-                              ++ ["copy_from"] -- AdImage Create
+                              "product_ad_behavior", "rf_prediction_id", "pacing_type", "targeting"]
+                              ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]
     let csvs' = V.filter (\(CsvLine ent mode _) -> mode == Reading || ent == (Entity "Ad Image")) (join csvs :: Vector CsvLine)
     let csvs'' = V.filter (\(CsvLine _ _ (FieldInfo name _ _ _ _)) -> not $ V.elem name ignore) csvs'
     let envs = V.map buildEnvCsv csvs''
     let merged = merge envs
     let uni = unify merged
-    Right $ trace (show uni) uni
+    Right uni
+    --Right $ trace (show uni) uni
 
 merge :: V.Vector Env -> Env -- Types Env and unified env
 -- this should be easier...

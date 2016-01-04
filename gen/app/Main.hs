@@ -21,16 +21,8 @@ main :: IO ()
 main = do
     inps <- V.mapM BS.readFile csvFiles
     let csvs = V.map (decode HasHeader) inps :: V.Vector (Either String (V.Vector CsvLine))
-    --print $ rights csvs
     let (Right e@(Env m)) = buildEnv $ rights csvs
-    --let out = (Map.!) ((Map.!) (genFiles e) (Entity "AdAccount")) $ InteractionMode "Reading"
-    --writeFile "Test.hs" $ unpack $ V.foldl' append "" out
-    --putStrLn $ Map.showTree m
-    let (fp, out) = V.head $ genFiles e
-    writeFile "Test.hs" $ unpack out
-    --print $ V.head $ V.tail $ genFiles e
     saveFiles $ genFiles e
-    -- parse CSV, build Env, type check/unify, gen code, save files, be awesome
 
 saveFiles :: V.Vector (FilePath, Text) -> IO ()
 saveFiles = V.mapM_ save
