@@ -6,6 +6,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Data.Text hiding (foldr)
 import Data.Text.Encoding
+import Data.Coerce
 import qualified Data.ByteString as BS
 import qualified Data.HashMap.Strict as Map
 import Prelude hiding (take, length)
@@ -43,6 +44,19 @@ instance (ToBS a, Field f) => ToBS (f :*: a) where
 
 fieldToByteString :: Field f => f -> BS.ByteString
 fieldToByteString f = encodeUtf8 $ fieldName f
+
+-- in order to post as parameters
+class ToParam a where
+  toParam :: a -> [(BS.ByteString, BS.ByteString)]
+
+instance ToParam Nil where
+  toParam _ = []
+
+instance (ToParam a, Field f, SimpleType (FieldValue f)) => ToParam (f :*: a) where
+  toParam ((f, val) :*: rest) =
+    let reqName = fieldToByteString f
+        val' = toBS val
+    in (reqName, val') : toParam rest
 
 instance FromJSON Nil where
   parseJSON _ = return Nil
