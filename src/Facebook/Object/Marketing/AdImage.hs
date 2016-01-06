@@ -29,6 +29,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Control.Monad.Trans.Resource as R
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Facebook.Object.Marketing.Types
+import Control.Applicative
 
 data Filename = Filename
 newtype Filename_ = Filename_ Text deriving (Show, Generic)
@@ -229,4 +230,3 @@ delAdImage :: (R.MonadResource m, MonadBaseControl IO m, AdImageDel r) =>
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m Success
 delAdImage (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adimages") (toForm r) mtoken
-

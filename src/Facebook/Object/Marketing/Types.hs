@@ -35,6 +35,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
 import Control.Monad
+import System.Locale
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text.Encoding as TE
@@ -169,7 +170,7 @@ instance FromJSON Success
 data SuccessId = SuccessId {
 	   id_ :: Text
 	} deriving (Show, Generic)
-instance FromJSON SuccessId where 
+instance FromJSON SuccessId where
 	parseJSON (Object v) =
 			SuccessId <$> v .: "id"
 
