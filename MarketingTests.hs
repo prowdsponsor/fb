@@ -13,14 +13,13 @@ import Control.Monad.Trans
 import Facebook.Object.Marketing.AdAccount
 import Facebook.Object.Marketing.Types
 import Facebook.Object.Marketing.AdCampaign
+import qualified Facebook.Object.Marketing.AdCampaign as AdC
+--import Facebook.Object.Marketing.AdLabel
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.AdImage
 import Facebook.Object.Marketing.Utility hiding (toBS)
 import Facebook.Object.Marketing.Insights
 import Prelude hiding (id)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BS8
-import qualified Data.ByteString.Lazy as BSL
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -64,5 +63,8 @@ main = do
     Pager images'' _ _ <- getAdImage (id $ head adaccids)
         (Id ::: Nil) tok
     liftIO $ print $ length images''
-    -- TODO: Upload Image, create Ad; test here; then beautilitics
+    --let campaign = (Name, Name_ "Test Campaign") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
+    --ret <- setAdCampaign (id $ head adaccids) campaign tok
+    --liftIO $ print ret
+    -- TODO: create Ad; test here; then beautilitics
     return ()
