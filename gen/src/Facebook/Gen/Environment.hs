@@ -25,6 +25,7 @@ typesMap =
     Map.fromList [("string", "Text")
                 , ("unsigned int32", "Word32")
                 , ("int32", "Int")
+                , ("int", "Integer")
                 , ("float", "Float")
                 , ("boolean", "Bool")
                 , ("bool", "Bool")
@@ -36,13 +37,31 @@ typesMap =
                 , ("list<unsigned int32>", "Vector Word32")
                 , ("list<string>", "Vector Text")
                 , ("list<numeric string>", "Vector Text")
+                , ("list<numeric string or integer>", "Vector Text")
+                , ("list<ExecOption>", "Vector ExecOption")
                 , ("ISO 4217 Currency Code", "Money") -- ???
                 , ("map<string, int32>", "Map.Map Text Int")
-                , ("ConfiguredStatus", "ConfiguredCampaignStatus")
-                , ("EffectiveStatus", "EffectiveCampaignStatus")
+                , ("ConfigureStatus", "ConfigureStatusADT")
+                , ("EffectiveStatus", "EffectiveStatusADT")
+                , ("ConfiguredAdStatus", "ConfiguredAdStatus")
+                , ("EffectiveAdStatus", "EffectiveAdStatus")
+                , ("OptGoal", "OptGoal")
+                , ("BidType", "BidTypeADT")
+                , ("Objective", "ObjectiveADT")
+                , ("BuyingType", "BuyingTypeADT")
+                , ("CallActionType", "CallActionType")
+                , ("URL", "Text")
+                , ("post id", "Text")
+                , ("Post ID", "Text")
+                , ("post_id", "Text")
+                , ("id", "Text")
+                , ("AdAccount", "AdAccount") -- FIXME
+                , ("AdCreativeId", "Text")
+                , ("RunStatus", "RunStatusADT")
                 , ("map<string, int32>", "Map.Map Text Int")
                 , ("map<string, unsigned int32>", "Map.Map Text Word32")
-                , ("dictionary", "Map.Map k e")] -- ???
+                , ("dictionary", "A.Value") -- ???
+                , ("Object", "A.Value")] -- ???
 type ModeFieldInfoMap = Map.Map InteractionMode (Vector FieldInfo)
 type EntityModeMap = Map.Map Entity ModeFieldInfoMap
 newtype Env = Env EntityModeMap deriving Show
@@ -62,8 +81,15 @@ buildEnv csvs = do
                               "product_ad_behavior", "rf_prediction_id", "pacing_type", "targeting"]
                               ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]
-    let csvs' = V.filter (\(CsvLine ent mode _) -> mode == Reading || ent == (Entity "Ad Image")) (join csvs :: Vector CsvLine)
-    let csvs'' = V.filter (\(CsvLine _ _ (FieldInfo name _ _ _ _)) -> not $ V.elem name ignore) csvs'
+                              ++ ["image_crops", "object_story_spec", "object_type", "applink_treatment", "tracking_specs",
+                                  "adset", "conversion_specs", "ad_review_feedback"]
+                              ++ ["custom_event_type"]
+                              ++ ["type", "dynamic_ad_voice", "annotations", "info_fields"]
+                              ++ ["delete_strategy"]
+                              ++ ["account"]
+    --let csvs' = V.filter (\(CsvLine ent mode _) ->
+    --               mode == Reading || ent == Entity "Ad Image" || ent == Entity "AdCreative") (join csvs :: Vector CsvLine)
+    let csvs'' = V.filter (\(CsvLine _ _ (FieldInfo name _ _ _ _)) -> not $ V.elem name ignore) (join csvs :: Vector CsvLine)
     let envs = V.map buildEnvCsv csvs''
     let merged = merge envs
     let uni = unify merged
@@ -157,6 +183,20 @@ findDups fis = go fis []
                              tail' = V.ifilter (\idx _ -> not $ V.elem idx dupInds) tail
                          in go tail' $ dups:acc
 
+removeDups :: V.Vector FieldInfo -> V.Vector FieldInfo
+removeDups fis = V.reverse $ V.fromList $ go fis []
+    where
+        go fis acc
+            | V.null fis = acc
+            | otherwise =
+                let fi = V.head fis
+                    tail = V.tail fis
+                    dupInds = V.findIndices (\e -> e == fi && type_ e == type_ fi) tail
+                in if V.null dupInds
+                    then go tail $ fi:acc
+                    else let dups = V.cons fi $ V.map (\idx -> unsafeIndex tail idx) dupInds
+                             tail' = V.ifilter (\idx _ -> not $ V.elem idx dupInds) tail
+                         in go tail' $ fi:acc
 buildEnvCsv :: CsvLine -> Env
 buildEnvCsv (CsvLine (Entity ent) mode info) =
     let ent'  = (Entity $ T.concat $ splitOn " " ent)

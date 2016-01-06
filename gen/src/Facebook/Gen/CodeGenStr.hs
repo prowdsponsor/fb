@@ -19,21 +19,25 @@ import Debug.Trace
 typesImport = "import Facebook.Object.Marketing.Types"
 
 imports =
-    V.fromList ["import Facebook.Records",
+    V.fromList ["import Facebook.Records hiding (get)",
+                "import qualified Facebook.Records as Rec",
                 "import Facebook.Types hiding (Id)",
                 "import Facebook.Pager",
                 "import Facebook.Monad",
                 "import Facebook.Graph",
                 "import qualified Data.Aeson as A",
                 "import Data.Time.Clock",
-                "import Data.Aeson",
+                "import Data.Time.Format",
+                "import Data.Aeson hiding (Value)",
                 "import Data.Text (Text)",
                 "import qualified Data.Text.Encoding as TE",
                 "import Data.Word (Word32)",
                 "import GHC.Generics (Generic)",
                 "import qualified Data.Map.Strict as Map",
                 "import Data.Vector (Vector)",
+                "import qualified Data.Vector as V",
                 "import qualified Data.ByteString as BS",
+                "import qualified Data.ByteString.Char8 as B8",
                 "import qualified Data.ByteString.Builder as BSB",
                 "import qualified Data.ByteString.Lazy as BSL",
                 "import qualified Control.Monad.Trans.Resource as R",
@@ -46,6 +50,8 @@ entityUrlPostfixMap =
     Map.fromList [(Entity "AdCampaign", "/campaigns"),
                   (Entity "Insights", "/insights"),
                   (Entity "AdImage", "/adimages"),
+                  (Entity "Ad", "/ads"),
+                  (Entity "AdCreative", "/adcreatives"),
                   (Entity "AdSet", "/adsets")]
 
 -- Does the generated function return a Pager?
@@ -58,13 +64,20 @@ entityModePagerSet =
 -- Does the generated function return a Pager?
 entityModeRetType =
     Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
-                  ((Entity "AdImage", Deleting), "DelSuc")]
+                  ((Entity "AdImage", Deleting), "Success"),
+                  ((Entity "AdCampaign", Deleting), "Success"),
+                  ((Entity "AdCampaign", Creating), "CreateCampaignId")]
+
+
+-- Does the generated function return a Pager?
+idTypeMap =
+    Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId")]
 
 -- Does the generated function return a Pager?
 entityModeRetDefs :: Map.Map (Entity, InteractionMode) Text
 entityModeRetDefs =
     Map.fromList [((Entity "AdImage", Creating), imgCreate),
-                  ((Entity "AdImage", Deleting), imgDelete)]
+                  ((Entity "AdCampaign", Creating), campaignCreate)]
 
 imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
                 \\timages  :: Map.Map Text SetImg\n\
@@ -78,17 +91,38 @@ imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
                     \\t\tSetImg <$> v .: \"hash\"\n\
                            \\t\t\t\t<*> v .: \"url\"\n"
 
-imgDelete =  "data DelSuc = DelSuc {\n\
+imgDelete =  "data Success = Success {\n\
               \\tsuccess :: Bool\n\
               \\t} deriving (Show, Generic)\n\
-              \instance FromJSON DelSuc"
+              \instance FromJSON Success"
+
+campaignCreate =
+    "data CreateCampaignId = CreateCampaignId {\n\
+     \\tcampaignId :: Text\n\
+     \\t} deriving (Show, Generic)\n\
+     \instance FromJSON CreateCampaignId"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
     Set.fromList [(Entity "AdCampaign", Reading),
+                  (Entity "AdCampaign", Creating),
+                  (Entity "AdCampaign", Updating),
+                  (Entity "AdCampaign", Deleting),
                   (Entity "AdImage", Reading),
                   (Entity "AdImage", Creating),
+                  (Entity "AdAccount", Creating),
+                  (Entity "AdAccount", Updating),
+                  (Entity "AdAccount", Deleting),
                   (Entity "AdImage", Deleting),
+                  (Entity "Ad", Deleting),
+                  (Entity "Ad", Updating),
+                  (Entity "Ad", Creating),
+                  (Entity "AdCreative", Deleting),
+                  (Entity "AdCreative", Updating),
+                  (Entity "AdCreative", Creating),
+                  (Entity "AdSet", Deleting),
+                  (Entity "AdSet", Updating),
+                  (Entity "AdSet", Creating),
                   (Entity "AdSet", Reading)]
 
 modPrefix = "Facebook.Object.Marketing."
@@ -96,11 +130,20 @@ modNameToPath = replace "." "/"
 
 -- needed for POST
 toBsInstances :: Text
-toBsInstances =
+toBsInstances = -- FIXME
   "\ninstance ToBS Text where\n\
-    \\ttoBS = TE.encodeUtf8\n\
-   \instance ToBS String where\n\
-    \\ttoBS w = BSL.toStrict $ BSB.toLazyByteString $ BSB.stringUtf8 w\n"
+  \\ttoBS = TE.encodeUtf8\n\
+  \instance ToBS Char where\n\
+  \\ttoBS = B8.singleton\n\
+  \instance ToBS Integer\n\
+  \instance ToBS Bool\n\
+  \instance ToBS A.Value\n\
+  \instance ToBS Word32\n\
+  \instance ToBS Float\n\
+  \instance ToBS a => ToBS (Vector a) where\n\
+  \\ttoBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs\n\
+  \instance ToBS UTCTime where\n\
+  \\ttoBS t = B8.pack $ formatTime defaultTimeLocale rfc822DateFormat t\n"
 
 genFiles :: Env -> Vector (FilePath, Text)
 genFiles (Env env) =
@@ -135,11 +178,13 @@ genEntity ent@(Entity nameEnt) map types =
                     then types
                     else V.filter (\fi -> not $ V.elem fi types) x
         filtered = filter fis
-        dataDecl = V.foldl' append "" $ V.map dataAndFieldInstance filtered
-        getter = myConcat $ V.map getterFct filtered
+        dataDecl = V.foldl' append "" $ V.map dataAndFieldInstance $ removeDups filtered
+        getter = myConcat $ V.map getterFct $ removeDups filtered
         getterFct fi = getterField fi
+        bsInstances = genToBsInstances $ removeDups filtered
+            -- genToBsInstances $ collectFieldInfosMode $ Map.delete Reading map -- collect all fields that need to be transmitted to FB
         -- gen all data fields + instances for records here TODO
-    in (path, top <> dataDecl <> getter <> Prelude.foldl append "" (
+    in (path, top <> dataDecl <> bsInstances <> getter <> Prelude.foldl append "" (
             Map.elems $ Map.mapWithKey (\mode fis -> genMode ent mode fis) map))
 
 genMode :: Entity -> InteractionMode -> V.Vector FieldInfo -> Text
@@ -148,13 +193,14 @@ genMode ent@(Entity nameEnt) mode unfiltered = -- source code for one entity(/mo
     let -- source = V.foldl' append "" $ V.map dataAndFieldInstance fis -- TODO filter out globally defined ones
         doc = "\n-- Entity:" <> nameEnt <> ", mode:" <> T.pack (show mode)
         retDef = getRetDef ent mode
-        toBS = if mode /= Reading
-                then genToBsInstances unfiltered
-                else ""
+        toBS = ""
+                --if mode /= Reading
+                --then genToBsInstances unfiltered
+                --else ""
         m = genFcts mode ent unfiltered
         isInstances = genClassWitnesses ent mode unfiltered
     in doc <> toBS <> isInstances <> retDef <> m <>
-        if nameEnt == "AdAccount"
+        if nameEnt == "AdAccount" && mode == Reading
             then adAccIdDetails <> genGetId
             else ""
 
@@ -165,9 +211,9 @@ genToBsInstances :: V.Vector FieldInfo -> Text
 genToBsInstances fis = myConcat $ V.map go fis
     where
         go fi =
-         let nt = fieldToAdt fi <> "_"
-         in "\ninstance ToBS " <> nt <> " where\n\t"
-            <> "toBS (" <> nt <> " a) = toBS a\n"
+         let nt = fieldToAdt fi <> "_" -- FIXME
+         in "\ninstance ToBS " <> nt <> " where\n"
+            <> "\ttoBS (" <> nt <> " a) = toBS a\n"
 
 getRetDef :: Entity -> InteractionMode -> Text
 getRetDef ent mode =
@@ -319,7 +365,7 @@ getterField :: FieldInfo -> Text
 getterField fi =
     let fieldName = name fi
         adtName = fieldToAdt fi
-    in "\n" <> fieldName <> " r = r `get` " <> adtName
+    in "\n" <> fieldName <> " r = r `Rec.get` " <> adtName
 
 adAccIdDetails :: Text
 adAccIdDetails = "type AdAccountIdDetails = Id :*: AccountId :*: Nil\n"
@@ -376,9 +422,12 @@ getFctType ent mode =
         param = if mode == Reading
                     then " fl r"
                     else " r"
+        idConstr = case Map.lookup (ent, mode) idTypeMap of
+                    Just x -> x
+                    Nothing -> "Id_"
     in
-    fctName <> " :: (R.MonadResource m, MonadBaseControl IO m, " <> className <> param <> ") =>\n\t\
-               \Id_    -- ^ Ad Account Id\n\t\
+    fctName <> " :: (R.MonadResource m, MonadBaseControl IO m, " <> className <> param <> ") =>\n\t"
+            <> idConstr <> "    -- ^ Ad Account Id\n\t\
             \-> " <> argName <> "     -- ^ Arguments to be passed to Facebook.\n\t\
             \-> " <> maybeToken <> " UserAccessToken -- ^ Optional user access token.\n\t\
             \-> FacebookT " <> auth <> " m " <> pager'
@@ -395,7 +444,10 @@ genFct ent mode defFields =
         argName = if mode == Reading
                     then "fl"
                     else "r"
-    in fctName <> " (Id_ id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\" <> id <> \"" <> url
+        idConstr = case Map.lookup (ent, mode) idTypeMap of
+                    Just x -> x
+                    Nothing -> "Id_"
+    in fctName <> " (" <> idConstr <> " id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\" <> id <> \"" <> url
        <> "\") " <> args defFields <> maybeToken <> "mtoken\n\n"
 
 modeToArgs Types _ = ""
@@ -407,7 +459,7 @@ modeToArgs Deleting _ = "(toForm r) "
 modeToMethod :: InteractionMode -> Text
 modeToMethod Reading = "getObject"
 modeToMethod Creating = "postForm"
-modeToMethod Updating = "postObject"
+modeToMethod Updating = "postForm"
 modeToMethod Deleting = "deleteForm"
 
 fieldToAdt :: FieldInfo -> Text

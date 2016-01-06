@@ -63,7 +63,6 @@ Ad Account,Creating,partner,string,"This could be FBMP or FBX parthner if there 
 Ad Account,Reading,timezone_offset_hours_utc,float,Time Zone difference from UTC,,
 Ad Account,Creating,invoice,boolean,"If business manager has Business Manager Owned Normal Credit Line on file on the FB CRM, it will attach the ad account to that credit line.",,
 Ad Account,Reading,age,float,"Amount of time the ad account has been open, in days",,
-Ad Account,Creating,adaccounts,list<string>,string&gt,,
 Ad Account,Reading,business_state,string,State abbreviation for business address,,
 Ad Account,Creating,funding_id,numeric string or integer,ID of the payment method. If the account does not have a payment method it will still be possible to create ads but these ads will get no delivery.,,
 Ad Account,Reading,min_daily_budget,unsigned int32,The minimum daily budget for this ad account,,

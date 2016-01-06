@@ -15,7 +15,8 @@ import Facebook.Gen.Environment
 import Facebook.Gen.Types
 import Facebook.Gen.CodeGenStr
 
-csvFiles = V.fromList ["data/adaccount.csv", "data/adcampaign.csv", "data/adset.csv", "data/adimage.csv"] --, "data/insights.csv", ] -- TODO
+csvFiles = V.fromList ["data/adaccount.csv", "data/adcampaign.csv", "data/adset.csv",
+                       "data/adimage.csv", "data/adcreative.csv", "data/ad.csv", "data/adlabel.csv"]
 
 main :: IO ()
 main = do
