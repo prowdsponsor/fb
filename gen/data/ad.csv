@@ -1,0 +1,59 @@
+Entity,InteractionMode,FieldName,FieldType,Description,Required,InResponse
+Ad,Creating,adset_id,unsigned int32,The ID of the ad set.,,
+Ad,Creating,date_format,string,The format of the date.,,
+Ad,Deleting,id,numeric string,The ID of this ad.Required,y,
+Ad,Updating,name,string,Name of the ad.,,
+Ad,Updating,adset_id,unsigned int32,The ID of the ad set.,,
+Ad,Updating,tracking_specs,Object,Tracking specs,,
+Ad,Updating,bid_amount,integer,Bid amount for this ad,,
+Ad,Reading,campaign,AdCampaignGroup,Ad campaign that contains this ad,,
+Ad,Updating,creative,AdCreativeId,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",,
+Ad,Reading,created_time,datetime,Created time,,
+Ad,Creating,bid_amount,integer,Bid amount for this ad,,
+Ad,Updating,id,string,The ID of this ad.Required,y,
+Ad,Reading,name,string,Name of the ad.,,
+Ad,Reading,updated_time,datetime,Updated time,,
+Ad,Creating,tracking_specs,Object,Tracking specs,,
+Ad,Creating,status,ConfigureStatus,"Only ACTIVE and PAUSED are valid during creation. Other statuses
+        can be used for update. When an ad is created, it will first go through
+        ad review, and will have the ad status PENDING_REVIEW before it
+        finishes review and reverts back to your selected status of ACTIVE
+        or PAUSED. During testing, it is recommended to set ads to a PAUSED
+        status so as to not incur accidental spend.",,
+Ad,Reading,ad_review_feedback,AdgroupReviewFeedback,"The review feedback for
+        this ad after it is reviewed.",,
+Ad,Updating,status,ConfigureStatus,"Only ACTIVE and PAUSED are valid during creation. Other statuses
+        can be used for update. When an ad is created, it will first go through
+        ad review, and will have the ad status PENDING_REVIEW before it
+        finishes review and reverts back to your selected status of ACTIVE
+        or PAUSED. During testing, it is recommended to set ads to a PAUSED
+        status so as to not incur accidental spend.",,
+Ad,Reading,bid_amount,integer,Bid amount for this ad,,
+Ad,Updating,redownload,boolean,Set this value to true and the API will respond with all fields instead of just id.,,
+Ad,Reading,last_updated_by_app_id,id,Last Updated By App ID,,
+Ad,Creating,name,string,Name of the ad.,,
+Ad,Reading,conversion_specs,list<ConversionActionQuery>,Conversion specs,,
+Ad,Creating,creative,AdCreativeId,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",y,
+Ad,Creating,redownload,boolean,Set this value to true and the API will respond with all fields instead of just id.,,
+Ad,Reading,id,numeric string,The ID of this ad.Default,y,
+Ad,Reading,bid_type,BidType,Bid type,,
+Ad,Reading,adset,AdCampaign,Ad set that contains this ad,,
+Ad,Creating,id,string,The ID of this ad.Required,y,
+Ad,Reading,configured_status,ConfigureStatus,The configured status of the ad.,,
+Ad,Reading,campaign_id,numeric string,ID of the ad campaign that contains this ad,,
+Ad,Updating,adlabels,list<Object>,Ad labels associated with this ad,,
+Ad,Reading,adlabels,list<AdLabel>,Ad labels associated with this ad,,
+Ad,Updating,campaign_group_id,unsigned int32,The ID of the campaign.,,
+Ad,Reading,tracking_specs,list<ConversionActionQuery>,Tracking specs,,
+Ad,Reading,adset_id,unsigned int32,ID of the ad set that contains the ad,,
+Ad,Updating,display_sequence,unsigned int32,The sequence of the ad within the same campaign,,
+Ad,Creating,adlabels,list<Objec>,Ad labels associated with this ad,,
+Ad,Reading,account_id,numeric string,The ID of the ad account that this ad belongs to.,,
+Ad,Updating,execution_options,list<ExecOption>,"Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. synchronous_ad_review: this option should not be used by itself. It should always be specified with validate_only. When these options are specified, the API call will perform Ads Integrity validations, which include message language checking, image 20% text rule, and so on, as well as the validation logics.If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
+Ad,Reading,creative_id,string,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",y,
+Ad,Creating,display_sequence,unsigned int32,The sequence of the ad within the same campaign,,
+Ad,Creating,execution_options,list<ExecOption>,"Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. synchronous_ad_review: this option should not be used by itself. It should always be specified with validate_only. When these options are specified, the API call will perform Ads Integrity validations, which include message language checking, image 20% text rule, and so on, as well as the validation logics.If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
+Ad,Creating,campaign_group_id,unsigned int32,The ID of the campaign.,,
+Ad,Reading,effective_status,EffectiveStatus,"The effective status of the ad. The status could be effective either
+        because of its own status, or the status of its parent units.",,
+Ad,Reading,bid_info,"map<string, unsigned int32>","A dictionary of {objective}:{value} that you place on your bid, based on the bid_type of ad set. Values are defined in your currency's minimum denomination:For bid_type=CPM, bid_info={'IMPRESSIONS':}For bid_type=CPC, bid_info={'CLICKS':}For bid_type=ABSOLUTE_OCPM, bid_info={'ACTIONS':, 'REACH':, 'CLICKS':, 'SOCIAL':}For bid_type=CPA, bid_info={'ACTIONS':}",,
