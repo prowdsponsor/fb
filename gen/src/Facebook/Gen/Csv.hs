@@ -7,6 +7,8 @@ import Control.Monad (mzero)
 import Data.Csv
 import Data.Text hiding (length)
 import qualified Data.Text as T
+import Control.Applicative
+import qualified Data.Vector as V
 
 import Facebook.Gen.Types
 
@@ -18,7 +20,7 @@ data CsvLine = CsvLine {
 
 instance FromRecord CsvLine where
     parseRecord v
-        | length v == 7 =
+        | V.length v == 7 =
             let ent = Entity <$> v .! 0
                 mode = v .! 1
                 fn = v .! 2

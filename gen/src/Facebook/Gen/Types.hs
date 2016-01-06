@@ -6,6 +6,7 @@ import Data.Text hiding (length)
 import Data.Csv
 import Data.Coerce
 import Control.Monad
+import Control.Applicative
 
 newtype Entity = Entity Text deriving (Show, Ord, Eq)
 data InteractionMode =
