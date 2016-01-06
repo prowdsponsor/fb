@@ -1,8 +1,10 @@
-{-# LANGUAGE ScopedTypeVariables, TypeOperators, GADTs, InstanceSigs, OverloadedStrings, FlexibleContexts, OverlappingInstances, UndecidableInstances, FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables, TypeOperators, GADTs, InstanceSigs, OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverlappingInstances, UndecidableInstances, FunctionalDependencies #-}
+{-# LANGUAGE DefaultSignatures #-}
 
 module Facebook.Records where
 
-import Data.Aeson
+import Data.Aeson hiding (encode, decode)
 import Data.Aeson.Types
 import Data.Text hiding (foldr)
 import Network.HTTP.Client.MultipartFormData
@@ -32,6 +34,11 @@ instance Show Nil where
 -- in order to feed getObject in Facebook/Graph.hs
 class ToBS a where
     toBS :: a -> BS.ByteString
+    default toBS :: Show a => a -> BS.ByteString
+    toBS = toBS . show
+
+instance ToBS String where
+    toBS = B8.pack
 
 instance ToBS Nil where
     toBS _ = ""

@@ -66,7 +66,7 @@ library
     Facebook.Object.Marketing.TargetingSpecs.Location
     Facebook.Object.Marketing.TargetingSpecs.Mobile
     Facebook.Object.Marketing.TargetingSpecs.Placement
-    Facebook.Object.Marketing.GettingStarted
+    --Facebook.Object.Marketing.GettingStarted
   other-modules:
     Facebook.Types
     Facebook.Monad
