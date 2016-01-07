@@ -364,13 +364,15 @@ dataAndFieldInstance fi =
         fieldType = type_ fi
         fieldName = name fi
     in "\ndata "  <> adtName <> " = " <> adtName <> "\n"
-        <> "newtype " <> nt <> " = " <> nt <> " { un" <> nt <> " :: " 
-         <> fieldTypeParan fieldType <> " } deriving " <> derivings fieldType <> "\n"
+        <> "newtype " <> nt <> " = " <> nt <> " "
+        <> fieldTypeParan fieldType <> " deriving " <> derivings fieldType <> "\n"
         -- <> newtypeInstances newtypeName
         <> "instance Field " <> adtName <> " where\n\t"
         <> "type FieldValue " <> adtName <> " = " <> nt <> "\n\t"
         <> "fieldName _ = \"" <> fieldName <> "\"\n\t"
         <> "fieldLabel = " <> adtName <> "\n"
+        <> "un" <> nt <> " :: " <> nt <> " -> " <> fieldType <> "\n"
+        <> "un" <> nt <> " (" <> nt <> " x) = x\n"
 
 newtypeName :: FieldInfo -> Text
 newtypeName fi =
