@@ -70,18 +70,19 @@ entityModeRetType =
     Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
                   ((Entity "AdImage", Deleting), "Success"),
                   ((Entity "AdCampaign", Deleting), "Success"),
+                  ((Entity "AdSet", Creating), "CreateAdSetId"),
                   ((Entity "AdCampaign", Creating), "CreateCampaignId")]
 
-
--- Does the generated function return a Pager?
 idTypeMap =
-    Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId")]
+    Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),
+                  ((Entity "AdSet", Deleting), "CreateAdSetId")]
 
 -- Does the generated function return a Pager?
 entityModeRetDefs :: Map.Map (Entity, InteractionMode) Text
 entityModeRetDefs =
     Map.fromList [((Entity "AdImage", Creating), imgCreate),
-                  ((Entity "AdCampaign", Creating), campaignCreate)]
+                  ((Entity "AdCampaign", Creating), campaignCreate),
+                  ((Entity "AdSet", Creating), adsetCreate)]
 
 imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
                 \\timages  :: Map.Map Text SetImg\n\
@@ -107,6 +108,14 @@ campaignCreate =
      \instance FromJSON CreateCampaignId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateCampaignId <$> v .: \"id\"\n"
+
+adsetCreate =
+    "data CreateAdSetId = CreateAdSetId {\n\
+     \\tadsetId :: Text\n\
+     \\t} deriving (Show, Generic)\n\
+     \instance FromJSON CreateAdSetId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateAdSetId <$> v .: \"id\"\n"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
@@ -355,8 +364,8 @@ dataAndFieldInstance fi =
         fieldType = type_ fi
         fieldName = name fi
     in "\ndata "  <> adtName <> " = " <> adtName <> "\n"
-        <> "newtype " <> nt <> " = " <> nt
-        <> " " <> fieldTypeParan fieldType <> " deriving " <> derivings fieldType <> "\n"
+        <> "newtype " <> nt <> " = " <> nt <> " { un" <> nt <> " :: " 
+         <> fieldTypeParan fieldType <> " } deriving " <> derivings fieldType <> "\n"
         -- <> newtypeInstances newtypeName
         <> "instance Field " <> adtName <> " where\n\t"
         <> "type FieldValue " <> adtName <> " = " <> nt <> "\n\t"
