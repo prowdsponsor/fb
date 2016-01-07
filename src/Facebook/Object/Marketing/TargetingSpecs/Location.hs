@@ -4,7 +4,7 @@ module Facebook.Object.Marketing.TargetingSpecs.Location where
 
 import Data.Text (Text, unpack, pack)
 import Data.Aeson
-import Facebook.Object.Marketing.Types
+--import Facebook.Object.Marketing.Types
 import GHC.Generics
 
 -- | Location

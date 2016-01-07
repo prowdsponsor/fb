@@ -4,7 +4,7 @@ module Facebook.Object.Marketing.TargetingSpecs.Demographies where
 
 import Data.Text (Text, unpack, pack)
 import Data.Aeson
-import Facebook.Object.Marketing.Types
+--import Facebook.Object.Marketing.Types
 
 -- | Demographics and events
 --   See https://developers.facebook.com/docs/marketing-api/reference/ad-campaign#demographics

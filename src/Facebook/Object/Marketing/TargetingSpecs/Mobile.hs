@@ -5,7 +5,7 @@ module Facebook.Object.Marketing.TargetingSpecs.Mobile where
 import GHC.Generics
 import Data.Text (Text, unpack, pack)
 import Data.Aeson
-import Facebook.Object.Marketing.Types
+--import Facebook.Object.Marketing.Types
 
 -- | Mobile
 --   See https://developers.facebook.com/docs/marketing-api/reference/ad-campaign#mobile
@@ -22,14 +22,13 @@ data MobileTargeting = MobileTargetting
 
 instance ToJSON MobileTargeting
 
-instance ToFbText MobileOS where
-  toFbText (IOS IOS_Any) = "iOS"
-  toFbText (IOS version) = error "Not implemented"
-  toFbText (Android Android_Any) = "Android"
-  toFbText (Android version) =  error "Not implemented"
+mobOSToText (IOS IOS_Any) = "iOS"
+mobOSToText (IOS version) = error "Not implemented"
+mobOSToText (Android Android_Any) = "Android"
+mobOSToText (Android version) =  error "Not implemented"
 
 instance ToJSON MobileOS where
-  toJSON = String . toFbText
+  toJSON = String . mobOSToText
 
 
 data IOSVersion  = IOS_2 | IOS_3 | IOS_4 | IOS_4_3 | IOS_5 |
