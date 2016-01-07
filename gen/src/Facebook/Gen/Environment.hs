@@ -23,7 +23,7 @@ import Debug.Trace
 typesMap :: Map.Map Text Text
 typesMap =
     Map.fromList [("string", "Text")
-                , ("unsigned int32", "Word32")
+                , ("unsigned int32", "Int")
                 , ("int32", "Int")
                 , ("int", "Integer")
                 , ("float", "Float")
@@ -34,7 +34,7 @@ typesMap =
                 , ("UTF-8 encoded string", "BS.ByteString")
                 , ("numeric string or integer", "Text") -- ???
                 , ("integer", "Integer")
-                , ("list<unsigned int32>", "Vector Word32")
+                , ("list<unsigned int32>", "Vector Int")
                 , ("list<string>", "Vector Text")
                 , ("list<numeric string>", "Vector Text")
                 , ("list<numeric string or integer>", "Vector Text")
@@ -63,7 +63,7 @@ typesMap =
                 , ("AdCreativeId", "Text")
                 , ("RunStatus", "RunStatusADT")
                 , ("map<string, int32>", "Map.Map Text Int")
-                , ("map<string, unsigned int32>", "Map.Map Text Word32")
+                , ("map<string, unsigned int32>", "Map.Map Text Int")
                 , ("dictionary", "A.Value") -- ???
                 , ("Object", "A.Value")] -- ???
 type ModeFieldInfoMap = Map.Map InteractionMode (Vector FieldInfo)

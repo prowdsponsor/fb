@@ -35,7 +35,6 @@ imports =
                 "import Data.Text.Read (decimal)",
                 "import Data.Scientific (toBoundedInteger)",
                 "import qualified Data.Text.Encoding as TE",
-                "import Data.Word (Word32)",
                 "import GHC.Generics (Generic)",
                 "import qualified Data.Map.Strict as Map",
                 "import Data.Vector (Vector)",
@@ -143,9 +142,9 @@ toBsInstances = -- FIXME, look at old SimpleType class for instances
   \instance ToBS Char where\n\
   \\ttoBS = B8.singleton\n\
   \instance ToBS Integer\n\
+  \instance ToBS Int\n\
   \instance ToBS Bool\n\
   \instance ToBS A.Value\n\
-  \instance ToBS Word32\n\
   \instance ToBS Float\n\
   \instance ToBS a => ToBS (Vector a) where\n\
   \\ttoBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs\n\
@@ -335,7 +334,7 @@ genJsonNewtype fis =
     in T.concat $ List.map typesToJsonInstances types
 
 typesToJsonInstances :: (Text, Text, Text) -> Text
-typesToJsonInstances (nt, "Word32", "Text") =
+typesToJsonInstances (nt, "Int", "Text") =
     let create = "pure $ " <> nt <> " num"
     in "instance A.FromJSON " <> nt <> " where\n\
         \\tparseJSON (Number x) =\n\

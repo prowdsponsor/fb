@@ -37,7 +37,10 @@ instance Eq FieldInfo where
 
 instance Ord FieldInfo where -- order by type string in order to choose type when they mismatch... ugly hack
     compare (FieldInfo _ t1 _ _ _)
-            (FieldInfo _ t2 _ _ _) = compare t1 t2
+            (FieldInfo _ t2 _ _ _) = cmp t1 t2
+                where
+                    cmp "Int" "Text" = GT -- FIXME!!!!
+                    cmp a b = compare a b
 
 instance FromField Boolean where
     parseField s
