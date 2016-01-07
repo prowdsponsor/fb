@@ -15,9 +15,11 @@ import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -31,319 +33,389 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Facebook.Object.Marketing.Types
 
 data ActionSpec = ActionSpec
-newtype ActionSpec_ = ActionSpec_ (Vector Word32) deriving (Show, Generic)
-instance A.FromJSON ActionSpec_
-instance A.ToJSON ActionSpec_
+newtype ActionSpec_ = ActionSpec_ (Vector Int) deriving (Show, Generic)
 instance Field ActionSpec where
 	type FieldValue ActionSpec = ActionSpec_
 	fieldName _ = "action_spec"
 	fieldLabel = ActionSpec
+unActionSpec_ :: ActionSpec_ -> Vector Int
+unActionSpec_ (ActionSpec_ x) = x
 
 data CallToAction = CallToAction
 newtype CallToAction_ = CallToAction_ A.Value deriving (Show, Generic)
-instance A.FromJSON CallToAction_
-instance A.ToJSON CallToAction_
 instance Field CallToAction where
 	type FieldValue CallToAction = CallToAction_
 	fieldName _ = "call_to_action"
 	fieldLabel = CallToAction
+unCallToAction_ :: CallToAction_ -> A.Value
+unCallToAction_ (CallToAction_ x) = x
 
 data PlacePageSetId = PlacePageSetId
 newtype PlacePageSetId_ = PlacePageSetId_ Text deriving (Show, Generic)
-instance A.FromJSON PlacePageSetId_
-instance A.ToJSON PlacePageSetId_
 instance Field PlacePageSetId where
 	type FieldValue PlacePageSetId = PlacePageSetId_
 	fieldName _ = "place_page_set_id"
 	fieldLabel = PlacePageSetId
+unPlacePageSetId_ :: PlacePageSetId_ -> Text
+unPlacePageSetId_ (PlacePageSetId_ x) = x
 
 data Value = Value
 newtype Value_ = Value_ A.Value deriving (Show, Generic)
-instance A.FromJSON Value_
-instance A.ToJSON Value_
 instance Field Value where
 	type FieldValue Value = Value_
 	fieldName _ = "value"
 	fieldLabel = Value
+unValue_ :: Value_ -> A.Value
+unValue_ (Value_ x) = x
 
 data ImageFile = ImageFile
 newtype ImageFile_ = ImageFile_ Text deriving (Show, Generic)
-instance A.FromJSON ImageFile_
-instance A.ToJSON ImageFile_
 instance Field ImageFile where
 	type FieldValue ImageFile = ImageFile_
 	fieldName _ = "image_file"
 	fieldLabel = ImageFile
+unImageFile_ :: ImageFile_ -> Text
+unImageFile_ (ImageFile_ x) = x
 
 data FollowRedirect = FollowRedirect
 newtype FollowRedirect_ = FollowRedirect_ Bool deriving (Show, Generic)
-instance A.FromJSON FollowRedirect_
-instance A.ToJSON FollowRedirect_
 instance Field FollowRedirect where
 	type FieldValue FollowRedirect = FollowRedirect_
 	fieldName _ = "follow_redirect"
 	fieldLabel = FollowRedirect
+unFollowRedirect_ :: FollowRedirect_ -> Bool
+unFollowRedirect_ (FollowRedirect_ x) = x
 
 data ObjectInstagramId = ObjectInstagramId
-newtype ObjectInstagramId_ = ObjectInstagramId_ Word32 deriving (Show, Generic)
-instance A.FromJSON ObjectInstagramId_
-instance A.ToJSON ObjectInstagramId_
+newtype ObjectInstagramId_ = ObjectInstagramId_ Int deriving (Show, Generic)
 instance Field ObjectInstagramId where
 	type FieldValue ObjectInstagramId = ObjectInstagramId_
 	fieldName _ = "object_instagram_id"
 	fieldLabel = ObjectInstagramId
+unObjectInstagramId_ :: ObjectInstagramId_ -> Int
+unObjectInstagramId_ (ObjectInstagramId_ x) = x
 
 data VideoId = VideoId
-newtype VideoId_ = VideoId_ Word32 deriving (Show, Generic)
-instance A.FromJSON VideoId_
-instance A.ToJSON VideoId_
+newtype VideoId_ = VideoId_ Int deriving (Show, Generic)
 instance Field VideoId where
 	type FieldValue VideoId = VideoId_
 	fieldName _ = "video_id"
 	fieldLabel = VideoId
+unVideoId_ :: VideoId_ -> Int
+unVideoId_ (VideoId_ x) = x
 
 data Image = Image
 newtype Image_ = Image_ Text deriving (Show, Generic)
-instance A.FromJSON Image_
-instance A.ToJSON Image_
 instance Field Image where
 	type FieldValue Image = Image_
 	fieldName _ = "image"
 	fieldLabel = Image
+unImage_ :: Image_ -> Text
+unImage_ (Image_ x) = x
 
 data AppLink = AppLink
 newtype AppLink_ = AppLink_ Text deriving (Show, Generic)
-instance A.FromJSON AppLink_
-instance A.ToJSON AppLink_
 instance Field AppLink where
 	type FieldValue AppLink = AppLink_
 	fieldName _ = "app_link"
 	fieldLabel = AppLink
+unAppLink_ :: AppLink_ -> Text
+unAppLink_ (AppLink_ x) = x
 
 data LinkCaption = LinkCaption
 newtype LinkCaption_ = LinkCaption_ Text deriving (Show, Generic)
-instance A.FromJSON LinkCaption_
-instance A.ToJSON LinkCaption_
 instance Field LinkCaption where
 	type FieldValue LinkCaption = LinkCaption_
 	fieldName _ = "link_caption"
 	fieldLabel = LinkCaption
+unLinkCaption_ :: LinkCaption_ -> Text
+unLinkCaption_ (LinkCaption_ x) = x
 
 data GetMovieShowtimes = GetMovieShowtimes
 newtype GetMovieShowtimes_ = GetMovieShowtimes_ Bool deriving (Show, Generic)
-instance A.FromJSON GetMovieShowtimes_
-instance A.ToJSON GetMovieShowtimes_
 instance Field GetMovieShowtimes where
 	type FieldValue GetMovieShowtimes = GetMovieShowtimes_
 	fieldName _ = "get_movie_showtimes"
 	fieldLabel = GetMovieShowtimes
+unGetMovieShowtimes_ :: GetMovieShowtimes_ -> Bool
+unGetMovieShowtimes_ (GetMovieShowtimes_ x) = x
 
 data Leadgen = Leadgen
 newtype Leadgen_ = Leadgen_ A.Value deriving (Show, Generic)
-instance A.FromJSON Leadgen_
-instance A.ToJSON Leadgen_
 instance Field Leadgen where
 	type FieldValue Leadgen = Leadgen_
 	fieldName _ = "leadgen"
 	fieldLabel = Leadgen
+unLeadgen_ :: Leadgen_ -> A.Value
+unLeadgen_ (Leadgen_ x) = x
 
 data LinkDescription = LinkDescription
 newtype LinkDescription_ = LinkDescription_ Text deriving (Show, Generic)
-instance A.FromJSON LinkDescription_
-instance A.ToJSON LinkDescription_
 instance Field LinkDescription where
 	type FieldValue LinkDescription = LinkDescription_
 	fieldName _ = "link_description"
 	fieldLabel = LinkDescription
+unLinkDescription_ :: LinkDescription_ -> Text
+unLinkDescription_ (LinkDescription_ x) = x
 
 data Sponsorship = Sponsorship
 newtype Sponsorship_ = Sponsorship_ A.Value deriving (Show, Generic)
-instance A.FromJSON Sponsorship_
-instance A.ToJSON Sponsorship_
 instance Field Sponsorship where
 	type FieldValue Sponsorship = Sponsorship_
 	fieldName _ = "sponsorship"
 	fieldLabel = Sponsorship
+unSponsorship_ :: Sponsorship_ -> A.Value
+unSponsorship_ (Sponsorship_ x) = x
 
 data Application = Application
 newtype Application_ = Application_ Text deriving (Show, Generic)
-instance A.FromJSON Application_
-instance A.ToJSON Application_
 instance Field Application where
 	type FieldValue Application = Application_
 	fieldName _ = "application"
 	fieldLabel = Application
+unApplication_ :: Application_ -> Text
+unApplication_ (Application_ x) = x
 
 data VideoAnnotation = VideoAnnotation
 newtype VideoAnnotation_ = VideoAnnotation_ A.Value deriving (Show, Generic)
-instance A.FromJSON VideoAnnotation_
-instance A.ToJSON VideoAnnotation_
 instance Field VideoAnnotation where
 	type FieldValue VideoAnnotation = VideoAnnotation_
 	fieldName _ = "video_annotation"
 	fieldLabel = VideoAnnotation
+unVideoAnnotation_ :: VideoAnnotation_ -> A.Value
+unVideoAnnotation_ (VideoAnnotation_ x) = x
 
 data StartTimeInSec = StartTimeInSec
-newtype StartTimeInSec_ = StartTimeInSec_ Word32 deriving (Show, Generic)
-instance A.FromJSON StartTimeInSec_
-instance A.ToJSON StartTimeInSec_
+newtype StartTimeInSec_ = StartTimeInSec_ Int deriving (Show, Generic)
 instance Field StartTimeInSec where
 	type FieldValue StartTimeInSec = StartTimeInSec_
 	fieldName _ = "start_time_in_sec"
 	fieldLabel = StartTimeInSec
+unStartTimeInSec_ :: StartTimeInSec_ -> Int
+unStartTimeInSec_ (StartTimeInSec_ x) = x
 
 data PolicyUrl = PolicyUrl
 newtype PolicyUrl_ = PolicyUrl_ Text deriving (Show, Generic)
-instance A.FromJSON PolicyUrl_
-instance A.ToJSON PolicyUrl_
 instance Field PolicyUrl where
 	type FieldValue PolicyUrl = PolicyUrl_
 	fieldName _ = "policy_url"
 	fieldLabel = PolicyUrl
+unPolicyUrl_ :: PolicyUrl_ -> Text
+unPolicyUrl_ (PolicyUrl_ x) = x
 
 data Link = Link
 newtype Link_ = Link_ Text deriving (Show, Generic)
-instance A.FromJSON Link_
-instance A.ToJSON Link_
 instance Field Link where
 	type FieldValue Link = Link_
 	fieldName _ = "link"
 	fieldLabel = Link
+unLink_ :: Link_ -> Text
+unLink_ (Link_ x) = x
 
 data ProductLink = ProductLink
 newtype ProductLink_ = ProductLink_ Text deriving (Show, Generic)
-instance A.FromJSON ProductLink_
-instance A.ToJSON ProductLink_
 instance Field ProductLink where
 	type FieldValue ProductLink = ProductLink_
 	fieldName _ = "product_link"
 	fieldLabel = ProductLink
+unProductLink_ :: ProductLink_ -> Text
+unProductLink_ (ProductLink_ x) = x
 
 data EndTimeInSec = EndTimeInSec
-newtype EndTimeInSec_ = EndTimeInSec_ Word32 deriving (Show, Generic)
-instance A.FromJSON EndTimeInSec_
-instance A.ToJSON EndTimeInSec_
+newtype EndTimeInSec_ = EndTimeInSec_ Int deriving (Show, Generic)
 instance Field EndTimeInSec where
 	type FieldValue EndTimeInSec = EndTimeInSec_
 	fieldName _ = "end_time_in_sec"
 	fieldLabel = EndTimeInSec
+unEndTimeInSec_ :: EndTimeInSec_ -> Int
+unEndTimeInSec_ (EndTimeInSec_ x) = x
 
 data Page = Page
 newtype Page_ = Page_ Text deriving (Show, Generic)
-instance A.FromJSON Page_
-instance A.ToJSON Page_
 instance Field Page where
 	type FieldValue Page = Page_
 	fieldName _ = "page"
 	fieldLabel = Page
+unPage_ :: Page_ -> Text
+unPage_ (Page_ x) = x
 
 data FallbackTestUrl = FallbackTestUrl
 newtype FallbackTestUrl_ = FallbackTestUrl_ Text deriving (Show, Generic)
-instance A.FromJSON FallbackTestUrl_
-instance A.ToJSON FallbackTestUrl_
 instance Field FallbackTestUrl where
 	type FieldValue FallbackTestUrl = FallbackTestUrl_
 	fieldName _ = "fallback_test_url"
 	fieldLabel = FallbackTestUrl
+unFallbackTestUrl_ :: FallbackTestUrl_ -> Text
+unFallbackTestUrl_ (FallbackTestUrl_ x) = x
 
 data FollowUpActionUrl = FollowUpActionUrl
 newtype FollowUpActionUrl_ = FollowUpActionUrl_ Text deriving (Show, Generic)
-instance A.FromJSON FollowUpActionUrl_
-instance A.ToJSON FollowUpActionUrl_
 instance Field FollowUpActionUrl where
 	type FieldValue FollowUpActionUrl = FollowUpActionUrl_
 	fieldName _ = "follow_up_action_url"
 	fieldLabel = FollowUpActionUrl
+unFollowUpActionUrl_ :: FollowUpActionUrl_ -> Text
+unFollowUpActionUrl_ (FollowUpActionUrl_ x) = x
 
 data SplitFlowUsePost = SplitFlowUsePost
 newtype SplitFlowUsePost_ = SplitFlowUsePost_ Bool deriving (Show, Generic)
-instance A.FromJSON SplitFlowUsePost_
-instance A.ToJSON SplitFlowUsePost_
 instance Field SplitFlowUsePost where
 	type FieldValue SplitFlowUsePost = SplitFlowUsePost_
 	fieldName _ = "split_flow_use_post"
 	fieldLabel = SplitFlowUsePost
+unSplitFlowUsePost_ :: SplitFlowUsePost_ -> Bool
+unSplitFlowUsePost_ (SplitFlowUsePost_ x) = x
 
 data FollowUpTitle = FollowUpTitle
 newtype FollowUpTitle_ = FollowUpTitle_ Text deriving (Show, Generic)
-instance A.FromJSON FollowUpTitle_
-instance A.ToJSON FollowUpTitle_
 instance Field FollowUpTitle where
 	type FieldValue FollowUpTitle = FollowUpTitle_
 	fieldName _ = "follow_up_title"
 	fieldLabel = FollowUpTitle
+unFollowUpTitle_ :: FollowUpTitle_ -> Text
+unFollowUpTitle_ (FollowUpTitle_ x) = x
 
 data NeedSplitFlow = NeedSplitFlow
 newtype NeedSplitFlow_ = NeedSplitFlow_ Bool deriving (Show, Generic)
-instance A.FromJSON NeedSplitFlow_
-instance A.ToJSON NeedSplitFlow_
 instance Field NeedSplitFlow where
 	type FieldValue NeedSplitFlow = NeedSplitFlow_
 	fieldName _ = "need_split_flow"
 	fieldLabel = NeedSplitFlow
+unNeedSplitFlow_ :: NeedSplitFlow_ -> Bool
+unNeedSplitFlow_ (NeedSplitFlow_ x) = x
 
 data TcpaCompliant = TcpaCompliant
 newtype TcpaCompliant_ = TcpaCompliant_ Bool deriving (Show, Generic)
-instance A.FromJSON TcpaCompliant_
-instance A.ToJSON TcpaCompliant_
 instance Field TcpaCompliant where
 	type FieldValue TcpaCompliant = TcpaCompliant_
 	fieldName _ = "tcpa_compliant"
 	fieldLabel = TcpaCompliant
+unTcpaCompliant_ :: TcpaCompliant_ -> Bool
+unTcpaCompliant_ (TcpaCompliant_ x) = x
 
 data FollowUpActionText = FollowUpActionText
 newtype FollowUpActionText_ = FollowUpActionText_ Text deriving (Show, Generic)
-instance A.FromJSON FollowUpActionText_
-instance A.ToJSON FollowUpActionText_
 instance Field FollowUpActionText where
 	type FieldValue FollowUpActionText = FollowUpActionText_
 	fieldName _ = "follow_up_action_text"
 	fieldLabel = FollowUpActionText
+unFollowUpActionText_ :: FollowUpActionText_ -> Text
+unFollowUpActionText_ (FollowUpActionText_ x) = x
 
 data LandingPageCta = LandingPageCta
 newtype LandingPageCta_ = LandingPageCta_ Text deriving (Show, Generic)
-instance A.FromJSON LandingPageCta_
-instance A.ToJSON LandingPageCta_
 instance Field LandingPageCta where
 	type FieldValue LandingPageCta = LandingPageCta_
 	fieldName _ = "landing_page_cta"
 	fieldLabel = LandingPageCta
+unLandingPageCta_ :: LandingPageCta_ -> Text
+unLandingPageCta_ (LandingPageCta_ x) = x
 
 data LinkTitle = LinkTitle
 newtype LinkTitle_ = LinkTitle_ Text deriving (Show, Generic)
-instance A.FromJSON LinkTitle_
-instance A.ToJSON LinkTitle_
 instance Field LinkTitle where
 	type FieldValue LinkTitle = LinkTitle_
 	fieldName _ = "link_title"
 	fieldLabel = LinkTitle
+unLinkTitle_ :: LinkTitle_ -> Text
+unLinkTitle_ (LinkTitle_ x) = x
 
 data AdvancedData = AdvancedData
 newtype AdvancedData_ = AdvancedData_ A.Value deriving (Show, Generic)
-instance A.FromJSON AdvancedData_
-instance A.ToJSON AdvancedData_
 instance Field AdvancedData where
 	type FieldValue AdvancedData = AdvancedData_
 	fieldName _ = "advanced_data"
 	fieldLabel = AdvancedData
+unAdvancedData_ :: AdvancedData_ -> A.Value
+unAdvancedData_ (AdvancedData_ x) = x
 
 data CallToActionType = CallToActionType
 newtype CallToActionType_ = CallToActionType_ CallActionType deriving (Show, Generic)
-instance A.FromJSON CallToActionType_
-instance A.ToJSON CallToActionType_
 instance Field CallToActionType where
 	type FieldValue CallToActionType = CallToActionType_
 	fieldName _ = "call_to_action_type"
 	fieldLabel = CallToActionType
+unCallToActionType_ :: CallToActionType_ -> CallActionType
+unCallToActionType_ (CallToActionType_ x) = x
 
 data InstagramPermalinkUrl = InstagramPermalinkUrl
 newtype InstagramPermalinkUrl_ = InstagramPermalinkUrl_ Text deriving (Show, Generic)
-instance A.FromJSON InstagramPermalinkUrl_
-instance A.ToJSON InstagramPermalinkUrl_
 instance Field InstagramPermalinkUrl where
 	type FieldValue InstagramPermalinkUrl = InstagramPermalinkUrl_
 	fieldName _ = "instagram_permalink_url"
 	fieldLabel = InstagramPermalinkUrl
+unInstagramPermalinkUrl_ :: InstagramPermalinkUrl_ -> Text
+unInstagramPermalinkUrl_ (InstagramPermalinkUrl_ x) = x
+instance A.FromJSON ActionSpec_
+instance A.ToJSON ActionSpec_
+instance A.FromJSON CallToAction_
+instance A.ToJSON CallToAction_
+instance A.FromJSON PlacePageSetId_
+instance A.ToJSON PlacePageSetId_
+instance A.FromJSON Value_
+instance A.ToJSON Value_
+instance A.FromJSON ImageFile_
+instance A.ToJSON ImageFile_
+instance A.FromJSON FollowRedirect_
+instance A.ToJSON FollowRedirect_
+instance A.FromJSON ObjectInstagramId_
+instance A.ToJSON ObjectInstagramId_
+instance A.FromJSON VideoId_
+instance A.ToJSON VideoId_
+instance A.FromJSON Image_
+instance A.ToJSON Image_
+instance A.FromJSON AppLink_
+instance A.ToJSON AppLink_
+instance A.FromJSON LinkCaption_
+instance A.ToJSON LinkCaption_
+instance A.FromJSON GetMovieShowtimes_
+instance A.ToJSON GetMovieShowtimes_
+instance A.FromJSON Leadgen_
+instance A.ToJSON Leadgen_
+instance A.FromJSON LinkDescription_
+instance A.ToJSON LinkDescription_
+instance A.FromJSON Sponsorship_
+instance A.ToJSON Sponsorship_
+instance A.FromJSON Application_
+instance A.ToJSON Application_
+instance A.FromJSON VideoAnnotation_
+instance A.ToJSON VideoAnnotation_
+instance A.FromJSON StartTimeInSec_
+instance A.ToJSON StartTimeInSec_
+instance A.FromJSON PolicyUrl_
+instance A.ToJSON PolicyUrl_
+instance A.FromJSON Link_
+instance A.ToJSON Link_
+instance A.FromJSON ProductLink_
+instance A.ToJSON ProductLink_
+instance A.FromJSON EndTimeInSec_
+instance A.ToJSON EndTimeInSec_
+instance A.FromJSON Page_
+instance A.ToJSON Page_
+instance A.FromJSON FallbackTestUrl_
+instance A.ToJSON FallbackTestUrl_
+instance A.FromJSON FollowUpActionUrl_
+instance A.ToJSON FollowUpActionUrl_
+instance A.FromJSON SplitFlowUsePost_
+instance A.ToJSON SplitFlowUsePost_
+instance A.FromJSON FollowUpTitle_
+instance A.ToJSON FollowUpTitle_
+instance A.FromJSON NeedSplitFlow_
+instance A.ToJSON NeedSplitFlow_
+instance A.FromJSON TcpaCompliant_
+instance A.ToJSON TcpaCompliant_
+instance A.FromJSON FollowUpActionText_
+instance A.ToJSON FollowUpActionText_
+instance A.FromJSON LandingPageCta_
+instance A.ToJSON LandingPageCta_
+instance A.FromJSON LinkTitle_
+instance A.ToJSON LinkTitle_
+instance A.FromJSON AdvancedData_
+instance A.ToJSON AdvancedData_
+instance A.FromJSON CallToActionType_
+instance A.ToJSON CallToActionType_
+instance A.FromJSON InstagramPermalinkUrl_
+instance A.ToJSON InstagramPermalinkUrl_
 
 instance ToBS ActionSpec_ where
 	toBS (ActionSpec_ a) = toBS a

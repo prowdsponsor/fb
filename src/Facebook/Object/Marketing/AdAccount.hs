@@ -15,9 +15,11 @@ import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -32,363 +34,443 @@ import Facebook.Object.Marketing.Types
 
 data SpendCapAction = SpendCapAction
 newtype SpendCapAction_ = SpendCapAction_ Text deriving (Show, Generic)
-instance A.FromJSON SpendCapAction_
-instance A.ToJSON SpendCapAction_
 instance Field SpendCapAction where
 	type FieldValue SpendCapAction = SpendCapAction_
 	fieldName _ = "spend_cap_action"
 	fieldLabel = SpendCapAction
+unSpendCapAction_ :: SpendCapAction_ -> Text
+unSpendCapAction_ (SpendCapAction_ x) = x
 
 data BusinessInfo = BusinessInfo
 newtype BusinessInfo_ = BusinessInfo_ A.Value deriving (Show, Generic)
-instance A.FromJSON BusinessInfo_
-instance A.ToJSON BusinessInfo_
 instance Field BusinessInfo where
 	type FieldValue BusinessInfo = BusinessInfo_
 	fieldName _ = "business_info"
 	fieldLabel = BusinessInfo
+unBusinessInfo_ :: BusinessInfo_ -> A.Value
+unBusinessInfo_ (BusinessInfo_ x) = x
 
 data FundingId = FundingId
 newtype FundingId_ = FundingId_ Text deriving (Show, Generic)
-instance A.FromJSON FundingId_
-instance A.ToJSON FundingId_
 instance Field FundingId where
 	type FieldValue FundingId = FundingId_
 	fieldName _ = "funding_id"
 	fieldLabel = FundingId
+unFundingId_ :: FundingId_ -> Text
+unFundingId_ (FundingId_ x) = x
 
 data Invoice = Invoice
 newtype Invoice_ = Invoice_ Bool deriving (Show, Generic)
-instance A.FromJSON Invoice_
-instance A.ToJSON Invoice_
 instance Field Invoice where
 	type FieldValue Invoice = Invoice_
 	fieldName _ = "invoice"
 	fieldLabel = Invoice
+unInvoice_ :: Invoice_ -> Bool
+unInvoice_ (Invoice_ x) = x
 
 data Replace = Replace
 newtype Replace_ = Replace_ Bool deriving (Show, Generic)
-instance A.FromJSON Replace_
-instance A.ToJSON Replace_
 instance Field Replace where
 	type FieldValue Replace = Replace_
 	fieldName _ = "replace"
 	fieldLabel = Replace
+unReplace_ :: Replace_ -> Bool
+unReplace_ (Replace_ x) = x
 
 data Io = Io
 newtype Io_ = Io_ Bool deriving (Show, Generic)
-instance A.FromJSON Io_
-instance A.ToJSON Io_
 instance Field Io where
 	type FieldValue Io = Io_
 	fieldName _ = "io"
 	fieldLabel = Io
+unIo_ :: Io_ -> Bool
+unIo_ (Io_ x) = x
 
 data AdaccountId = AdaccountId
 newtype AdaccountId_ = AdaccountId_ Text deriving (Show, Generic)
-instance A.FromJSON AdaccountId_
-instance A.ToJSON AdaccountId_
 instance Field AdaccountId where
 	type FieldValue AdaccountId = AdaccountId_
 	fieldName _ = "adaccount_id"
 	fieldLabel = AdaccountId
+unAdaccountId_ :: AdaccountId_ -> Text
+unAdaccountId_ (AdaccountId_ x) = x
 
 data PoNumber = PoNumber
 newtype PoNumber_ = PoNumber_ Text deriving (Show, Generic)
-instance A.FromJSON PoNumber_
-instance A.ToJSON PoNumber_
 instance Field PoNumber where
 	type FieldValue PoNumber = PoNumber_
 	fieldName _ = "po_number"
 	fieldLabel = PoNumber
+unPoNumber_ :: PoNumber_ -> Text
+unPoNumber_ (PoNumber_ x) = x
 
 data BusinessCity = BusinessCity
 newtype BusinessCity_ = BusinessCity_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessCity_
-instance A.ToJSON BusinessCity_
 instance Field BusinessCity where
 	type FieldValue BusinessCity = BusinessCity_
 	fieldName _ = "business_city"
 	fieldLabel = BusinessCity
+unBusinessCity_ :: BusinessCity_ -> Text
+unBusinessCity_ (BusinessCity_ x) = x
 
 data FundingSource = FundingSource
 newtype FundingSource_ = FundingSource_ Text deriving (Show, Generic)
-instance A.FromJSON FundingSource_
-instance A.ToJSON FundingSource_
 instance Field FundingSource where
 	type FieldValue FundingSource = FundingSource_
 	fieldName _ = "funding_source"
 	fieldLabel = FundingSource
+unFundingSource_ :: FundingSource_ -> Text
+unFundingSource_ (FundingSource_ x) = x
 
 data HasMigratedPermissions = HasMigratedPermissions
 newtype HasMigratedPermissions_ = HasMigratedPermissions_ Bool deriving (Show, Generic)
-instance A.FromJSON HasMigratedPermissions_
-instance A.ToJSON HasMigratedPermissions_
 instance Field HasMigratedPermissions where
 	type FieldValue HasMigratedPermissions = HasMigratedPermissions_
 	fieldName _ = "has_migrated_permissions"
 	fieldLabel = HasMigratedPermissions
+unHasMigratedPermissions_ :: HasMigratedPermissions_ -> Bool
+unHasMigratedPermissions_ (HasMigratedPermissions_ x) = x
 
 data BusinessCountryCode = BusinessCountryCode
 newtype BusinessCountryCode_ = BusinessCountryCode_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessCountryCode_
-instance A.ToJSON BusinessCountryCode_
 instance Field BusinessCountryCode where
 	type FieldValue BusinessCountryCode = BusinessCountryCode_
 	fieldName _ = "business_country_code"
 	fieldLabel = BusinessCountryCode
+unBusinessCountryCode_ :: BusinessCountryCode_ -> Text
+unBusinessCountryCode_ (BusinessCountryCode_ x) = x
 
 data AmountSpent = AmountSpent
 newtype AmountSpent_ = AmountSpent_ Text deriving (Show, Generic)
-instance A.FromJSON AmountSpent_
-instance A.ToJSON AmountSpent_
 instance Field AmountSpent where
 	type FieldValue AmountSpent = AmountSpent_
 	fieldName _ = "amount_spent"
 	fieldLabel = AmountSpent
+unAmountSpent_ :: AmountSpent_ -> Text
+unAmountSpent_ (AmountSpent_ x) = x
 
 data IsTaxIdRequired = IsTaxIdRequired
 newtype IsTaxIdRequired_ = IsTaxIdRequired_ Bool deriving (Show, Generic)
-instance A.FromJSON IsTaxIdRequired_
-instance A.ToJSON IsTaxIdRequired_
 instance Field IsTaxIdRequired where
 	type FieldValue IsTaxIdRequired = IsTaxIdRequired_
 	fieldName _ = "is_tax_id_required"
 	fieldLabel = IsTaxIdRequired
+unIsTaxIdRequired_ :: IsTaxIdRequired_ -> Bool
+unIsTaxIdRequired_ (IsTaxIdRequired_ x) = x
 
 data BusinessZip = BusinessZip
 newtype BusinessZip_ = BusinessZip_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessZip_
-instance A.ToJSON BusinessZip_
 instance Field BusinessZip where
 	type FieldValue BusinessZip = BusinessZip_
 	fieldName _ = "business_zip"
 	fieldLabel = BusinessZip
+unBusinessZip_ :: BusinessZip_ -> Text
+unBusinessZip_ (BusinessZip_ x) = x
 
 data LastUsedTime = LastUsedTime
 newtype LastUsedTime_ = LastUsedTime_ UTCTime deriving Generic
-instance A.FromJSON LastUsedTime_
-instance A.ToJSON LastUsedTime_
 instance Field LastUsedTime where
 	type FieldValue LastUsedTime = LastUsedTime_
 	fieldName _ = "last_used_time"
 	fieldLabel = LastUsedTime
+unLastUsedTime_ :: LastUsedTime_ -> UTCTime
+unLastUsedTime_ (LastUsedTime_ x) = x
 
 data MinDailyBudget = MinDailyBudget
-newtype MinDailyBudget_ = MinDailyBudget_ Word32 deriving (Show, Generic)
-instance A.FromJSON MinDailyBudget_
-instance A.ToJSON MinDailyBudget_
+newtype MinDailyBudget_ = MinDailyBudget_ Int deriving (Show, Generic)
 instance Field MinDailyBudget where
 	type FieldValue MinDailyBudget = MinDailyBudget_
 	fieldName _ = "min_daily_budget"
 	fieldLabel = MinDailyBudget
+unMinDailyBudget_ :: MinDailyBudget_ -> Int
+unMinDailyBudget_ (MinDailyBudget_ x) = x
 
 data BusinessState = BusinessState
 newtype BusinessState_ = BusinessState_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessState_
-instance A.ToJSON BusinessState_
 instance Field BusinessState where
 	type FieldValue BusinessState = BusinessState_
 	fieldName _ = "business_state"
 	fieldLabel = BusinessState
+unBusinessState_ :: BusinessState_ -> Text
+unBusinessState_ (BusinessState_ x) = x
 
 data Age = Age
 newtype Age_ = Age_ Float deriving (Show, Generic)
-instance A.FromJSON Age_
-instance A.ToJSON Age_
 instance Field Age where
 	type FieldValue Age = Age_
 	fieldName _ = "age"
 	fieldLabel = Age
+unAge_ :: Age_ -> Float
+unAge_ (Age_ x) = x
 
 data TimezoneOffsetHoursUtc = TimezoneOffsetHoursUtc
 newtype TimezoneOffsetHoursUtc_ = TimezoneOffsetHoursUtc_ Float deriving (Show, Generic)
-instance A.FromJSON TimezoneOffsetHoursUtc_
-instance A.ToJSON TimezoneOffsetHoursUtc_
 instance Field TimezoneOffsetHoursUtc where
 	type FieldValue TimezoneOffsetHoursUtc = TimezoneOffsetHoursUtc_
 	fieldName _ = "timezone_offset_hours_utc"
 	fieldLabel = TimezoneOffsetHoursUtc
+unTimezoneOffsetHoursUtc_ :: TimezoneOffsetHoursUtc_ -> Float
+unTimezoneOffsetHoursUtc_ (TimezoneOffsetHoursUtc_ x) = x
 
 data BusinessStreet2 = BusinessStreet2
 newtype BusinessStreet2_ = BusinessStreet2_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessStreet2_
-instance A.ToJSON BusinessStreet2_
 instance Field BusinessStreet2 where
 	type FieldValue BusinessStreet2 = BusinessStreet2_
 	fieldName _ = "business_street2"
 	fieldLabel = BusinessStreet2
+unBusinessStreet2_ :: BusinessStreet2_ -> Text
+unBusinessStreet2_ (BusinessStreet2_ x) = x
 
 data AccountStatus = AccountStatus
-newtype AccountStatus_ = AccountStatus_ Word32 deriving (Show, Generic)
-instance A.FromJSON AccountStatus_
-instance A.ToJSON AccountStatus_
+newtype AccountStatus_ = AccountStatus_ Int deriving (Show, Generic)
 instance Field AccountStatus where
 	type FieldValue AccountStatus = AccountStatus_
 	fieldName _ = "account_status"
 	fieldLabel = AccountStatus
+unAccountStatus_ :: AccountStatus_ -> Int
+unAccountStatus_ (AccountStatus_ x) = x
 
 data BusinessStreet = BusinessStreet
 newtype BusinessStreet_ = BusinessStreet_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessStreet_
-instance A.ToJSON BusinessStreet_
 instance Field BusinessStreet where
 	type FieldValue BusinessStreet = BusinessStreet_
 	fieldName _ = "business_street"
 	fieldLabel = BusinessStreet
+unBusinessStreet_ :: BusinessStreet_ -> Text
+unBusinessStreet_ (BusinessStreet_ x) = x
 
 data EndAdvertiserName = EndAdvertiserName
 newtype EndAdvertiserName_ = EndAdvertiserName_ Text deriving (Show, Generic)
-instance A.FromJSON EndAdvertiserName_
-instance A.ToJSON EndAdvertiserName_
 instance Field EndAdvertiserName where
 	type FieldValue EndAdvertiserName = EndAdvertiserName_
 	fieldName _ = "end_advertiser_name"
 	fieldLabel = EndAdvertiserName
+unEndAdvertiserName_ :: EndAdvertiserName_ -> Text
+unEndAdvertiserName_ (EndAdvertiserName_ x) = x
 
 data BusinessName = BusinessName
 newtype BusinessName_ = BusinessName_ Text deriving (Show, Generic)
-instance A.FromJSON BusinessName_
-instance A.ToJSON BusinessName_
 instance Field BusinessName where
 	type FieldValue BusinessName = BusinessName_
 	fieldName _ = "business_name"
 	fieldLabel = BusinessName
+unBusinessName_ :: BusinessName_ -> Text
+unBusinessName_ (BusinessName_ x) = x
 
 data TaxIdType = TaxIdType
 newtype TaxIdType_ = TaxIdType_ Text deriving (Show, Generic)
-instance A.FromJSON TaxIdType_
-instance A.ToJSON TaxIdType_
 instance Field TaxIdType where
 	type FieldValue TaxIdType = TaxIdType_
 	fieldName _ = "tax_id_type"
 	fieldLabel = TaxIdType
+unTaxIdType_ :: TaxIdType_ -> Text
+unTaxIdType_ (TaxIdType_ x) = x
 
 data Owner = Owner
 newtype Owner_ = Owner_ Text deriving (Show, Generic)
-instance A.FromJSON Owner_
-instance A.ToJSON Owner_
 instance Field Owner where
 	type FieldValue Owner = Owner_
 	fieldName _ = "owner"
 	fieldLabel = Owner
+unOwner_ :: Owner_ -> Text
+unOwner_ (Owner_ x) = x
 
 data TaxIdStatus = TaxIdStatus
-newtype TaxIdStatus_ = TaxIdStatus_ Word32 deriving (Show, Generic)
-instance A.FromJSON TaxIdStatus_
-instance A.ToJSON TaxIdStatus_
+newtype TaxIdStatus_ = TaxIdStatus_ Int deriving (Show, Generic)
 instance Field TaxIdStatus where
 	type FieldValue TaxIdStatus = TaxIdStatus_
 	fieldName _ = "tax_id_status"
 	fieldLabel = TaxIdStatus
+unTaxIdStatus_ :: TaxIdStatus_ -> Int
+unTaxIdStatus_ (TaxIdStatus_ x) = x
 
 data IsPrepayAccount = IsPrepayAccount
 newtype IsPrepayAccount_ = IsPrepayAccount_ Bool deriving (Show, Generic)
-instance A.FromJSON IsPrepayAccount_
-instance A.ToJSON IsPrepayAccount_
 instance Field IsPrepayAccount where
 	type FieldValue IsPrepayAccount = IsPrepayAccount_
 	fieldName _ = "is_prepay_account"
 	fieldLabel = IsPrepayAccount
+unIsPrepayAccount_ :: IsPrepayAccount_ -> Bool
+unIsPrepayAccount_ (IsPrepayAccount_ x) = x
 
 data Balance = Balance
 newtype Balance_ = Balance_ Text deriving (Show, Generic)
-instance A.FromJSON Balance_
-instance A.ToJSON Balance_
 instance Field Balance where
 	type FieldValue Balance = Balance_
 	fieldName _ = "balance"
 	fieldLabel = Balance
+unBalance_ :: Balance_ -> Text
+unBalance_ (Balance_ x) = x
 
 data DisableReason = DisableReason
-newtype DisableReason_ = DisableReason_ Word32 deriving (Show, Generic)
-instance A.FromJSON DisableReason_
-instance A.ToJSON DisableReason_
+newtype DisableReason_ = DisableReason_ Int deriving (Show, Generic)
 instance Field DisableReason where
 	type FieldValue DisableReason = DisableReason_
 	fieldName _ = "disable_reason"
 	fieldLabel = DisableReason
+unDisableReason_ :: DisableReason_ -> Int
+unDisableReason_ (DisableReason_ x) = x
 
 data IsPersonal = IsPersonal
-newtype IsPersonal_ = IsPersonal_ Word32 deriving (Show, Generic)
-instance A.FromJSON IsPersonal_
-instance A.ToJSON IsPersonal_
+newtype IsPersonal_ = IsPersonal_ Int deriving (Show, Generic)
 instance Field IsPersonal where
 	type FieldValue IsPersonal = IsPersonal_
 	fieldName _ = "is_personal"
 	fieldLabel = IsPersonal
+unIsPersonal_ :: IsPersonal_ -> Int
+unIsPersonal_ (IsPersonal_ x) = x
 
 data MinCampaignGroupSpendCap = MinCampaignGroupSpendCap
 newtype MinCampaignGroupSpendCap_ = MinCampaignGroupSpendCap_ Text deriving (Show, Generic)
-instance A.FromJSON MinCampaignGroupSpendCap_
-instance A.ToJSON MinCampaignGroupSpendCap_
 instance Field MinCampaignGroupSpendCap where
 	type FieldValue MinCampaignGroupSpendCap = MinCampaignGroupSpendCap_
 	fieldName _ = "min_campaign_group_spend_cap"
 	fieldLabel = MinCampaignGroupSpendCap
+unMinCampaignGroupSpendCap_ :: MinCampaignGroupSpendCap_ -> Text
+unMinCampaignGroupSpendCap_ (MinCampaignGroupSpendCap_ x) = x
 
 data UserRole = UserRole
 newtype UserRole_ = UserRole_ Text deriving (Show, Generic)
-instance A.FromJSON UserRole_
-instance A.ToJSON UserRole_
 instance Field UserRole where
 	type FieldValue UserRole = UserRole_
 	fieldName _ = "user_role"
 	fieldLabel = UserRole
+unUserRole_ :: UserRole_ -> Text
+unUserRole_ (UserRole_ x) = x
 
 data OffsitePixelsTosAccepted = OffsitePixelsTosAccepted
 newtype OffsitePixelsTosAccepted_ = OffsitePixelsTosAccepted_ Bool deriving (Show, Generic)
-instance A.FromJSON OffsitePixelsTosAccepted_
-instance A.ToJSON OffsitePixelsTosAccepted_
 instance Field OffsitePixelsTosAccepted where
 	type FieldValue OffsitePixelsTosAccepted = OffsitePixelsTosAccepted_
 	fieldName _ = "offsite_pixels_tos_accepted"
 	fieldLabel = OffsitePixelsTosAccepted
+unOffsitePixelsTosAccepted_ :: OffsitePixelsTosAccepted_ -> Bool
+unOffsitePixelsTosAccepted_ (OffsitePixelsTosAccepted_ x) = x
 
 data IoNumber = IoNumber
 newtype IoNumber_ = IoNumber_ Text deriving (Show, Generic)
-instance A.FromJSON IoNumber_
-instance A.ToJSON IoNumber_
 instance Field IoNumber where
 	type FieldValue IoNumber = IoNumber_
 	fieldName _ = "io_number"
 	fieldLabel = IoNumber
+unIoNumber_ :: IoNumber_ -> Text
+unIoNumber_ (IoNumber_ x) = x
 
 data TimezoneName = TimezoneName
 newtype TimezoneName_ = TimezoneName_ Text deriving (Show, Generic)
-instance A.FromJSON TimezoneName_
-instance A.ToJSON TimezoneName_
 instance Field TimezoneName where
 	type FieldValue TimezoneName = TimezoneName_
 	fieldName _ = "timezone_name"
 	fieldLabel = TimezoneName
+unTimezoneName_ :: TimezoneName_ -> Text
+unTimezoneName_ (TimezoneName_ x) = x
 
 data AssetScore = AssetScore
 newtype AssetScore_ = AssetScore_ Float deriving (Show, Generic)
-instance A.FromJSON AssetScore_
-instance A.ToJSON AssetScore_
 instance Field AssetScore where
 	type FieldValue AssetScore = AssetScore_
 	fieldName _ = "asset_score"
 	fieldLabel = AssetScore
+unAssetScore_ :: AssetScore_ -> Float
+unAssetScore_ (AssetScore_ x) = x
 
 data TaxId = TaxId
 newtype TaxId_ = TaxId_ Text deriving (Show, Generic)
-instance A.FromJSON TaxId_
-instance A.ToJSON TaxId_
 instance Field TaxId where
 	type FieldValue TaxId = TaxId_
 	fieldName _ = "tax_id"
 	fieldLabel = TaxId
+unTaxId_ :: TaxId_ -> Text
+unTaxId_ (TaxId_ x) = x
 
 data VerticalName = VerticalName
 newtype VerticalName_ = VerticalName_ Text deriving (Show, Generic)
-instance A.FromJSON VerticalName_
-instance A.ToJSON VerticalName_
 instance Field VerticalName where
 	type FieldValue VerticalName = VerticalName_
 	fieldName _ = "vertical_name"
 	fieldLabel = VerticalName
+unVerticalName_ :: VerticalName_ -> Text
+unVerticalName_ (VerticalName_ x) = x
+instance A.FromJSON SpendCapAction_
+instance A.ToJSON SpendCapAction_
+instance A.FromJSON BusinessInfo_
+instance A.ToJSON BusinessInfo_
+instance A.FromJSON FundingId_
+instance A.ToJSON FundingId_
+instance A.FromJSON Invoice_
+instance A.ToJSON Invoice_
+instance A.FromJSON Replace_
+instance A.ToJSON Replace_
+instance A.FromJSON Io_
+instance A.ToJSON Io_
+instance A.FromJSON AdaccountId_
+instance A.ToJSON AdaccountId_
+instance A.FromJSON PoNumber_
+instance A.ToJSON PoNumber_
+instance A.FromJSON BusinessCity_
+instance A.ToJSON BusinessCity_
+instance A.FromJSON FundingSource_
+instance A.ToJSON FundingSource_
+instance A.FromJSON HasMigratedPermissions_
+instance A.ToJSON HasMigratedPermissions_
+instance A.FromJSON BusinessCountryCode_
+instance A.ToJSON BusinessCountryCode_
+instance A.FromJSON AmountSpent_
+instance A.ToJSON AmountSpent_
+instance A.FromJSON IsTaxIdRequired_
+instance A.ToJSON IsTaxIdRequired_
+instance A.FromJSON BusinessZip_
+instance A.ToJSON BusinessZip_
+instance A.FromJSON LastUsedTime_
+instance A.ToJSON LastUsedTime_
+instance A.FromJSON MinDailyBudget_
+instance A.ToJSON MinDailyBudget_
+instance A.FromJSON BusinessState_
+instance A.ToJSON BusinessState_
+instance A.FromJSON Age_
+instance A.ToJSON Age_
+instance A.FromJSON TimezoneOffsetHoursUtc_
+instance A.ToJSON TimezoneOffsetHoursUtc_
+instance A.FromJSON BusinessStreet2_
+instance A.ToJSON BusinessStreet2_
+instance A.FromJSON AccountStatus_
+instance A.ToJSON AccountStatus_
+instance A.FromJSON BusinessStreet_
+instance A.ToJSON BusinessStreet_
+instance A.FromJSON EndAdvertiserName_
+instance A.ToJSON EndAdvertiserName_
+instance A.FromJSON BusinessName_
+instance A.ToJSON BusinessName_
+instance A.FromJSON TaxIdType_
+instance A.ToJSON TaxIdType_
+instance A.FromJSON Owner_
+instance A.ToJSON Owner_
+instance A.FromJSON TaxIdStatus_
+instance A.ToJSON TaxIdStatus_
+instance A.FromJSON IsPrepayAccount_
+instance A.ToJSON IsPrepayAccount_
+instance A.FromJSON Balance_
+instance A.ToJSON Balance_
+instance A.FromJSON DisableReason_
+instance A.ToJSON DisableReason_
+instance A.FromJSON IsPersonal_
+instance A.ToJSON IsPersonal_
+instance A.FromJSON MinCampaignGroupSpendCap_
+instance A.ToJSON MinCampaignGroupSpendCap_
+instance A.FromJSON UserRole_
+instance A.ToJSON UserRole_
+instance A.FromJSON OffsitePixelsTosAccepted_
+instance A.ToJSON OffsitePixelsTosAccepted_
+instance A.FromJSON IoNumber_
+instance A.ToJSON IoNumber_
+instance A.FromJSON TimezoneName_
+instance A.ToJSON TimezoneName_
+instance A.FromJSON AssetScore_
+instance A.ToJSON AssetScore_
+instance A.FromJSON TaxId_
+instance A.ToJSON TaxId_
+instance A.FromJSON VerticalName_
+instance A.ToJSON VerticalName_
 
 instance ToBS SpendCapAction_ where
 	toBS (SpendCapAction_ a) = toBS a

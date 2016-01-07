@@ -15,9 +15,11 @@ import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -34,12 +36,13 @@ import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
-import Control.Monad
 import System.Locale
+import Control.Monad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text.Encoding as TE
 import Facebook.Object.Marketing.Utility hiding (toBS)
+import Facebook.Object.Marketing.TargetingSpecs
 import Text.Read (readMaybe)
 newtype Money = Money {getMoneyInPennies :: Int} deriving (Eq, Ord, Show, Read, Typeable, Generic, Num)
 
@@ -102,6 +105,8 @@ instance FromJSON ExecOption
 instance ToBS ExecOption
 data OptGoal = NONE | APP_INSTALLS | CLICKS | ENGAGED_USERS | EXTERNAL | EVENT_RESPONSES | IMPRESSIONS | LEAD_GENERATION | LINK_CLICKS | OFFER_CLAIMS | OFFSITE_CONVERSIONS | PAGE_ENGAGEMENT | PAGE_LIKES | POST_ENGAGEMENT | REACH | SOCIAL_IMPRESSIONS | VIDEO_VIEWS deriving (Show, Generic)
 instance FromJSON OptGoal
+instance ToJSON OptGoal
+instance ToBS OptGoal
 
 data BidTypeADT = CPC | CPM | MULTI_PREMIUM | ABSOLUTE_OCPM | CPA deriving (Show, Generic)
 instance FromJSON BidTypeADT
@@ -161,6 +166,28 @@ data BuyingTypeADT = AUCTION | RESERVED deriving (Show, Generic)
 instance FromJSON BuyingTypeADT
 instance ToJSON BuyingTypeADT
 instance ToBS BuyingTypeADT
+data DeleteStrategyADT = DELETE_ANY | DELETE_OLDEST | DELETE_ARCHIVED_BEFORE deriving (Show, Generic)
+instance FromJSON DeleteStrategyADT
+instance ToJSON DeleteStrategyADT
+instance ToBS DeleteStrategyADT
+data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | POST_ENGAGEMENT_ | VIDEO_VIEWS_
+instance Show BillingEventADT where
+	 show APP_INSTALLS_ = "APP_INSTALLS"
+	 show LINK_CLICKS_ = "LINK_CLICKS"
+	 show OFFER_CLAIMS_ = "OFFER_CLAIMS"
+	 show PAGE_LIKES_ = "PAGE_LIKES"
+	 show POST_ENGAGEMENT_ = "POST_ENGAGEMENT"
+	 show VIDEO_VIEWS_ = "VIDEO_VIEWS"
+instance ToBS BillingEventADT
+instance ToJSON BillingEventADT where
+	toJSON = toJSON . show
+instance FromJSON BillingEventADT where
+	parseJSON (String "APP_INSTALLS") = pure APP_INSTALLS_
+	parseJSON (String "LINK_CLICKS") = pure LINK_CLICKS_
+	parseJSON (String "OFFER_CLAIMS") = pure OFFER_CLAIMS_
+	parseJSON (String "PAGE_LIKES") = pure PAGE_LIKES_
+	parseJSON (String "POST_ENGAGEMENT") = pure POST_ENGAGEMENT_
+	parseJSON (String "VIDEO_VIEWS") = pure VIDEO_VIEWS_
 
 data Success = Success {
 	success :: Bool
@@ -179,9 +206,9 @@ instance ToBS Text where
 instance ToBS Char where
 	toBS = B8.singleton
 instance ToBS Integer
+instance ToBS Int
 instance ToBS Bool
 instance ToBS A.Value
-instance ToBS Word32
 instance ToBS Float
 instance ToBS a => ToBS (Vector a) where
 	toBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs
@@ -190,579 +217,729 @@ instance ToBS UTCTime where
 
 data Id = Id
 newtype Id_ = Id_ Text deriving (Show, Generic)
-instance A.FromJSON Id_
-instance A.ToJSON Id_
 instance Field Id where
 	type FieldValue Id = Id_
 	fieldName _ = "id"
 	fieldLabel = Id
+unId_ :: Id_ -> Text
+unId_ (Id_ x) = x
 
 data AccountId = AccountId
 newtype AccountId_ = AccountId_ Text deriving (Show, Generic)
-instance A.FromJSON AccountId_
-instance A.ToJSON AccountId_
 instance Field AccountId where
 	type FieldValue AccountId = AccountId_
 	fieldName _ = "account_id"
 	fieldLabel = AccountId
+unAccountId_ :: AccountId_ -> Text
+unAccountId_ (AccountId_ x) = x
 
 data ExecutionOptions = ExecutionOptions
 newtype ExecutionOptions_ = ExecutionOptions_ (Vector ExecOption) deriving (Show, Generic)
-instance A.FromJSON ExecutionOptions_
-instance A.ToJSON ExecutionOptions_
 instance Field ExecutionOptions where
 	type FieldValue ExecutionOptions = ExecutionOptions_
 	fieldName _ = "execution_options"
 	fieldLabel = ExecutionOptions
+unExecutionOptions_ :: ExecutionOptions_ -> Vector ExecOption
+unExecutionOptions_ (ExecutionOptions_ x) = x
+
+data OptimizationGoal = OptimizationGoal
+newtype OptimizationGoal_ = OptimizationGoal_ OptGoal deriving (Show, Generic)
+instance Field OptimizationGoal where
+	type FieldValue OptimizationGoal = OptimizationGoal_
+	fieldName _ = "optimization_goal"
+	fieldLabel = OptimizationGoal
+unOptimizationGoal_ :: OptimizationGoal_ -> OptGoal
+unOptimizationGoal_ (OptimizationGoal_ x) = x
 
 data BidAmount = BidAmount
 newtype BidAmount_ = BidAmount_ Integer deriving (Show, Generic)
-instance A.FromJSON BidAmount_
-instance A.ToJSON BidAmount_
 instance Field BidAmount where
 	type FieldValue BidAmount = BidAmount_
 	fieldName _ = "bid_amount"
 	fieldLabel = BidAmount
+unBidAmount_ :: BidAmount_ -> Integer
+unBidAmount_ (BidAmount_ x) = x
 
 data DailyImps = DailyImps
-newtype DailyImps_ = DailyImps_ Word32 deriving (Show, Generic)
-instance A.FromJSON DailyImps_
-instance A.ToJSON DailyImps_
+newtype DailyImps_ = DailyImps_ Int deriving (Show, Generic)
 instance Field DailyImps where
 	type FieldValue DailyImps = DailyImps_
 	fieldName _ = "daily_imps"
 	fieldLabel = DailyImps
+unDailyImps_ :: DailyImps_ -> Int
+unDailyImps_ (DailyImps_ x) = x
 
 data EndMinute = EndMinute
-newtype EndMinute_ = EndMinute_ Word32 deriving (Show, Generic)
-instance A.FromJSON EndMinute_
-instance A.ToJSON EndMinute_
+newtype EndMinute_ = EndMinute_ Int deriving (Show, Generic)
 instance Field EndMinute where
 	type FieldValue EndMinute = EndMinute_
 	fieldName _ = "end_minute"
 	fieldLabel = EndMinute
+unEndMinute_ :: EndMinute_ -> Int
+unEndMinute_ (EndMinute_ x) = x
 
 data ApplicationId = ApplicationId
 newtype ApplicationId_ = ApplicationId_ Integer deriving (Show, Generic)
-instance A.FromJSON ApplicationId_
-instance A.ToJSON ApplicationId_
 instance Field ApplicationId where
 	type FieldValue ApplicationId = ApplicationId_
 	fieldName _ = "application_id"
 	fieldLabel = ApplicationId
+unApplicationId_ :: ApplicationId_ -> Integer
+unApplicationId_ (ApplicationId_ x) = x
+
+data BillingEvent = BillingEvent
+newtype BillingEvent_ = BillingEvent_ BillingEventADT deriving (Show, Generic)
+instance Field BillingEvent where
+	type FieldValue BillingEvent = BillingEvent_
+	fieldName _ = "billing_event"
+	fieldLabel = BillingEvent
+unBillingEvent_ :: BillingEvent_ -> BillingEventADT
+unBillingEvent_ (BillingEvent_ x) = x
 
 data IsAutobid = IsAutobid
 newtype IsAutobid_ = IsAutobid_ Bool deriving (Show, Generic)
-instance A.FromJSON IsAutobid_
-instance A.ToJSON IsAutobid_
 instance Field IsAutobid where
 	type FieldValue IsAutobid = IsAutobid_
 	fieldName _ = "is_autobid"
 	fieldLabel = IsAutobid
+unIsAutobid_ :: IsAutobid_ -> Bool
+unIsAutobid_ (IsAutobid_ x) = x
 
 data StartMinute = StartMinute
-newtype StartMinute_ = StartMinute_ Word32 deriving (Show, Generic)
-instance A.FromJSON StartMinute_
-instance A.ToJSON StartMinute_
+newtype StartMinute_ = StartMinute_ Int deriving (Show, Generic)
 instance Field StartMinute where
 	type FieldValue StartMinute = StartMinute_
 	fieldName _ = "start_minute"
 	fieldLabel = StartMinute
+unStartMinute_ :: StartMinute_ -> Int
+unStartMinute_ (StartMinute_ x) = x
 
 data Days = Days
-newtype Days_ = Days_ (Vector Word32) deriving (Show, Generic)
-instance A.FromJSON Days_
-instance A.ToJSON Days_
+newtype Days_ = Days_ (Vector Int) deriving (Show, Generic)
 instance Field Days where
 	type FieldValue Days = Days_
 	fieldName _ = "days"
 	fieldLabel = Days
+unDays_ :: Days_ -> Vector Int
+unDays_ (Days_ x) = x
 
 data PixelId = PixelId
 newtype PixelId_ = PixelId_ Text deriving (Show, Generic)
-instance A.FromJSON PixelId_
-instance A.ToJSON PixelId_
 instance Field PixelId where
 	type FieldValue PixelId = PixelId_
 	fieldName _ = "pixel_id"
 	fieldLabel = PixelId
+unPixelId_ :: PixelId_ -> Text
+unPixelId_ (PixelId_ x) = x
 
 data EndTime = EndTime
 newtype EndTime_ = EndTime_ UTCTime deriving Generic
-instance A.FromJSON EndTime_
-instance A.ToJSON EndTime_
 instance Field EndTime where
 	type FieldValue EndTime = EndTime_
 	fieldName _ = "end_time"
 	fieldLabel = EndTime
+unEndTime_ :: EndTime_ -> UTCTime
+unEndTime_ (EndTime_ x) = x
 
 data Name = Name
 newtype Name_ = Name_ Text deriving (Show, Generic)
-instance A.FromJSON Name_
-instance A.ToJSON Name_
 instance Field Name where
 	type FieldValue Name = Name_
 	fieldName _ = "name"
 	fieldLabel = Name
+unName_ :: Name_ -> Text
+unName_ (Name_ x) = x
 
 data LifetimeImps = LifetimeImps
-newtype LifetimeImps_ = LifetimeImps_ Word32 deriving (Show, Generic)
-instance A.FromJSON LifetimeImps_
-instance A.ToJSON LifetimeImps_
+newtype LifetimeImps_ = LifetimeImps_ Int deriving (Show, Generic)
 instance Field LifetimeImps where
 	type FieldValue LifetimeImps = LifetimeImps_
 	fieldName _ = "lifetime_imps"
 	fieldLabel = LifetimeImps
-
-data DailyBudget = DailyBudget
-newtype DailyBudget_ = DailyBudget_ Text deriving (Show, Generic)
-instance A.FromJSON DailyBudget_
-instance A.ToJSON DailyBudget_
-instance Field DailyBudget where
-	type FieldValue DailyBudget = DailyBudget_
-	fieldName _ = "daily_budget"
-	fieldLabel = DailyBudget
+unLifetimeImps_ :: LifetimeImps_ -> Int
+unLifetimeImps_ (LifetimeImps_ x) = x
 
 data OfferId = OfferId
 newtype OfferId_ = OfferId_ Text deriving (Show, Generic)
-instance A.FromJSON OfferId_
-instance A.ToJSON OfferId_
 instance Field OfferId where
 	type FieldValue OfferId = OfferId_
 	fieldName _ = "offer_id"
 	fieldLabel = OfferId
+unOfferId_ :: OfferId_ -> Text
+unOfferId_ (OfferId_ x) = x
 
 data LifetimeBudget = LifetimeBudget
-newtype LifetimeBudget_ = LifetimeBudget_ Word32 deriving (Show, Generic)
-instance A.FromJSON LifetimeBudget_
-instance A.ToJSON LifetimeBudget_
+newtype LifetimeBudget_ = LifetimeBudget_ Int deriving (Show, Generic)
 instance Field LifetimeBudget where
 	type FieldValue LifetimeBudget = LifetimeBudget_
 	fieldName _ = "lifetime_budget"
 	fieldLabel = LifetimeBudget
+unLifetimeBudget_ :: LifetimeBudget_ -> Int
+unLifetimeBudget_ (LifetimeBudget_ x) = x
 
 data Redownload = Redownload
 newtype Redownload_ = Redownload_ Bool deriving (Show, Generic)
-instance A.FromJSON Redownload_
-instance A.ToJSON Redownload_
 instance Field Redownload where
 	type FieldValue Redownload = Redownload_
 	fieldName _ = "redownload"
 	fieldLabel = Redownload
+unRedownload_ :: Redownload_ -> Bool
+unRedownload_ (Redownload_ x) = x
 
 data ObjectStoreUrl = ObjectStoreUrl
 newtype ObjectStoreUrl_ = ObjectStoreUrl_ Text deriving (Show, Generic)
-instance A.FromJSON ObjectStoreUrl_
-instance A.ToJSON ObjectStoreUrl_
 instance Field ObjectStoreUrl where
 	type FieldValue ObjectStoreUrl = ObjectStoreUrl_
 	fieldName _ = "object_store_url"
 	fieldLabel = ObjectStoreUrl
+unObjectStoreUrl_ :: ObjectStoreUrl_ -> Text
+unObjectStoreUrl_ (ObjectStoreUrl_ x) = x
 
 data ProductSetId = ProductSetId
 newtype ProductSetId_ = ProductSetId_ Text deriving (Show, Generic)
-instance A.FromJSON ProductSetId_
-instance A.ToJSON ProductSetId_
 instance Field ProductSetId where
 	type FieldValue ProductSetId = ProductSetId_
 	fieldName _ = "product_set_id"
 	fieldLabel = ProductSetId
+unProductSetId_ :: ProductSetId_ -> Text
+unProductSetId_ (ProductSetId_ x) = x
 
 data LifetimeFrequencyCap = LifetimeFrequencyCap
-newtype LifetimeFrequencyCap_ = LifetimeFrequencyCap_ Word32 deriving (Show, Generic)
-instance A.FromJSON LifetimeFrequencyCap_
-instance A.ToJSON LifetimeFrequencyCap_
+newtype LifetimeFrequencyCap_ = LifetimeFrequencyCap_ Int deriving (Show, Generic)
 instance Field LifetimeFrequencyCap where
 	type FieldValue LifetimeFrequencyCap = LifetimeFrequencyCap_
 	fieldName _ = "lifetime_frequency_cap"
 	fieldLabel = LifetimeFrequencyCap
+unLifetimeFrequencyCap_ :: LifetimeFrequencyCap_ -> Int
+unLifetimeFrequencyCap_ (LifetimeFrequencyCap_ x) = x
 
 data ProductCatalogId = ProductCatalogId
 newtype ProductCatalogId_ = ProductCatalogId_ Text deriving (Show, Generic)
-instance A.FromJSON ProductCatalogId_
-instance A.ToJSON ProductCatalogId_
 instance Field ProductCatalogId where
 	type FieldValue ProductCatalogId = ProductCatalogId_
 	fieldName _ = "product_catalog_id"
 	fieldLabel = ProductCatalogId
+unProductCatalogId_ :: ProductCatalogId_ -> Text
+unProductCatalogId_ (ProductCatalogId_ x) = x
 
 data StartTime = StartTime
 newtype StartTime_ = StartTime_ UTCTime deriving Generic
-instance A.FromJSON StartTime_
-instance A.ToJSON StartTime_
 instance Field StartTime where
 	type FieldValue StartTime = StartTime_
 	fieldName _ = "start_time"
 	fieldLabel = StartTime
+unStartTime_ :: StartTime_ -> UTCTime
+unStartTime_ (StartTime_ x) = x
 
 data CreativeSequence = CreativeSequence
 newtype CreativeSequence_ = CreativeSequence_ (Vector Text) deriving (Show, Generic)
-instance A.FromJSON CreativeSequence_
-instance A.ToJSON CreativeSequence_
 instance Field CreativeSequence where
 	type FieldValue CreativeSequence = CreativeSequence_
 	fieldName _ = "creative_sequence"
 	fieldLabel = CreativeSequence
+unCreativeSequence_ :: CreativeSequence_ -> Vector Text
+unCreativeSequence_ (CreativeSequence_ x) = x
+
+data Targeting = Targeting
+newtype Targeting_ = Targeting_ TargetingSpecs deriving (Show, Generic)
+instance Field Targeting where
+	type FieldValue Targeting = Targeting_
+	fieldName _ = "targeting"
+	fieldLabel = Targeting
+unTargeting_ :: Targeting_ -> TargetingSpecs
+unTargeting_ (Targeting_ x) = x
 
 data TimeStop = TimeStop
 newtype TimeStop_ = TimeStop_ UTCTime deriving Generic
-instance A.FromJSON TimeStop_
-instance A.ToJSON TimeStop_
 instance Field TimeStop where
 	type FieldValue TimeStop = TimeStop_
 	fieldName _ = "time_stop"
 	fieldLabel = TimeStop
+unTimeStop_ :: TimeStop_ -> UTCTime
+unTimeStop_ (TimeStop_ x) = x
 
 data TimeStart = TimeStart
 newtype TimeStart_ = TimeStart_ UTCTime deriving Generic
-instance A.FromJSON TimeStart_
-instance A.ToJSON TimeStart_
 instance Field TimeStart where
 	type FieldValue TimeStart = TimeStart_
 	fieldName _ = "time_start"
 	fieldLabel = TimeStart
+unTimeStart_ :: TimeStart_ -> UTCTime
+unTimeStart_ (TimeStart_ x) = x
 
 data PageId = PageId
 newtype PageId_ = PageId_ Integer deriving (Show, Generic)
-instance A.FromJSON PageId_
-instance A.ToJSON PageId_
 instance Field PageId where
 	type FieldValue PageId = PageId_
 	fieldName _ = "page_id"
 	fieldLabel = PageId
+unPageId_ :: PageId_ -> Integer
+unPageId_ (PageId_ x) = x
 
 data CampaignId = CampaignId
 newtype CampaignId_ = CampaignId_ Text deriving (Show, Generic)
-instance A.FromJSON CampaignId_
-instance A.ToJSON CampaignId_
 instance Field CampaignId where
 	type FieldValue CampaignId = CampaignId_
 	fieldName _ = "campaign_id"
 	fieldLabel = CampaignId
+unCampaignId_ :: CampaignId_ -> Text
+unCampaignId_ (CampaignId_ x) = x
 
 data RtbFlag = RtbFlag
 newtype RtbFlag_ = RtbFlag_ Bool deriving (Show, Generic)
-instance A.FromJSON RtbFlag_
-instance A.ToJSON RtbFlag_
 instance Field RtbFlag where
 	type FieldValue RtbFlag = RtbFlag_
 	fieldName _ = "rtb_flag"
 	fieldLabel = RtbFlag
+unRtbFlag_ :: RtbFlag_ -> Bool
+unRtbFlag_ (RtbFlag_ x) = x
 
 data ConfiguredStatus = ConfiguredStatus
 newtype ConfiguredStatus_ = ConfiguredStatus_ ConfigureStatusADT deriving (Show, Generic)
-instance A.FromJSON ConfiguredStatus_
-instance A.ToJSON ConfiguredStatus_
 instance Field ConfiguredStatus where
 	type FieldValue ConfiguredStatus = ConfiguredStatus_
 	fieldName _ = "configured_status"
 	fieldLabel = ConfiguredStatus
+unConfiguredStatus_ :: ConfiguredStatus_ -> ConfigureStatusADT
+unConfiguredStatus_ (ConfiguredStatus_ x) = x
 
 data EffectiveStatus = EffectiveStatus
 newtype EffectiveStatus_ = EffectiveStatus_ EffectiveStatusADT deriving (Show, Generic)
-instance A.FromJSON EffectiveStatus_
-instance A.ToJSON EffectiveStatus_
 instance Field EffectiveStatus where
 	type FieldValue EffectiveStatus = EffectiveStatus_
 	fieldName _ = "effective_status"
 	fieldLabel = EffectiveStatus
+unEffectiveStatus_ :: EffectiveStatus_ -> EffectiveStatusADT
+unEffectiveStatus_ (EffectiveStatus_ x) = x
 
 data CreatedTime = CreatedTime
 newtype CreatedTime_ = CreatedTime_ UTCTime deriving Generic
-instance A.FromJSON CreatedTime_
-instance A.ToJSON CreatedTime_
 instance Field CreatedTime where
 	type FieldValue CreatedTime = CreatedTime_
 	fieldName _ = "created_time"
 	fieldLabel = CreatedTime
+unCreatedTime_ :: CreatedTime_ -> UTCTime
+unCreatedTime_ (CreatedTime_ x) = x
 
 data UpdatedTime = UpdatedTime
 newtype UpdatedTime_ = UpdatedTime_ UTCTime deriving Generic
-instance A.FromJSON UpdatedTime_
-instance A.ToJSON UpdatedTime_
 instance Field UpdatedTime where
 	type FieldValue UpdatedTime = UpdatedTime_
 	fieldName _ = "updated_time"
 	fieldLabel = UpdatedTime
+unUpdatedTime_ :: UpdatedTime_ -> UTCTime
+unUpdatedTime_ (UpdatedTime_ x) = x
 
 data Hash = Hash
 newtype Hash_ = Hash_ Text deriving (Show, Generic)
-instance A.FromJSON Hash_
-instance A.ToJSON Hash_
 instance Field Hash where
 	type FieldValue Hash = Hash_
 	fieldName _ = "hash"
 	fieldLabel = Hash
+unHash_ :: Hash_ -> Text
+unHash_ (Hash_ x) = x
 
 data RunStatus = RunStatus
-newtype RunStatus_ = RunStatus_ Word32 deriving (Show, Generic)
-instance A.FromJSON RunStatus_
-instance A.ToJSON RunStatus_
+newtype RunStatus_ = RunStatus_ Int deriving (Show, Generic)
 instance Field RunStatus where
 	type FieldValue RunStatus = RunStatus_
 	fieldName _ = "run_status"
 	fieldLabel = RunStatus
+unRunStatus_ :: RunStatus_ -> Int
+unRunStatus_ (RunStatus_ x) = x
 
 data ActorImageUrl = ActorImageUrl
 newtype ActorImageUrl_ = ActorImageUrl_ Text deriving (Show, Generic)
-instance A.FromJSON ActorImageUrl_
-instance A.ToJSON ActorImageUrl_
 instance Field ActorImageUrl where
 	type FieldValue ActorImageUrl = ActorImageUrl_
 	fieldName _ = "actor_image_url"
 	fieldLabel = ActorImageUrl
+unActorImageUrl_ :: ActorImageUrl_ -> Text
+unActorImageUrl_ (ActorImageUrl_ x) = x
 
 data ActorImageHash = ActorImageHash
 newtype ActorImageHash_ = ActorImageHash_ Text deriving (Show, Generic)
-instance A.FromJSON ActorImageHash_
-instance A.ToJSON ActorImageHash_
 instance Field ActorImageHash where
 	type FieldValue ActorImageHash = ActorImageHash_
 	fieldName _ = "actor_image_hash"
 	fieldLabel = ActorImageHash
+unActorImageHash_ :: ActorImageHash_ -> Text
+unActorImageHash_ (ActorImageHash_ x) = x
 
 data LinkOgId = LinkOgId
 newtype LinkOgId_ = LinkOgId_ Text deriving (Show, Generic)
-instance A.FromJSON LinkOgId_
-instance A.ToJSON LinkOgId_
 instance Field LinkOgId where
 	type FieldValue LinkOgId = LinkOgId_
 	fieldName _ = "link_og_id"
 	fieldLabel = LinkOgId
+unLinkOgId_ :: LinkOgId_ -> Text
+unLinkOgId_ (LinkOgId_ x) = x
 
 data ActorName = ActorName
 newtype ActorName_ = ActorName_ Text deriving (Show, Generic)
-instance A.FromJSON ActorName_
-instance A.ToJSON ActorName_
 instance Field ActorName where
 	type FieldValue ActorName = ActorName_
 	fieldName _ = "actor_name"
 	fieldLabel = ActorName
+unActorName_ :: ActorName_ -> Text
+unActorName_ (ActorName_ x) = x
 
 data ObjectId = ObjectId
-newtype ObjectId_ = ObjectId_ Word32 deriving (Show, Generic)
-instance A.FromJSON ObjectId_
-instance A.ToJSON ObjectId_
+newtype ObjectId_ = ObjectId_ Int deriving (Show, Generic)
 instance Field ObjectId where
 	type FieldValue ObjectId = ObjectId_
 	fieldName _ = "object_id"
 	fieldLabel = ObjectId
+unObjectId_ :: ObjectId_ -> Int
+unObjectId_ (ObjectId_ x) = x
 
 data InstagramActorId = InstagramActorId
 newtype InstagramActorId_ = InstagramActorId_ Text deriving (Show, Generic)
-instance A.FromJSON InstagramActorId_
-instance A.ToJSON InstagramActorId_
 instance Field InstagramActorId where
 	type FieldValue InstagramActorId = InstagramActorId_
 	fieldName _ = "instagram_actor_id"
 	fieldLabel = InstagramActorId
+unInstagramActorId_ :: InstagramActorId_ -> Text
+unInstagramActorId_ (InstagramActorId_ x) = x
 
 data ActorId = ActorId
-newtype ActorId_ = ActorId_ Word32 deriving (Show, Generic)
-instance A.FromJSON ActorId_
-instance A.ToJSON ActorId_
+newtype ActorId_ = ActorId_ Int deriving (Show, Generic)
 instance Field ActorId where
 	type FieldValue ActorId = ActorId_
 	fieldName _ = "actor_id"
 	fieldLabel = ActorId
+unActorId_ :: ActorId_ -> Int
+unActorId_ (ActorId_ x) = x
 
 data ThumbnailUrl = ThumbnailUrl
 newtype ThumbnailUrl_ = ThumbnailUrl_ Text deriving (Show, Generic)
-instance A.FromJSON ThumbnailUrl_
-instance A.ToJSON ThumbnailUrl_
 instance Field ThumbnailUrl where
 	type FieldValue ThumbnailUrl = ThumbnailUrl_
 	fieldName _ = "thumbnail_url"
 	fieldLabel = ThumbnailUrl
+unThumbnailUrl_ :: ThumbnailUrl_ -> Text
+unThumbnailUrl_ (ThumbnailUrl_ x) = x
 
 data TemplateUrl = TemplateUrl
 newtype TemplateUrl_ = TemplateUrl_ Text deriving (Show, Generic)
-instance A.FromJSON TemplateUrl_
-instance A.ToJSON TemplateUrl_
 instance Field TemplateUrl where
 	type FieldValue TemplateUrl = TemplateUrl_
 	fieldName _ = "template_url"
 	fieldLabel = TemplateUrl
+unTemplateUrl_ :: TemplateUrl_ -> Text
+unTemplateUrl_ (TemplateUrl_ x) = x
 
 data LinkUrl = LinkUrl
 newtype LinkUrl_ = LinkUrl_ Text deriving (Show, Generic)
-instance A.FromJSON LinkUrl_
-instance A.ToJSON LinkUrl_
 instance Field LinkUrl where
 	type FieldValue LinkUrl = LinkUrl_
 	fieldName _ = "link_url"
 	fieldLabel = LinkUrl
+unLinkUrl_ :: LinkUrl_ -> Text
+unLinkUrl_ (LinkUrl_ x) = x
 
 data ObjectStoryId = ObjectStoryId
 newtype ObjectStoryId_ = ObjectStoryId_ Text deriving (Show, Generic)
-instance A.FromJSON ObjectStoryId_
-instance A.ToJSON ObjectStoryId_
 instance Field ObjectStoryId where
 	type FieldValue ObjectStoryId = ObjectStoryId_
 	fieldName _ = "object_story_id"
 	fieldLabel = ObjectStoryId
+unObjectStoryId_ :: ObjectStoryId_ -> Text
+unObjectStoryId_ (ObjectStoryId_ x) = x
 
 data UrlTags = UrlTags
 newtype UrlTags_ = UrlTags_ Text deriving (Show, Generic)
-instance A.FromJSON UrlTags_
-instance A.ToJSON UrlTags_
 instance Field UrlTags where
 	type FieldValue UrlTags = UrlTags_
 	fieldName _ = "url_tags"
 	fieldLabel = UrlTags
+unUrlTags_ :: UrlTags_ -> Text
+unUrlTags_ (UrlTags_ x) = x
 
 data ImageHash = ImageHash
 newtype ImageHash_ = ImageHash_ Text deriving (Show, Generic)
-instance A.FromJSON ImageHash_
-instance A.ToJSON ImageHash_
 instance Field ImageHash where
 	type FieldValue ImageHash = ImageHash_
 	fieldName _ = "image_hash"
 	fieldLabel = ImageHash
+unImageHash_ :: ImageHash_ -> Text
+unImageHash_ (ImageHash_ x) = x
 
 data Title = Title
 newtype Title_ = Title_ Text deriving (Show, Generic)
-instance A.FromJSON Title_
-instance A.ToJSON Title_
 instance Field Title where
 	type FieldValue Title = Title_
 	fieldName _ = "title"
 	fieldLabel = Title
+unTitle_ :: Title_ -> Text
+unTitle_ (Title_ x) = x
 
 data ObjectUrl = ObjectUrl
 newtype ObjectUrl_ = ObjectUrl_ Text deriving (Show, Generic)
-instance A.FromJSON ObjectUrl_
-instance A.ToJSON ObjectUrl_
 instance Field ObjectUrl where
 	type FieldValue ObjectUrl = ObjectUrl_
 	fieldName _ = "object_url"
 	fieldLabel = ObjectUrl
+unObjectUrl_ :: ObjectUrl_ -> Text
+unObjectUrl_ (ObjectUrl_ x) = x
 
 data Body = Body
 newtype Body_ = Body_ Text deriving (Show, Generic)
-instance A.FromJSON Body_
-instance A.ToJSON Body_
 instance Field Body where
 	type FieldValue Body = Body_
 	fieldName _ = "body"
 	fieldLabel = Body
+unBody_ :: Body_ -> Text
+unBody_ (Body_ x) = x
 
 data ImageUrl = ImageUrl
 newtype ImageUrl_ = ImageUrl_ Text deriving (Show, Generic)
-instance A.FromJSON ImageUrl_
-instance A.ToJSON ImageUrl_
 instance Field ImageUrl where
 	type FieldValue ImageUrl = ImageUrl_
 	fieldName _ = "image_url"
 	fieldLabel = ImageUrl
+unImageUrl_ :: ImageUrl_ -> Text
+unImageUrl_ (ImageUrl_ x) = x
 
 data SpendCap = SpendCap
 newtype SpendCap_ = SpendCap_ Text deriving (Show, Generic)
-instance A.FromJSON SpendCap_
-instance A.ToJSON SpendCap_
 instance Field SpendCap where
 	type FieldValue SpendCap = SpendCap_
 	fieldName _ = "spend_cap"
 	fieldLabel = SpendCap
+unSpendCap_ :: SpendCap_ -> Text
+unSpendCap_ (SpendCap_ x) = x
 
 data Objective = Objective
 newtype Objective_ = Objective_ ObjectiveADT deriving (Show, Generic)
-instance A.FromJSON Objective_
-instance A.ToJSON Objective_
 instance Field Objective where
 	type FieldValue Objective = Objective_
 	fieldName _ = "objective"
 	fieldLabel = Objective
+unObjective_ :: Objective_ -> ObjectiveADT
+unObjective_ (Objective_ x) = x
 
 data BuyingType = BuyingType
 newtype BuyingType_ = BuyingType_ BuyingTypeADT deriving (Show, Generic)
-instance A.FromJSON BuyingType_
-instance A.ToJSON BuyingType_
 instance Field BuyingType where
 	type FieldValue BuyingType = BuyingType_
 	fieldName _ = "buying_type"
 	fieldLabel = BuyingType
+unBuyingType_ :: BuyingType_ -> BuyingTypeADT
+unBuyingType_ (BuyingType_ x) = x
 
 data Adaccounts = Adaccounts
 newtype Adaccounts_ = Adaccounts_ (Vector Text) deriving (Show, Generic)
-instance A.FromJSON Adaccounts_
-instance A.ToJSON Adaccounts_
 instance Field Adaccounts where
 	type FieldValue Adaccounts = Adaccounts_
 	fieldName _ = "adaccounts"
 	fieldLabel = Adaccounts
+unAdaccounts_ :: Adaccounts_ -> Vector Text
+unAdaccounts_ (Adaccounts_ x) = x
 
 data TimezoneId = TimezoneId
-newtype TimezoneId_ = TimezoneId_ Word32 deriving (Show, Generic)
-instance A.FromJSON TimezoneId_
-instance A.ToJSON TimezoneId_
+newtype TimezoneId_ = TimezoneId_ Int deriving (Show, Generic)
 instance Field TimezoneId where
 	type FieldValue TimezoneId = TimezoneId_
 	fieldName _ = "timezone_id"
 	fieldLabel = TimezoneId
+unTimezoneId_ :: TimezoneId_ -> Int
+unTimezoneId_ (TimezoneId_ x) = x
 
 data IsNotificationsEnabled = IsNotificationsEnabled
 newtype IsNotificationsEnabled_ = IsNotificationsEnabled_ Bool deriving (Show, Generic)
-instance A.FromJSON IsNotificationsEnabled_
-instance A.ToJSON IsNotificationsEnabled_
 instance Field IsNotificationsEnabled where
 	type FieldValue IsNotificationsEnabled = IsNotificationsEnabled_
 	fieldName _ = "is_notifications_enabled"
 	fieldLabel = IsNotificationsEnabled
+unIsNotificationsEnabled_ :: IsNotificationsEnabled_ -> Bool
+unIsNotificationsEnabled_ (IsNotificationsEnabled_ x) = x
 
 data Partner = Partner
 newtype Partner_ = Partner_ Text deriving (Show, Generic)
-instance A.FromJSON Partner_
-instance A.ToJSON Partner_
 instance Field Partner where
 	type FieldValue Partner = Partner_
 	fieldName _ = "partner"
 	fieldLabel = Partner
+unPartner_ :: Partner_ -> Text
+unPartner_ (Partner_ x) = x
 
 data MediaAgency = MediaAgency
 newtype MediaAgency_ = MediaAgency_ Text deriving (Show, Generic)
-instance A.FromJSON MediaAgency_
-instance A.ToJSON MediaAgency_
 instance Field MediaAgency where
 	type FieldValue MediaAgency = MediaAgency_
 	fieldName _ = "media_agency"
 	fieldLabel = MediaAgency
+unMediaAgency_ :: MediaAgency_ -> Text
+unMediaAgency_ (MediaAgency_ x) = x
 
 data DisplaySequence = DisplaySequence
-newtype DisplaySequence_ = DisplaySequence_ Word32 deriving (Show, Generic)
-instance A.FromJSON DisplaySequence_
-instance A.ToJSON DisplaySequence_
+newtype DisplaySequence_ = DisplaySequence_ Int deriving (Show, Generic)
 instance Field DisplaySequence where
 	type FieldValue DisplaySequence = DisplaySequence_
 	fieldName _ = "display_sequence"
 	fieldLabel = DisplaySequence
+unDisplaySequence_ :: DisplaySequence_ -> Int
+unDisplaySequence_ (DisplaySequence_ x) = x
 
 data CampaignGroupId = CampaignGroupId
-newtype CampaignGroupId_ = CampaignGroupId_ Word32 deriving (Show, Generic)
-instance A.FromJSON CampaignGroupId_
-instance A.ToJSON CampaignGroupId_
+newtype CampaignGroupId_ = CampaignGroupId_ Int deriving (Show, Generic)
 instance Field CampaignGroupId where
 	type FieldValue CampaignGroupId = CampaignGroupId_
 	fieldName _ = "campaign_group_id"
 	fieldLabel = CampaignGroupId
+unCampaignGroupId_ :: CampaignGroupId_ -> Int
+unCampaignGroupId_ (CampaignGroupId_ x) = x
 
 data Creative = Creative
 newtype Creative_ = Creative_ Text deriving (Show, Generic)
-instance A.FromJSON Creative_
-instance A.ToJSON Creative_
 instance Field Creative where
 	type FieldValue Creative = Creative_
 	fieldName _ = "creative"
 	fieldLabel = Creative
+unCreative_ :: Creative_ -> Text
+unCreative_ (Creative_ x) = x
 
 data AdsetId = AdsetId
-newtype AdsetId_ = AdsetId_ Word32 deriving (Show, Generic)
-instance A.FromJSON AdsetId_
-instance A.ToJSON AdsetId_
+newtype AdsetId_ = AdsetId_ Int deriving (Show, Generic)
 instance Field AdsetId where
 	type FieldValue AdsetId = AdsetId_
 	fieldName _ = "adset_id"
 	fieldLabel = AdsetId
+unAdsetId_ :: AdsetId_ -> Int
+unAdsetId_ (AdsetId_ x) = x
+instance A.FromJSON Id_
+instance A.ToJSON Id_
+instance A.FromJSON AccountId_
+instance A.ToJSON AccountId_
+instance A.FromJSON ExecutionOptions_
+instance A.ToJSON ExecutionOptions_
+instance A.FromJSON OptimizationGoal_
+instance A.ToJSON OptimizationGoal_
+instance A.FromJSON BidAmount_
+instance A.ToJSON BidAmount_
+instance A.FromJSON DailyImps_
+instance A.ToJSON DailyImps_
+instance A.FromJSON EndMinute_
+instance A.ToJSON EndMinute_
+instance A.FromJSON ApplicationId_
+instance A.ToJSON ApplicationId_
+instance A.FromJSON BillingEvent_
+instance A.ToJSON BillingEvent_
+instance A.FromJSON IsAutobid_
+instance A.ToJSON IsAutobid_
+instance A.FromJSON StartMinute_
+instance A.ToJSON StartMinute_
+instance A.FromJSON Days_
+instance A.ToJSON Days_
+instance A.FromJSON PixelId_
+instance A.ToJSON PixelId_
+instance A.FromJSON EndTime_
+instance A.ToJSON EndTime_
+instance A.FromJSON Name_
+instance A.ToJSON Name_
+instance A.FromJSON LifetimeImps_
+instance A.ToJSON LifetimeImps_
+instance A.FromJSON OfferId_
+instance A.ToJSON OfferId_
+instance A.FromJSON LifetimeBudget_
+instance A.ToJSON LifetimeBudget_
+instance A.FromJSON Redownload_
+instance A.ToJSON Redownload_
+instance A.FromJSON ObjectStoreUrl_
+instance A.ToJSON ObjectStoreUrl_
+instance A.FromJSON ProductSetId_
+instance A.ToJSON ProductSetId_
+instance A.FromJSON LifetimeFrequencyCap_
+instance A.ToJSON LifetimeFrequencyCap_
+instance A.FromJSON ProductCatalogId_
+instance A.ToJSON ProductCatalogId_
+instance A.FromJSON StartTime_
+instance A.ToJSON StartTime_
+instance A.FromJSON CreativeSequence_
+instance A.ToJSON CreativeSequence_
+instance A.FromJSON Targeting_
+instance A.ToJSON Targeting_
+instance A.FromJSON TimeStop_
+instance A.ToJSON TimeStop_
+instance A.FromJSON TimeStart_
+instance A.ToJSON TimeStart_
+instance A.FromJSON PageId_
+instance A.ToJSON PageId_
+instance A.FromJSON CampaignId_
+instance A.ToJSON CampaignId_
+instance A.FromJSON RtbFlag_
+instance A.ToJSON RtbFlag_
+instance A.FromJSON ConfiguredStatus_
+instance A.ToJSON ConfiguredStatus_
+instance A.FromJSON EffectiveStatus_
+instance A.ToJSON EffectiveStatus_
+instance A.FromJSON CreatedTime_
+instance A.ToJSON CreatedTime_
+instance A.FromJSON UpdatedTime_
+instance A.ToJSON UpdatedTime_
+instance A.FromJSON Hash_
+instance A.ToJSON Hash_
+instance A.FromJSON RunStatus_
+instance A.ToJSON RunStatus_
+instance A.FromJSON ActorImageUrl_
+instance A.ToJSON ActorImageUrl_
+instance A.FromJSON ActorImageHash_
+instance A.ToJSON ActorImageHash_
+instance A.FromJSON LinkOgId_
+instance A.ToJSON LinkOgId_
+instance A.FromJSON ActorName_
+instance A.ToJSON ActorName_
+instance A.FromJSON ObjectId_
+instance A.ToJSON ObjectId_
+instance A.FromJSON InstagramActorId_
+instance A.ToJSON InstagramActorId_
+instance A.FromJSON ActorId_
+instance A.ToJSON ActorId_
+instance A.FromJSON ThumbnailUrl_
+instance A.ToJSON ThumbnailUrl_
+instance A.FromJSON TemplateUrl_
+instance A.ToJSON TemplateUrl_
+instance A.FromJSON LinkUrl_
+instance A.ToJSON LinkUrl_
+instance A.FromJSON ObjectStoryId_
+instance A.ToJSON ObjectStoryId_
+instance A.FromJSON UrlTags_
+instance A.ToJSON UrlTags_
+instance A.FromJSON ImageHash_
+instance A.ToJSON ImageHash_
+instance A.FromJSON Title_
+instance A.ToJSON Title_
+instance A.FromJSON ObjectUrl_
+instance A.ToJSON ObjectUrl_
+instance A.FromJSON Body_
+instance A.ToJSON Body_
+instance A.FromJSON ImageUrl_
+instance A.ToJSON ImageUrl_
+instance A.FromJSON SpendCap_
+instance A.ToJSON SpendCap_
+instance A.FromJSON Objective_
+instance A.ToJSON Objective_
+instance A.FromJSON BuyingType_
+instance A.ToJSON BuyingType_
+instance A.FromJSON Adaccounts_
+instance A.ToJSON Adaccounts_
+instance A.FromJSON TimezoneId_
+instance A.ToJSON TimezoneId_
+instance A.FromJSON IsNotificationsEnabled_
+instance A.ToJSON IsNotificationsEnabled_
+instance A.FromJSON Partner_
+instance A.ToJSON Partner_
+instance A.FromJSON MediaAgency_
+instance A.ToJSON MediaAgency_
+instance A.FromJSON DisplaySequence_
+instance A.ToJSON DisplaySequence_
+instance A.FromJSON CampaignGroupId_
+instance A.ToJSON CampaignGroupId_
+instance A.FromJSON Creative_
+instance A.ToJSON Creative_
+instance A.FromJSON AdsetId_
+instance A.ToJSON AdsetId_
 
 instance ToBS Id_ where
 	toBS (Id_ a) = toBS a
@@ -772,6 +949,9 @@ instance ToBS AccountId_ where
 
 instance ToBS ExecutionOptions_ where
 	toBS (ExecutionOptions_ a) = toBS a
+
+instance ToBS OptimizationGoal_ where
+	toBS (OptimizationGoal_ a) = toBS a
 
 instance ToBS BidAmount_ where
 	toBS (BidAmount_ a) = toBS a
@@ -784,6 +964,9 @@ instance ToBS EndMinute_ where
 
 instance ToBS ApplicationId_ where
 	toBS (ApplicationId_ a) = toBS a
+
+instance ToBS BillingEvent_ where
+	toBS (BillingEvent_ a) = toBS a
 
 instance ToBS IsAutobid_ where
 	toBS (IsAutobid_ a) = toBS a
@@ -805,9 +988,6 @@ instance ToBS Name_ where
 
 instance ToBS LifetimeImps_ where
 	toBS (LifetimeImps_ a) = toBS a
-
-instance ToBS DailyBudget_ where
-	toBS (DailyBudget_ a) = toBS a
 
 instance ToBS OfferId_ where
 	toBS (OfferId_ a) = toBS a
@@ -835,6 +1015,9 @@ instance ToBS StartTime_ where
 
 instance ToBS CreativeSequence_ where
 	toBS (CreativeSequence_ a) = toBS a
+
+instance ToBS Targeting_ where
+	toBS (Targeting_ a) = toBS a
 
 instance ToBS TimeStop_ where
 	toBS (TimeStop_ a) = toBS a
@@ -959,10 +1142,12 @@ instance ToBS AdsetId_ where
 id r = r `Rec.get` Id
 account_id r = r `Rec.get` AccountId
 execution_options r = r `Rec.get` ExecutionOptions
+optimization_goal r = r `Rec.get` OptimizationGoal
 bid_amount r = r `Rec.get` BidAmount
 daily_imps r = r `Rec.get` DailyImps
 end_minute r = r `Rec.get` EndMinute
 application_id r = r `Rec.get` ApplicationId
+billing_event r = r `Rec.get` BillingEvent
 is_autobid r = r `Rec.get` IsAutobid
 start_minute r = r `Rec.get` StartMinute
 days r = r `Rec.get` Days
@@ -970,7 +1155,6 @@ pixel_id r = r `Rec.get` PixelId
 end_time r = r `Rec.get` EndTime
 name r = r `Rec.get` Name
 lifetime_imps r = r `Rec.get` LifetimeImps
-daily_budget r = r `Rec.get` DailyBudget
 offer_id r = r `Rec.get` OfferId
 lifetime_budget r = r `Rec.get` LifetimeBudget
 redownload r = r `Rec.get` Redownload
@@ -980,6 +1164,7 @@ lifetime_frequency_cap r = r `Rec.get` LifetimeFrequencyCap
 product_catalog_id r = r `Rec.get` ProductCatalogId
 start_time r = r `Rec.get` StartTime
 creative_sequence r = r `Rec.get` CreativeSequence
+targeting r = r `Rec.get` Targeting
 time_stop r = r `Rec.get` TimeStop
 time_start r = r `Rec.get` TimeStart
 page_id r = r `Rec.get` PageId

@@ -15,9 +15,11 @@ import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
