@@ -59,6 +59,7 @@ entityModePagerSet =
     Set.fromList [(Entity "AdCampaign", Reading),
                   (Entity "Insights", Reading),
                   (Entity "AdImage", Reading),
+                  (Entity "Ad", Reading),
                   (Entity "AdSet", Reading)]
 
 -- Does the generated function return a Pager?
@@ -100,7 +101,9 @@ campaignCreate =
     "data CreateCampaignId = CreateCampaignId {\n\
      \\tcampaignId :: Text\n\
      \\t} deriving (Show, Generic)\n\
-     \instance FromJSON CreateCampaignId"
+     \instance FromJSON CreateCampaignId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateCampaignId <$> v .: \"id\"\n"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
@@ -130,7 +133,7 @@ modNameToPath = replace "." "/"
 
 -- needed for POST
 toBsInstances :: Text
-toBsInstances = -- FIXME
+toBsInstances = -- FIXME, look at old SimpleType class for instances
   "\ninstance ToBS Text where\n\
   \\ttoBS = TE.encodeUtf8\n\
   \instance ToBS Char where\n\

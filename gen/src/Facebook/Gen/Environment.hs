@@ -46,7 +46,10 @@ typesMap =
                 , ("ConfiguredAdStatus", "ConfiguredAdStatus")
                 , ("EffectiveAdStatus", "EffectiveAdStatus")
                 , ("OptGoal", "OptGoal")
+                , ("Targeting object", "TargetingSpecs")
+                , ("Targeting", "TargetingSpecs")
                 , ("BidType", "BidTypeADT")
+                , ("DeleteStrategy", "DeleteStrategyADT")
                 , ("Objective", "ObjectiveADT")
                 , ("BuyingType", "BuyingTypeADT")
                 , ("CallActionType", "CallActionType")
@@ -78,14 +81,13 @@ buildEnv csvs = do
                               ["adlabels"] -- Campaign
                               ++
                               ["billing_event", "optimization_goal", "adset_schedule", "promoted_object", "campaign",
-                              "product_ad_behavior", "rf_prediction_id", "pacing_type", "targeting"]
+                              "product_ad_behavior", "rf_prediction_id", "pacing_type"]
                               ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]
                               ++ ["image_crops", "object_story_spec", "object_type", "applink_treatment", "tracking_specs",
                                   "adset", "conversion_specs", "ad_review_feedback"]
                               ++ ["custom_event_type"]
                               ++ ["type", "dynamic_ad_voice", "annotations", "info_fields"]
-                              ++ ["delete_strategy"]
                               ++ ["account"]
     --let csvs' = V.filter (\(CsvLine ent mode _) ->
     --               mode == Reading || ent == Entity "Ad Image" || ent == Entity "AdCreative") (join csvs :: Vector CsvLine)

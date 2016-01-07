@@ -17,6 +17,7 @@ oldTypesImport =
     \import qualified Data.ByteString.Lazy as BSL\n\
     \import qualified Data.Text.Encoding as TE\n\
     \import Facebook.Object.Marketing.Utility hiding (toBS)\n\
+    \import Facebook.Object.Marketing.TargetingSpecs\n\
     \import Text.Read (readMaybe)\n"
 
 newTypes :: Text
@@ -43,9 +44,15 @@ newTypes =
     \instance ToJSON EffectiveStatusADT\n\
     \instance ToBS EffectiveStatusADT\n"
     <> execOption <> optGoal <> bidType <> callActionType
-    <> runStatus <> objective <> buyingType <> genericRetType
-    <> genericIdRetType
+    <> runStatus <> objective <> buyingType <> deleteStrategy
+    <> genericRetType <> genericIdRetType
     -- <> runStatus <> genericRetType
+
+deleteStrategy =
+    "data DeleteStrategyADT = DELETE_ANY | DELETE_OLDEST | DELETE_ARCHIVED_BEFORE deriving (Show, Generic)\n\
+    \instance FromJSON DeleteStrategyADT\n\
+    \instance ToJSON DeleteStrategyADT\n\
+    \instance ToBS DeleteStrategyADT\n"
 
 buyingType =
     "data BuyingTypeADT = AUCTION | RESERVED deriving (Show, Generic)\n\
