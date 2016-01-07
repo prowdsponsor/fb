@@ -12,6 +12,7 @@ oldTypesImport =
     \import Data.Aeson\n\
     \import Data.Aeson.Types\n\
     \import Control.Applicative\n\
+    \import System.Locale hiding (defaultTimeLocale, rfc822DateFormat)\n\
     \import Control.Monad\n\
     \import qualified Data.ByteString as BS\n\
     \import qualified Data.ByteString.Lazy as BSL\n\
@@ -45,8 +46,30 @@ newTypes =
     \instance ToBS EffectiveStatusADT\n"
     <> execOption <> optGoal <> bidType <> callActionType
     <> runStatus <> objective <> buyingType <> deleteStrategy
-    <> genericRetType <> genericIdRetType
+    <> billingEvent <> genericRetType <> genericIdRetType
     -- <> runStatus <> genericRetType
+
+billingEvent =
+    "data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \
+    \POST_ENGAGEMENT_ | VIDEO_VIEWS_\n" <>
+    "instance Show BillingEventADT where\n\
+    \\t show APP_INSTALLS_ = \"APP_INSTALLS\"\n\
+    \\t show LINK_CLICKS_ = \"LINK_CLICKS\"\n\
+    \\t show OFFER_CLAIMS_ = \"OFFER_CLAIMS\"\n\
+    \\t show PAGE_LIKES_ = \"PAGE_LIKES\"\n\
+    \\t show POST_ENGAGEMENT_ = \"POST_ENGAGEMENT\"\n\
+    \\t show VIDEO_VIEWS_ = \"VIDEO_VIEWS\"\n" <>
+    "instance ToBS BillingEventADT\n"
+    <>
+    "instance ToJSON BillingEventADT where\n\
+    \\ttoJSON = toJSON . show\n\
+    \instance FromJSON BillingEventADT where\n\
+    \\tparseJSON (String \"APP_INSTALLS\") = pure APP_INSTALLS_\n\
+    \\tparseJSON (String \"LINK_CLICKS\") = pure LINK_CLICKS_\n\
+    \\tparseJSON (String \"OFFER_CLAIMS\") = pure OFFER_CLAIMS_\n\
+    \\tparseJSON (String \"PAGE_LIKES\") = pure PAGE_LIKES_\n\
+    \\tparseJSON (String \"POST_ENGAGEMENT\") = pure POST_ENGAGEMENT_\n\
+    \\tparseJSON (String \"VIDEO_VIEWS\") = pure VIDEO_VIEWS_\n"
 
 deleteStrategy =
     "data DeleteStrategyADT = DELETE_ANY | DELETE_OLDEST | DELETE_ARCHIVED_BEFORE deriving (Show, Generic)\n\
@@ -142,7 +165,9 @@ optGoal =
     \| EVENT_RESPONSES | IMPRESSIONS | LEAD_GENERATION | LINK_CLICKS | \
     \OFFER_CLAIMS | OFFSITE_CONVERSIONS | PAGE_ENGAGEMENT | PAGE_LIKES | \
     \POST_ENGAGEMENT | REACH | SOCIAL_IMPRESSIONS | VIDEO_VIEWS deriving (Show, Generic)\n\
-    \instance FromJSON OptGoal\n"
+    \instance FromJSON OptGoal\n\
+    \instance ToJSON OptGoal\n\
+    \instance ToBS OptGoal\n"
 
 genericRetType =
     "\ndata Success = Success {\n\

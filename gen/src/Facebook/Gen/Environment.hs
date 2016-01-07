@@ -52,6 +52,7 @@ typesMap =
                 , ("DeleteStrategy", "DeleteStrategyADT")
                 , ("Objective", "ObjectiveADT")
                 , ("BuyingType", "BuyingTypeADT")
+                , ("BillingEvent", "BillingEventADT")
                 , ("CallActionType", "CallActionType")
                 , ("URL", "Text")
                 , ("post id", "Text")
@@ -76,11 +77,12 @@ buildEnv :: Vector (Vector CsvLine) -> Either Text Env
 buildEnv csvs = do
     --let csvs' = join csvs :: Vector CsvLine
     let ignore = V.fromList $ ["rf_spec", "account_groups", "agency_client_declaration", "funding_source_details",
-                               "owner_business", "business", "failed_delivery_checks", "permitted_roles", "access_type", "end_advertiser", "currency"] -- Ad Account
-                               ++
+                              "owner_business", "business", "failed_delivery_checks", "permitted_roles", "access_type", "end_advertiser",
+                              "currency"] -- Ad AccountA
+                              ++
                               ["adlabels"] -- Campaign
                               ++
-                              ["billing_event", "optimization_goal", "adset_schedule", "promoted_object", "campaign",
+                              ["adset_schedule", "promoted_object", "campaign",
                               "product_ad_behavior", "rf_prediction_id", "pacing_type"]
                               ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]

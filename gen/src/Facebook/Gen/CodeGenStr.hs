@@ -30,6 +30,7 @@ imports =
                 "import Data.Time.Clock",
                 "import Data.Time.Format",
                 "import Data.Aeson hiding (Value)",
+                "import Control.Applicative",
                 "import Data.Text (Text)",
                 "import Data.Text.Read (decimal)",
                 "import Data.Scientific (toBoundedInteger)",
@@ -347,7 +348,6 @@ typesToJsonInstances (nt, "Word32", "Text") =
         \\t   Right (num, _) -> " <> create <> "\n" <> -- FIXME
         "instance A.ToJSON " <> nt <> "\n"
 typesToJsonInstances x = error $ show x
-
 
 dataAndFieldInstance :: FieldInfo -> Text
 dataAndFieldInstance fi =
