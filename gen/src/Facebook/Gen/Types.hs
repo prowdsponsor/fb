@@ -35,6 +35,10 @@ instance Eq FieldInfo where
     (==) (FieldInfo n1 _ _ _ _)
          (FieldInfo n2 _ _ _ _) = n1 == n2
 
+instance Ord FieldInfo where -- order by type string in order to choose type when they mismatch... ugly hack
+    compare (FieldInfo _ t1 _ _ _)
+            (FieldInfo _ t2 _ _ _) = compare t1 t2
+
 instance FromField Boolean where
     parseField s
         | s == "Y" || s == "y" = pure $ Boolean True

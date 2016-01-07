@@ -185,15 +185,21 @@ findDups fis = go fis []
                              tail' = V.ifilter (\idx _ -> not $ V.elem idx dupInds) tail
                          in go tail' $ dups:acc
 
-removeDups :: V.Vector FieldInfo -> V.Vector FieldInfo
-removeDups fis = V.reverse $ V.fromList $ go fis []
+removeNameTypeDups :: V.Vector FieldInfo -> V.Vector FieldInfo
+removeNameTypeDups fi = removeDups fi (\cur e -> e == cur && type_ e == type_ cur)
+
+removeNameDups :: V.Vector FieldInfo -> V.Vector FieldInfo
+removeNameDups fi = removeDups fi (\cur e -> e == cur)
+
+removeDups :: V.Vector FieldInfo -> (FieldInfo -> FieldInfo -> Bool) -> V.Vector FieldInfo
+removeDups fis pred = V.reverse $ V.fromList $ go fis []
     where
         go fis acc
             | V.null fis = acc
             | otherwise =
                 let fi = V.head fis
                     tail = V.tail fis
-                    dupInds = V.findIndices (\e -> e == fi && type_ e == type_ fi) tail
+                    dupInds = V.findIndices (pred fi) tail
                 in if V.null dupInds
                     then go tail $ fi:acc
                     else let dups = V.cons fi $ V.map (\idx -> unsafeIndex tail idx) dupInds

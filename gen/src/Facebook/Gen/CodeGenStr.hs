@@ -9,6 +9,7 @@ import Data.Vector hiding (singleton)
 import qualified Data.Vector as V
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import qualified Data.List as List
 
 import Facebook.Gen.Environment
 import Facebook.Gen.Types
@@ -30,6 +31,8 @@ imports =
                 "import Data.Time.Format",
                 "import Data.Aeson hiding (Value)",
                 "import Data.Text (Text)",
+                "import Data.Text.Read (decimal)",
+                "import Data.Scientific (toBoundedInteger)",
                 "import qualified Data.Text.Encoding as TE",
                 "import Data.Word (Word32)",
                 "import GHC.Generics (Generic)",
@@ -181,10 +184,11 @@ genEntity ent@(Entity nameEnt) map types =
                     then types
                     else V.filter (\fi -> not $ V.elem fi types) x
         filtered = filter fis
-        dataDecl = V.foldl' append "" $ V.map dataAndFieldInstance $ removeDups filtered
-        getter = myConcat $ V.map getterFct $ removeDups filtered
+        --dataDecl = V.foldl' append "" $ V.map dataAndFieldInstance $ removeDups filtered
+        dataDecl = dataAndFieldInstances $ removeNameTypeDups filtered
+        getter = myConcat $ V.map getterFct $ removeNameDups filtered
         getterFct fi = getterField fi
-        bsInstances = genToBsInstances $ removeDups filtered
+        bsInstances = genToBsInstances $ removeNameDups filtered
             -- genToBsInstances $ collectFieldInfosMode $ Map.delete Reading map -- collect all fields that need to be transmitted to FB
         -- gen all data fields + instances for records here TODO
     in (path, top <> dataDecl <> bsInstances <> getter <> Prelude.foldl append "" (
@@ -306,20 +310,64 @@ genConstraintLabel mode fis ent@(Entity entity) =
 --  type FieldValue AccId = Text
 --  fieldName _ = "acc_id"
 --  fieldLabel  = AccId
+dataAndFieldInstances :: V.Vector FieldInfo -> Text
+dataAndFieldInstances fis =
+    let dups = findDups fis
+    in if List.null dups -- Do all fields with the same name have the same type?
+        then let dataDecls = myConcat $ V.map dataAndFieldInstance fis
+                 new = myConcat $ V.map newtypeInstances fis
+             in dataDecls <> new
+        else -- this usually happens because Reading mode returns strings while Creating expects unsigned int32
+            let dups' = V.concat dups
+                unique = V.filter (\fi -> not $ List.elem fi dups') fis -- check
+                a@(maxs, mins) = (List.map List.maximum dups, --FIXME... let's hope we only have to convert to one type...
+                                List.map List.minimum dups)
+                dataDecls = myConcat $ V.map dataAndFieldInstance unique
+                new = myConcat $ V.map newtypeInstances unique
+                maxNew = T.concat $ List.map dataAndFieldInstance maxs -- these are the real types of our data types
+                jsonMax = genJsonNewtype $ List.zip maxs mins
+            in dataDecls <> new <> maxNew <> jsonMax
+
+genJsonNewtype :: [(FieldInfo, FieldInfo)] -> Text
+genJsonNewtype fis =
+    let types = List.map (\(f1, f2) -> (newtypeName f1, type_ f1, type_ f2)) fis
+    in T.concat $ List.map typesToJsonInstances types
+
+typesToJsonInstances :: (Text, Text, Text) -> Text
+typesToJsonInstances (nt, "Word32", "Text") =
+    let create = "pure $ " <> nt <> " num"
+    in "instance A.FromJSON " <> nt <> " where\n\
+        \\tparseJSON (Number x) =\n\
+        \\t case toBoundedInteger x of\n\
+        \\t   Just num -> " <> create <> "\n" <>
+        "\t   Nothing -> error \"Well... awesome\"\n\
+        \\tparseJSON (String str) =\n\
+        \\t case decimal str of\n\
+        \\t   Left err -> error err\n\
+        \\t   Right (num, _) -> " <> create <> "\n" <> -- FIXME
+        "instance A.ToJSON " <> nt <> "\n"
+typesToJsonInstances x = error $ show x
+
+
 dataAndFieldInstance :: FieldInfo -> Text
 dataAndFieldInstance fi =
     let adtName = fieldToAdt fi
-        newtypeName = adtName <> "_"
+        nt = newtypeName fi
         fieldType = type_ fi
         fieldName = name fi
     in "\ndata "  <> adtName <> " = " <> adtName <> "\n"
-        <> "newtype " <> newtypeName <> " = " <> newtypeName
+        <> "newtype " <> nt <> " = " <> nt
         <> " " <> fieldTypeParan fieldType <> " deriving " <> derivings fieldType <> "\n"
-        <> newtypeInstances newtypeName
+        -- <> newtypeInstances newtypeName
         <> "instance Field " <> adtName <> " where\n\t"
-        <> "type FieldValue " <> adtName <> " = " <> newtypeName <> "\n\t"
+        <> "type FieldValue " <> adtName <> " = " <> nt <> "\n\t"
         <> "fieldName _ = \"" <> fieldName <> "\"\n\t"
         <> "fieldLabel = " <> adtName <> "\n"
+
+newtypeName :: FieldInfo -> Text
+newtypeName fi =
+    let adtName = fieldToAdt fi
+    in adtName <> "_"
 
 fieldTypeParan :: Text -> Text
 fieldTypeParan ft =
@@ -331,10 +379,11 @@ derivings :: Text -> Text
 derivings "UTCTime" = "Generic"
 derivings _ = "(Show, Generic)"
 
-newtypeInstances :: Text -> Text
-newtypeInstances nt =
-    "instance A.FromJSON " <> nt <> "\n"
-    <> "instance A.ToJSON " <> nt <> "\n"
+newtypeInstances :: FieldInfo -> Text
+newtypeInstances fi =
+    let nt = newtypeName fi
+    in "instance A.FromJSON " <> nt <> "\n"
+        <> "instance A.ToJSON " <> nt <> "\n"
     -- <> "instance ToBS " <> nt <> " where\n\t"
     -- <> "toBS (" <> nt <> " a) = toBS a\n"
 

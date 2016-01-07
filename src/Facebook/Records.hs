@@ -105,7 +105,6 @@ toJSONRec ((f, v) :*: rest) =
     in case toJSON rest of -- will always be Object since we are representing records
         Object hmap -> toJSON $ Map.union curMap hmap
 
-
 -- List-level concatenation of Fields
 
 infixr 5 :::

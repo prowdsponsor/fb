@@ -63,11 +63,13 @@ main = do
     Pager images'' _ _ <- getAdImage (id $ head adaccids)
         (Id ::: Nil) tok
     liftIO $ print $ length images''
-    let campaign = (Name, Name_ "Test Campaign") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
-    ret <- setAdCampaign (id $ head adaccids) campaign tok
-    liftIO $ print ret
-   -- let delId = (CreateCampaignId, CreateCampaignId $ campaignId ret) :*: Nil
-   -- delCampaign <- delAdCampaign (id $ head adaccids) delId tok
-   -- liftIO $ print delCampaign
+    --let campaign = (Name, Name_ "Test Campaign") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
+    --ret <- setAdCampaign (id $ head adaccids) campaign tok
+    --liftIO $ print ret
+    --adset <- setAdSet (id $ head adaccids) campaign tok
+    --liftIO $ print adset
+    --let delId = (Id, Id_ $ campaignId ret) :*: Nil
+    --delCampaign <- delAdCampaign ret delId tok -- (id $ head adaccids) delId tok
+    --liftIO $ print delCampaign
     -- TODO: create Ad; test here; then beautilitics
     return ()

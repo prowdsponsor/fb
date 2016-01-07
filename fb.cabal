@@ -93,6 +93,7 @@ library
     , monad-control
     , resourcet
     , data-default
+    , scientific
     , http-types
     , http-conduit         >= 2.0     && < 2.2
     , http-client
