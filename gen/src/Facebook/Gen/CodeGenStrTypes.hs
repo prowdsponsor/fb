@@ -46,8 +46,51 @@ newTypes =
     \instance ToBS EffectiveStatusADT\n"
     <> execOption <> optGoal <> bidType <> callActionType
     <> runStatus <> objective <> buyingType <> deleteStrategy
-    <> billingEvent <> genericRetType <> genericIdRetType
-    -- <> runStatus <> genericRetType
+    <> billingEvent <> objectStorySpec <> adCreativeLinkData
+    <> genericRetType <> genericIdRetType
+
+objectStorySpec =
+    "data ObjectStorySpecADT = ObjectStorySpecADT {\n\
+    \\t\tlinkData  :: AdCreativeLinkData,\n\
+    \\t\tstoryPageId  :: Text -- FIXME PageId...\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance ToJSON ObjectStorySpecADT where\n\
+    \\ttoJSON (ObjectStorySpecADT ld pi) =\n\
+    \\t  object [ \"link_data\" .= ld,\n\
+    \\t           \"page_id\" .= pi ]\n"
+    <>
+    "instance FromJSON ObjectStorySpecADT where\n\
+    \\tparseJSON (Object v) =\n\
+    \\t ObjectStorySpecADT <$> v .: \"link_data\"\n\
+    \\t                    <*> v .: \"page_id\"\n"
+    <>
+    "instance ToBS ObjectStorySpecADT where\n\
+    \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
+
+adCreativeLinkData =
+    "data AdCreativeLinkData = AdCreativeLinkData {\n\
+    \\t\tcaption  :: Text,\n\
+    \\t\timageHash ::  Hash_,\n\
+    \\t\tlink, message  :: Text\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance ToJSON AdCreativeLinkData where\n\
+    \\ttoJSON (AdCreativeLinkData c i l m) =\n\
+    \\t  object [ \"caption\" .= c,\n\
+    \\t           \"image_hash\" .= i,\n\
+    \\t           \"link\" .= l,\n\
+    \\t           \"message\" .= m]\n"
+    <>
+    "instance FromJSON AdCreativeLinkData where\n\
+    \\tparseJSON (Object v) =\n\
+    \\t AdCreativeLinkData <$> v .: \"caption\"\n\
+    \\t                    <*> v .: \"image_hash\"\n\
+    \\t                    <*> v .: \"link\"\n\
+    \\t                    <*> v .: \"message\"\n"
+    <>
+    "instance ToBS AdCreativeLinkData where\n\
+    \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
 
 billingEvent =
     "data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \

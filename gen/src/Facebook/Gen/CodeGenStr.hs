@@ -65,16 +65,22 @@ entityModePagerSet =
                   (Entity "Ad", Reading),
                   (Entity "AdSet", Reading)]
 
+entityModeIdNotInURL  =
+    Set.fromList [(Entity "AdCreative", Deleting)]
+
 -- function return type
 entityModeRetType =
     Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
                   ((Entity "AdImage", Deleting), "Success"),
                   ((Entity "AdCampaign", Deleting), "Success"),
+                  ((Entity "AdCreative", Deleting), "Success"),
                   ((Entity "AdSet", Creating), "CreateAdSetId"),
+                  ((Entity "AdCreative", Creating), "CreateAdCreativeId"),
                   ((Entity "AdCampaign", Creating), "CreateCampaignId")]
 
 idTypeMap =
     Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),
+                  ((Entity "AdCreative", Deleting), "CreateAdCreativeId"),
                   ((Entity "AdSet", Deleting), "CreateAdSetId")]
 
 -- Does the generated function return a Pager?
@@ -82,6 +88,7 @@ entityModeRetDefs :: Map.Map (Entity, InteractionMode) Text
 entityModeRetDefs =
     Map.fromList [((Entity "AdImage", Creating), imgCreate),
                   ((Entity "AdCampaign", Creating), campaignCreate),
+                  ((Entity "AdCreative", Creating), adcreativeCreate),
                   ((Entity "AdSet", Creating), adsetCreate)]
 
 imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
@@ -104,7 +111,7 @@ imgDelete =  "data Success = Success {\n\
 campaignCreate =
     "data CreateCampaignId = CreateCampaignId {\n\
      \\tcampaignId :: Text\n\
-     \\t} deriving (Show, Generic)\n\
+     \\t} deriving Show\n\
      \instance FromJSON CreateCampaignId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateCampaignId <$> v .: \"id\"\n"
@@ -112,10 +119,18 @@ campaignCreate =
 adsetCreate =
     "data CreateAdSetId = CreateAdSetId {\n\
      \\tadsetId :: Text\n\
-     \\t} deriving (Show, Generic)\n\
+     \\t} deriving Show\n\
      \instance FromJSON CreateAdSetId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateAdSetId <$> v .: \"id\"\n"
+
+adcreativeCreate =
+    "data CreateAdCreativeId = CreateAdCreativeId {\n\
+     \\tadcreativeId :: Text\n\
+     \\t} deriving Show\n\
+     \instance FromJSON CreateAdCreativeId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateAdCreativeId <$> v .: \"id\"\n"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
@@ -512,7 +527,10 @@ genFct ent mode defFields =
         idConstr = case Map.lookup (ent, mode) idTypeMap of
                     Just x -> x
                     Nothing -> "Id_"
-    in fctName <> " (" <> idConstr <> " id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\" <> id <> \"" <> url
+        idUrl = if Set.member (ent, mode) entityModeIdNotInURL
+                    then ""
+                    else " <> id"
+    in fctName <> " (" <> idConstr <> " id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\"" <> idUrl <> " <> \"" <> url
        <> "\") " <> args defFields <> maybeToken <> "mtoken\n\n"
 
 modeToArgs Types _ = ""

@@ -22,13 +22,16 @@ main :: IO ()
 main = do
     inps <- V.mapM BS.readFile csvFiles
     let csvs = V.map (decode HasHeader) inps :: V.Vector (Either String (V.Vector CsvLine))
+    putStrLn "Generating source code ..."
     let (Right e@(Env m)) = buildEnv $ rights csvs
     saveFiles $ genFiles e
 
 saveFiles :: V.Vector (FilePath, Text) -> IO ()
 saveFiles = V.mapM_ save
     where
-        save (path, data_) = T.writeFile ("../src/" <> path) data_
+        save (path, data_) = do
+            putStrLn $ "Saving " ++ path
+            T.writeFile ("../src/" <> path) data_
 
 isAllRight :: V.Vector (Either String a) -> Bool
 isAllRight xs = V.length (V.filter isRight xs) == V.length xs

@@ -53,6 +53,7 @@ typesMap =
                 , ("Objective", "ObjectiveADT")
                 , ("BuyingType", "BuyingTypeADT")
                 , ("BillingEvent", "BillingEventADT")
+                , ("AdCreativeObjectStorySpec", "ObjectStorySpecADT")
                 , ("CallActionType", "CallActionType")
                 , ("URL", "Text")
                 , ("post id", "Text")
@@ -86,7 +87,7 @@ buildEnv csvs = do
                               "product_ad_behavior", "rf_prediction_id", "pacing_type"]
                               ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]
-                              ++ ["image_crops", "object_story_spec", "object_type", "applink_treatment", "tracking_specs",
+                              ++ ["image_crops", "object_type", "applink_treatment", "tracking_specs",
                                   "adset", "conversion_specs", "ad_review_feedback"]
                               ++ ["custom_event_type"]
                               ++ ["type", "dynamic_ad_voice", "annotations", "info_fields"]
