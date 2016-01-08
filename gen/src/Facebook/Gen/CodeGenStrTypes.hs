@@ -47,7 +47,18 @@ newTypes =
     <> execOption <> optGoal <> bidType <> callActionType
     <> runStatus <> objective <> buyingType <> deleteStrategy
     <> billingEvent <> objectStorySpec <> adCreativeLinkData
-    <> genericRetType <> genericIdRetType
+    <> creativeADT <> genericRetType <> genericIdRetType
+
+creativeADT =
+    "data AdCreativeADT = AdCreativeADT {\n\
+    \\tcreative_id  :: Text\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance FromJSON AdCreativeADT\n\
+    \instance ToJSON AdCreativeADT\n"
+    <>
+    "instance ToBS AdCreativeADT where\n\
+    \\ttoBS = toBS . toJSON\n"
 
 objectStorySpec =
     "data ObjectStorySpecADT = ObjectStorySpecADT {\n\
@@ -93,10 +104,12 @@ adCreativeLinkData =
     \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
 
 billingEvent =
-    "data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \
+    "data BillingEventADT = APP_INSTALLS_ | CLICKS_ | IMPRESSIONS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \
     \POST_ENGAGEMENT_ | VIDEO_VIEWS_\n" <>
     "instance Show BillingEventADT where\n\
     \\t show APP_INSTALLS_ = \"APP_INSTALLS\"\n\
+    \\t show CLICKS_ = \"CLICKS\"\n\
+    \\t show IMPRESSIONS_ = \"IMPRESSIONS\"\n\
     \\t show LINK_CLICKS_ = \"LINK_CLICKS\"\n\
     \\t show OFFER_CLAIMS_ = \"OFFER_CLAIMS\"\n\
     \\t show PAGE_LIKES_ = \"PAGE_LIKES\"\n\
@@ -108,6 +121,8 @@ billingEvent =
     \\ttoJSON = toJSON . show\n\
     \instance FromJSON BillingEventADT where\n\
     \\tparseJSON (String \"APP_INSTALLS\") = pure APP_INSTALLS_\n\
+    \\tparseJSON (String \"IMPRESSIONS\") = pure IMPRESSIONS_\n\
+    \\tparseJSON (String \"CLICKS\") = pure CLICKS_\n\
     \\tparseJSON (String \"LINK_CLICKS\") = pure LINK_CLICKS_\n\
     \\tparseJSON (String \"OFFER_CLAIMS\") = pure OFFER_CLAIMS_\n\
     \\tparseJSON (String \"PAGE_LIKES\") = pure PAGE_LIKES_\n\

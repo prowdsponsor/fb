@@ -62,6 +62,7 @@ entityModePagerSet =
     Set.fromList [(Entity "AdCampaign", Reading),
                   (Entity "Insights", Reading),
                   (Entity "AdImage", Reading),
+                  (Entity "AdCreative", Reading),
                   (Entity "Ad", Reading),
                   (Entity "AdSet", Reading)]
 
@@ -76,11 +77,13 @@ entityModeRetType =
                   ((Entity "AdCreative", Deleting), "Success"),
                   ((Entity "AdSet", Creating), "CreateAdSetId"),
                   ((Entity "AdCreative", Creating), "CreateAdCreativeId"),
+                  ((Entity "Ad", Creating), "CreateAdId"),
                   ((Entity "AdCampaign", Creating), "CreateCampaignId")]
 
 idTypeMap =
     Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),
                   ((Entity "AdCreative", Deleting), "CreateAdCreativeId"),
+                  ((Entity "Ad", Deleting), "CreateAdId"),
                   ((Entity "AdSet", Deleting), "CreateAdSetId")]
 
 -- Does the generated function return a Pager?
@@ -89,6 +92,7 @@ entityModeRetDefs =
     Map.fromList [((Entity "AdImage", Creating), imgCreate),
                   ((Entity "AdCampaign", Creating), campaignCreate),
                   ((Entity "AdCreative", Creating), adcreativeCreate),
+                  ((Entity "Ad", Creating), adCreate),
                   ((Entity "AdSet", Creating), adsetCreate)]
 
 imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
@@ -123,6 +127,7 @@ adsetCreate =
      \instance FromJSON CreateAdSetId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateAdSetId <$> v .: \"id\"\n"
+     <> hackSet
 
 adcreativeCreate =
     "data CreateAdCreativeId = CreateAdCreativeId {\n\
@@ -131,6 +136,15 @@ adcreativeCreate =
      \instance FromJSON CreateAdCreativeId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateAdCreativeId <$> v .: \"id\"\n"
+     <> hackCreative
+
+adCreate =
+    "data CreateAdId = CreateAdId {\n\
+     \\tadId :: Text\n\
+     \\t} deriving Show\n\
+     \instance FromJSON CreateAdId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateAdId <$> v .: \"id\"\n"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
@@ -177,6 +191,19 @@ toBsInstances = -- FIXME, look at old SimpleType class for instances
   \\ttoBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs\n\
   \instance ToBS UTCTime where\n\
   \\ttoBS t = B8.pack $ formatTime defaultTimeLocale rfc822DateFormat t\n"
+
+hackSet :: Text
+hackSet =
+    "\nadsetIdToInt :: CreateAdSetId -> Int\n\
+    \adsetIdToInt (CreateAdSetId id) =\n\
+    \\t    case decimal id of\n\
+    \\t      Right (num, _) -> num\n\
+    \\t      Left err -> error $ \"Could not convert CreateAdSetId to Int:\" ++ show err\n"
+
+hackCreative :: Text
+hackCreative =
+    "creativeToCreative :: CreateAdCreativeId -> AdCreativeADT\n\
+    \creativeToCreative (CreateAdCreativeId id) = AdCreativeADT id\n"
 
 genFiles :: Env -> Vector (FilePath, Text)
 genFiles (Env env) =
