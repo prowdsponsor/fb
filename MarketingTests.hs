@@ -14,12 +14,22 @@ import Facebook.Object.Marketing.AdAccount
 import Facebook.Object.Marketing.Types
 import Facebook.Object.Marketing.AdCampaign
 import qualified Facebook.Object.Marketing.AdCampaign as AdC
+import qualified Facebook.Object.Marketing.AdSet as AdS
 --import Facebook.Object.Marketing.AdLabel
+import Facebook.Object.Marketing.TargetingSpecs
+import Facebook.Object.Marketing.TargetingSpecs.Location
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.AdImage
 import Facebook.Object.Marketing.Utility hiding (toBS)
 import Facebook.Object.Marketing.Insights
 import Prelude hiding (id)
+
+
+location = TargetLocation ["US"]
+target = TargetingSpecs location
+adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet Alex")
+        :*: (CampaignId, CampaignId_ "DUMMY") :*: (Targeting, Targeting_ target)
+        :*: (BillingEvent, BillingEvent_ LINK_CLICKS_) :*: (DailyBudget, DailyBudget_ 500) :*: Nil
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -46,28 +56,33 @@ main = do
     Pager adSets _ _ <- getAdSet (id $ head adCamps) (ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
     liftIO $ print adSets
     let (Id_ idText) = id $ head adSets
-    Pager insights _ _ <- getInsights (FB.Id idText) [] tok
-    liftIO $ print (insights:: [WithJSON Insights])
-    Pager images _ _ <- getAdImage (id $ head adaccids)
-            (Id ::: Name ::: Nil) tok
-    liftIO $ print $ (id $ head adaccids)
-    liftIO $ print $ length images
-    let rec = (Filename, Filename_ "/home/alex/code/fb/bridge.jpg") :*: Nil
-    adImg <- setAdImage (id $ head adaccids) rec tok
-    liftIO $ print adImg
-    Pager images' _ _ <- getAdImage (id $ head adaccids)
-        (Id ::: Nil) tok
-    liftIO $ print $ length images'
-    delRet <- delAdImage (id $ head adaccids) ((Hash, Hash_ "5f73a7d1df0252ac7f012224dde315d0") :*: Nil) tok
-    liftIO $ print delRet
-    Pager images'' _ _ <- getAdImage (id $ head adaccids)
-        (Id ::: Nil) tok
-    liftIO $ print $ length images''
-    --let campaign = (Name, Name_ "Test Campaign") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
-    --ret <- setAdCampaign (id $ head adaccids) campaign tok
-    --liftIO $ print ret
-    --adset <- setAdSet (id $ head adaccids) campaign tok
-    --liftIO $ print adset
+    --Pager insights _ _ <- getInsights (FB.Id idText) [] tok
+    --liftIO $ print (insights:: [WithJSON Insights])
+    --Pager images _ _ <- getAdImage (id $ head adaccids)
+    --        (Id ::: Name ::: Nil) tok
+    --liftIO $ print $ (id $ head adaccids)
+    --liftIO $ print $ length images
+    --let rec = (Filename, Filename_ "/home/alex/code/fb/bridge.jpg") :*: Nil
+    --adImg <- setAdImage (id $ head adaccids) rec tok
+    --liftIO $ print adImg
+    --Pager images' _ _ <- getAdImage (id $ head adaccids)
+    --    (Id ::: Nil) tok
+    --liftIO $ print $ length images'
+    --delRet <- delAdImage (id $ head adaccids) ((Hash, Hash_ "5f73a7d1df0252ac7f012224dde315d0") :*: Nil) tok
+    --liftIO $ print delRet
+    --Pager images'' _ _ <- getAdImage (id $ head adaccids)
+    --    (Id ::: Nil) tok
+    --liftIO $ print $ length images''
+    let campaign = (Name, Name_ "Test Campaign") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
+    ret <- setAdCampaign (id $ head adaccids) campaign tok
+    liftIO $ print ret
+    let location = TargetLocation ["US"]
+    let target = TargetingSpecs location
+    let adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet Alex")
+                :*: (CampaignId, CampaignId_ $ campaignId ret) :*: (Targeting, Targeting_ target)
+                :*: (BillingEvent, BillingEvent_ LINK_CLICKS_) :*: (DailyBudget, DailyBudget_ 500) :*: Nil
+    adsetRet <- setAdSet (id $ head adaccids) adset tok
+    liftIO $ print adsetRet
     --let delId = (Id, Id_ $ campaignId ret) :*: Nil
     --delCampaign <- delAdCampaign ret delId tok -- (id $ head adaccids) delId tok
     --liftIO $ print delCampaign

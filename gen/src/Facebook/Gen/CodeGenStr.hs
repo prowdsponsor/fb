@@ -48,7 +48,7 @@ imports =
 langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts", "OverloadedStrings",
                        "ConstraintKinds"]
 
--- What do add after /id to the URL
+-- What to add after /id to the URL
 entityUrlPostfixMap =
     Map.fromList [(Entity "AdCampaign", "/campaigns"),
                   (Entity "Insights", "/insights"),
@@ -65,7 +65,7 @@ entityModePagerSet =
                   (Entity "Ad", Reading),
                   (Entity "AdSet", Reading)]
 
--- Does the generated function return a Pager?
+-- function return type
 entityModeRetType =
     Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
                   ((Entity "AdImage", Deleting), "Success"),
@@ -152,8 +152,11 @@ toBsInstances = -- FIXME, look at old SimpleType class for instances
   \\ttoBS = B8.singleton\n\
   \instance ToBS Integer\n\
   \instance ToBS Int\n\
-  \instance ToBS Bool\n\
-  \instance ToBS A.Value\n\
+  \instance ToBS Bool where\n\
+  \\ttoBS True = toBS (\"true\" :: String)\n\
+  \\ttoBS False = toBS (\"false\" :: String)\n\
+  \--instance ToBS Value where\n\
+  \--\ttoBS = BSL.toStrict . encode\n\
   \instance ToBS Float\n\
   \instance ToBS a => ToBS (Vector a) where\n\
   \\ttoBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs\n\

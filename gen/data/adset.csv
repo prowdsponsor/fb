@@ -43,7 +43,7 @@ Ad Set,Creating,product_catalog_id,id,The ID of a Product Catalog. Used with Dyn
 Ad Set,Updating,end_time,datetime,"End time, specify end_time=0 to set the set to be ongoing and have no end date. UTC UNIX timestamp",,
 Ad Set,Creating,daily_imps,unsigned int32,Daily impressions. Available only for campaigns with buying_type=FIXED_CPM,,
 Ad Set,Updating,pixel_id,numeric string or integer,The ID of a Facebook conversion pixel.  Used with offsite conversion campaigns.,,
-Ad Set,Creating,daily_budget,unsigned int32,The daily budget defined in your account currency,,
+Ad Set,Creating,daily_budget,unsigned int32,The daily budget defined in your account currency,y,
 Ad Set,Updating,days,list<unsigned int32>,unsigned int32&gt,"Array of ints representing which days the schedule is active. Valid values are 0-6 with 0 representing Sunday, 1 representing Monday, ... and 6 representing Saturday.Required",
 Ad Set,Updating,start_minute,unsigned int32,A 0 based minute of the day representing when the schedule startsRequired,,
 Ad Set,Updating,is_autobid,boolean,If autobid is set. Either bid_amount or is_autobid is required. Cannot be used when optimization_goal=APP_INSTALLS,,
