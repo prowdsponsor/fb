@@ -31,12 +31,5 @@ data TargetLocation = TargetLocation
   --, location_types :: Maybe LocationTypes
   } deriving (Show, Eq, Generic)
 
---instance Show TargetLocation where
---    show (TargetLocation c) = "\"countries:\"[\"US\"]"
-
---instance ToBS [Text] where
---    toBS = encodeFbParam
-
-instance FromJSON TargetLocation
 instance ToJSON TargetLocation where
     toJSON = genericToJSON defaultOptions { omitNothingFields = True }

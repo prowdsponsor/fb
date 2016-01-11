@@ -4,7 +4,7 @@ import System.Environment
 import Network.HTTP.Conduit
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import Facebook hiding (Id)
+import Facebook hiding (Id, Male, Female)
 import qualified Facebook as FB
 import Facebook.Records
 import           Control.Monad.Trans.Resource
@@ -20,6 +20,7 @@ import qualified Facebook.Object.Marketing.AdImage as AdI
 --import Facebook.Object.Marketing.AdLabel
 import Facebook.Object.Marketing.TargetingSpecs
 import Facebook.Object.Marketing.TargetingSpecs.Location
+import Facebook.Object.Marketing.TargetingSpecs.Demographies
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Ad
 import qualified Facebook.Object.Marketing.Ad as Ad
@@ -71,21 +72,23 @@ main = do
     --Pager images'' _ _ <- getAdImage (id $ head adaccids)
     --    (Id ::: Nil) tok
     --liftIO $ print $ length images''
-    let campaign = (Name, Name_ "Test Campaign API") :*: (Objective, Objective_ OBJ_LINK_CLICKS) :*: (AdC.Status, AdC.Status_ PAUSED_) :*: Nil
+    let campaign = (Name, Name_ "Test Campaign API") :*: (Objective, Objective_ OBJ_LINK_CLICKS)
+                   :*: (AdC.Status, AdC.Status_ PAUSED_) :*: (BuyingType, BuyingType_ AUCTION) :*: Nil
     ret <- setAdCampaign (id $ head adaccids) campaign tok
     liftIO $ print ret
-    let location = TargetLocation ["US"]
-    let target = TargetingSpecs location
+    let location = TargetLocation ["US", "GB"]
+    let demo = Demography Female (Just $ mkAge 20) $ Just $ mkAge 35
+    let target = TargetingSpecs location $ Just demo
     let adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet API")
                 :*: (CampaignId, CampaignId_ $ campaignId ret) :*: (Targeting, Targeting_ target)
                 :*: (OptimizationGoal, OptimizationGoal_ REACH)
                 :*: (BillingEvent, BillingEvent_ IMPRESSIONS_) :*: (DailyBudget, DailyBudget_ 500) :*: Nil
     adsetRet <- setAdSet (id $ head adaccids) adset tok
     liftIO $ print adsetRet
-    Pager adCr _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStoryId ::: Nil) $ Just tok
-    liftIO $ print adCr
+    --Pager adCr _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStoryId ::: Nil) $ Just tok
+    --liftIO $ print adCr
     --let pageId = unObjectStoryId_ $ object_story_id $ head adCr
-    let imgHash = AdI.hash $  AdI.images adImg Map.! "bridge.jpg"
+    let imgHash = AdI.hash $ AdI.images adImg Map.! "bridge.jpg"
     let link = AdCreativeLinkData "Test Caption API" (Hash_ imgHash)
                     "https://www.facebook.com/BeautifulDestinations" "Test message API"
     let oss = ObjectStorySpecADT link "266533256797995" -- BD page id
@@ -93,10 +96,12 @@ main = do
                     :*: (ObjectStorySpec, ObjectStorySpec_ oss) :*: Nil
     creativeRet <- setAdCreative (id $ head adaccids) adcreative tok
     liftIO $ print creativeRet
+    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Objective ::: BuyingType ::: Nil) tok
+    liftIO $ print adCamps
     let ad = (Creative, Creative_ $ creativeToCreative creativeRet) :*: (AdsetId, AdsetId_ $ adsetIdToInt adsetRet)
             :*: (Name, Name_ "Another Test Ad! API") :*: (Ad.Status, Ad.Status_ PAUSED_) :*: Nil
     adId <- setAd (id $ head adaccids) ad tok
-    liftIO $ print ad
+    liftIO $ print adId
     --let delId = (Id, Id_ $ campaignId ret) :*: Nil
     --delCampaign <- delAdCampaign ret delId tok -- (id $ head adaccids) delId tok
     --liftIO $ print delCampaign
