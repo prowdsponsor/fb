@@ -20,19 +20,23 @@ data TargetingSpecs = TargetingSpecs
    geo_locations :: TargetLocation
   , demo :: Maybe Demography
   --, mobile_targeting :: Maybe MobileTargeting -- ^ Please note that the fields of this record will be at the top level
-  --, page_types :: Maybe [PlacementOption]
+  , page_types :: Maybe [PlacementOption]
   } deriving (Show, Eq, Generic)
 
 instance ToJSON TargetingSpecs where -- FIXME
     --toJSON = genericToJSON defaultOptions { omitNothingFields = True }
-    toJSON (TargetingSpecs loc demo) =
-        let locJson = object ["geo_locations" .= genericToJSON defaultOptions { omitNothingFields = True } loc]
+    toJSON (TargetingSpecs loc demo pt) =
+        let locJson = object ["geo_locations" .= toJSON loc]
             demoJson = case demo of
                         Nothing ->  Null
                         Just dem -> demoToJSON dem
-        in merge locJson demoJson
+            pagesJson = case pt of
+                            Nothing -> Null
+                            Just x -> object ["page_types" .= toJSON x]
+        in foldl merge Null [locJson, demoJson, pagesJson]
 
 merge :: Value -> Value -> Value
+merge Null v = v
 merge v Null = v
 merge (Object v1) (Object v2) = Object $ HM.union v1 v2
 
