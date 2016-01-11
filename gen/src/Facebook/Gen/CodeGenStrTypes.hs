@@ -145,7 +145,7 @@ objective =
     "data ObjectiveADT = OBJ_BRAND_AWARENESS | OBJ_CANVAS_APP_ENGAGEMENT | OBJ_CANVAS_APP_INSTALLS | \
     \OBJ_CONVERSIONS | OBJ_EVENT_RESPONSES | OBJ_EXTERNAL | OBJ_LEAD_GENERATION | OBJ_LINK_CLICKS | OBJ_LOCAL_AWARENESS | \
     \OBJ_MOBILE_APP_ENGAGEMENT | OBJ_MOBILE_APP_INSTALLS | OBJ_OFFER_CLAIMS | OBJ_PAGE_LIKES | OBJ_POST_ENGAGEMENT | \
-    \OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS\n"
+    \OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS | OBJ_NONE\n"
     <>
     "instance Show ObjectiveADT where\n\
     \\tshow OBJ_BRAND_AWARENESS = \"BRAND_AWARENESS\"\n\
@@ -163,6 +163,7 @@ objective =
     \\tshow OBJ_PAGE_LIKES = \"PAGE_LIKES\"\n\
     \\tshow OBJ_POST_ENGAGEMENT = \"POST_ENGAGEMENT\"\n\
     \\tshow OBJ_PRODUCT_CATALOG_SALES = \"PRODUCT_CATALOG_SALES\"\n\
+    \\tshow OBJ_NONE = \"NONE\"\n\
     \\tshow OBJ_VIDEO_VIEWS = \"VIDEO_VIEWS\"\n"
     <>
     "instance ToBS ObjectiveADT\n"
@@ -185,6 +186,7 @@ objective =
     \\tparseJSON (String \"PAGE_LIKES\") = pure OBJ_PAGE_LIKES\n\
     \\tparseJSON (String \"POST_ENGAGEMENT\") = pure OBJ_POST_ENGAGEMENT\n\
     \\tparseJSON (String \"PRODUCT_CATALOG_SALES\") = pure OBJ_PRODUCT_CATALOG_SALES\n\
+    \\tparseJSON (String \"NONE\") = pure OBJ_NONE\n\
     \\tparseJSON (String \"VIDEO_VIEWS\") = pure OBJ_VIDEO_VIEWS\n"
 
 runStatus =

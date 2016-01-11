@@ -162,6 +162,7 @@ isTokenNecessarySet =
                   (Entity "Ad", Updating),
                   (Entity "Ad", Creating),
                   (Entity "Ad", Reading),
+                  (Entity "AdCreative", Reading),
                   (Entity "AdCreative", Deleting),
                   (Entity "AdCreative", Updating),
                   (Entity "AdCreative", Creating),
