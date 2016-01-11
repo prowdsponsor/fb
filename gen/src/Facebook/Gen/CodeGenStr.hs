@@ -161,6 +161,7 @@ isTokenNecessarySet =
                   (Entity "Ad", Deleting),
                   (Entity "Ad", Updating),
                   (Entity "Ad", Creating),
+                  (Entity "Ad", Reading),
                   (Entity "AdCreative", Deleting),
                   (Entity "AdCreative", Updating),
                   (Entity "AdCreative", Creating),
@@ -399,6 +400,12 @@ typesToJsonInstances (nt, "Int", "Text") =
         \\t case decimal str of\n\
         \\t   Left err -> error err\n\
         \\t   Right (num, _) -> " <> create <> "\n" <> -- FIXME
+        "instance A.ToJSON " <> nt <> "\n"
+typesToJsonInstances (nt, "AdCreativeADT", "Text") =
+    let create = "pure $ " <> nt <> " creativeId"
+    in "instance A.FromJSON " <> nt <> " where\n\
+        \\tparseJSON (Object v) = " <> nt <> " <$> AdCreativeADT <$>\n\
+        \\t v .: \"id\" <|> v .: \"creative_id\"\n" <>
         "instance A.ToJSON " <> nt <> "\n"
 typesToJsonInstances x = error $ show x
 

@@ -40,6 +40,7 @@ instance Ord FieldInfo where -- order by type string in order to choose type whe
             (FieldInfo _ t2 _ _ _) = cmp t1 t2
                 where
                     cmp "Int" "Text" = GT -- FIXME!!!!
+                    cmp "AdCreativeADT" "Text" = GT -- FIXME!!!!
                     cmp a b = compare a b
 
 instance FromField Boolean where

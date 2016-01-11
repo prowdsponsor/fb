@@ -21,6 +21,7 @@ import qualified Facebook.Object.Marketing.AdImage as AdI
 import Facebook.Object.Marketing.TargetingSpecs
 import Facebook.Object.Marketing.TargetingSpecs.Location
 import Facebook.Object.Marketing.TargetingSpecs.Demographies
+import Facebook.Object.Marketing.TargetingSpecs.Placement
 import Facebook.Object.Marketing.AdSet
 import Facebook.Object.Marketing.Ad
 import qualified Facebook.Object.Marketing.Ad as Ad
@@ -57,13 +58,13 @@ main = do
     let (Id_ idText) = id $ head adSets
     --Pager insights _ _ <- getInsights (FB.Id idText) [] tok
     --liftIO $ print (insights:: [WithJSON Insights])
-    Pager images _ _ <- getAdImage (id $ head adaccids)
-            (Id ::: Name ::: Nil) tok
-    liftIO $ print $ (id $ head adaccids)
-    liftIO $ print $ length images
+    --Pager images _ _ <- getAdImage (id $ head adaccids)
+    --        (Id ::: Name ::: Nil) tok
+    --liftIO $ print $ (id $ head adaccids)
+    --liftIO $ print $ length images
     let rec = (Filename, Filename_ "/home/alex/code/fb/bridge.jpg") :*: Nil
     adImg <- setAdImage (id $ head adaccids) rec tok
-    liftIO $ print adImg
+    --liftIO $ print adImg
     --Pager images' _ _ <- getAdImage (id $ head adaccids)
     --    (Id ::: Nil) tok
     --liftIO $ print $ length images'
@@ -78,7 +79,7 @@ main = do
     liftIO $ print ret
     let location = TargetLocation ["US", "GB"]
     let demo = Demography Female (Just $ mkAge 20) $ Just $ mkAge 35
-    let target = TargetingSpecs location $ Just demo
+    let target = TargetingSpecs location (Just demo) Nothing -- $ Just [InstagramStream, Desktopfeed]
     let adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet API")
                 :*: (CampaignId, CampaignId_ $ campaignId ret) :*: (Targeting, Targeting_ target)
                 :*: (OptimizationGoal, OptimizationGoal_ REACH)
@@ -100,6 +101,8 @@ main = do
     liftIO $ print adCamps
     let ad = (Creative, Creative_ $ creativeToCreative creativeRet) :*: (AdsetId, AdsetId_ $ adsetIdToInt adsetRet)
             :*: (Name, Name_ "Another Test Ad! API") :*: (Ad.Status, Ad.Status_ PAUSED_) :*: Nil
+    Pager ads _ _ <- getAd (id $ head adaccids) (Name ::: BidType ::: Nil) tok
+    liftIO $ print ads
     adId <- setAd (id $ head adaccids) ad tok
     liftIO $ print adId
     --let delId = (Id, Id_ $ campaignId ret) :*: Nil
