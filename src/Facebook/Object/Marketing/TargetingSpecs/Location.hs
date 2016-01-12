@@ -33,3 +33,6 @@ data TargetLocation = TargetLocation
 
 instance ToJSON TargetLocation where
     toJSON = genericToJSON defaultOptions { omitNothingFields = True }
+
+instance FromJSON TargetLocation where
+    parseJSON = genericParseJSON defaultOptions { omitNothingFields = True }

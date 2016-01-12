@@ -23,8 +23,7 @@ data TargetingSpecs = TargetingSpecs
   , page_types :: Maybe [PlacementOption]
   } deriving (Show, Eq, Generic)
 
-instance ToJSON TargetingSpecs where -- FIXME
-    --toJSON = genericToJSON defaultOptions { omitNothingFields = True }
+instance ToJSON TargetingSpecs where
     toJSON (TargetingSpecs loc demo pt) =
         let locJson = object ["geo_locations" .= toJSON loc]
             demoJson = case demo of
@@ -41,7 +40,7 @@ merge v Null = v
 merge (Object v1) (Object v2) = Object $ HM.union v1 v2
 
 instance FromJSON TargetingSpecs where
-    parseJSON (Object v) = undefined
+    parseJSON val@(Object v) = genericParseJSON defaultOptions val
 
 instance ToBS TargetingSpecs where
     toBS a = toBS $ toJSON a

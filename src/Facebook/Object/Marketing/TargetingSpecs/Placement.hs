@@ -20,3 +20,14 @@ data PlacementOption = Desktopfeed
                      deriving (Show, Eq, Generic)
 instance ToJSON PlacementOption where
     toJSON = genericToJSON defaultOptions {constructorTagModifier = map toLower}
+
+instance FromJSON PlacementOption where
+    parseJSON (String "desktopfeed") = pure Desktopfeed
+    parseJSON (String "rightcolumn") = pure RightColumn
+    parseJSON (String "mobilefeed") = pure MobileFeed
+    parseJSON (String "mobileexternal") = pure MobileExternal
+    parseJSON (String "home") = pure Home
+    parseJSON (String "instagramstream") = pure InstagramStream
+
+
+
