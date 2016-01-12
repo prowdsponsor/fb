@@ -8,6 +8,7 @@ import Facebook hiding (Id, Male, Female)
 import qualified Facebook as FB
 import Facebook.Records
 import           Control.Monad.Trans.Resource
+import           Control.Monad
 import Data.Time
 import Control.Monad.Trans
 import Facebook.Object.Marketing.AdAccount
@@ -36,6 +37,9 @@ main = do
   appSecret <- getEnv "FB_APP_SECRET"
   tokenBody <- getEnv "FB_ACCESS_TOKEN"
   fbUid <- getEnv "FB_USER_ID"
+  pageId <- liftM T.pack $ getEnv "FB_PAGE_ID"
+  igId <- liftM T.pack $ getEnv "IG_ID"
+  fbUrl <- liftM T.pack $ getEnv "FB_URL"
   man <- newManager conduitManagerSettings
   now <- getCurrentTime
   let creds = Credentials "bdpromo" (T.pack appId) (T.pack appSecret)
@@ -79,7 +83,7 @@ main = do
     liftIO $ print ret
     let location = TargetLocation ["US", "GB"]
     let demo = Demography Female (Just $ mkAge 20) $ Just $ mkAge 35
-    let target = TargetingSpecs location (Just demo) Nothing -- $ Just [InstagramStream, Desktopfeed]
+    let target = TargetingSpecs location (Just demo) $ Just [InstagramStream] -- required IG ID, InstagramStream]
     let adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet API")
                 :*: (CampaignId, CampaignId_ $ campaignId ret) :*: (Targeting, Targeting_ target)
                 :*: (OptimizationGoal, OptimizationGoal_ REACH)
@@ -89,14 +93,20 @@ main = do
     --Pager adCr _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStoryId ::: Nil) $ Just tok
     --liftIO $ print adCr
     --let pageId = unObjectStoryId_ $ object_story_id $ head adCr
+    Pager adSets _ _ <- getAdSet (id $ head adaccids) (Name ::: BillingEvent ::: OptimizationGoal ::: Targeting ::: Nil) tok
+    --liftIO $ print adSets
     let imgHash = AdI.hash $ AdI.images adImg Map.! "bridge.jpg"
-    let link = AdCreativeLinkData "Test Caption API" (Hash_ imgHash)
-                    "https://www.facebook.com/BeautifulDestinations" "Test message API"
-    let oss = ObjectStorySpecADT link "266533256797995" -- BD page id
-    let adcreative = (Name, Name_ "Test AdCreative Me, Myself, and I (API)")
+    let cta_value = CallToActionValue fbUrl "This is the link caption"
+    let call_to_action = Just $ CallToActionADT LEARN_MORE cta_value
+    let link = AdCreativeLinkData "Test Caption API" (Hash_ imgHash) fbUrl "This is my caption!"
+                    (Just ("This is a description" :: T.Text)) call_to_action
+    let oss = ObjectStorySpecADT link (FBPageId pageId) $ Just $ IgId igId
+    let adcreative = (Name, Name_ "Test AdCreative")
                     :*: (ObjectStorySpec, ObjectStorySpec_ oss) :*: Nil
     creativeRet <- setAdCreative (id $ head adaccids) adcreative tok
     liftIO $ print creativeRet
+    Pager cre _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStorySpec ::: Nil) tok
+    liftIO $ print cre
     Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Objective ::: BuyingType ::: Nil) tok
     liftIO $ print adCamps
     let ad = (Creative, Creative_ $ creativeToCreative creativeRet) :*: (AdsetId, AdsetId_ $ adsetIdToInt adsetRet)

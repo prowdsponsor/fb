@@ -55,7 +55,7 @@ typesMap =
                 , ("BuyingType", "BuyingTypeADT")
                 , ("BillingEvent", "BillingEventADT")
                 , ("AdCreativeObjectStorySpec", "ObjectStorySpecADT")
-                , ("CallActionType", "CallActionType")
+                , ("CallActionType", "CallToActionTypeADT")
                 , ("URL", "Text")
                 , ("post id", "Text")
                 , ("Post ID", "Text")
