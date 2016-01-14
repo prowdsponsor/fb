@@ -26,6 +26,7 @@ imports =
                 "import Facebook.Pager",
                 "import Facebook.Monad",
                 "import Facebook.Graph",
+                "import Facebook.Base (FacebookException(..))",
                 "import qualified Data.Aeson as A",
                 "import Data.Time.Clock",
                 "import Data.Time.Format",
@@ -70,15 +71,25 @@ entityModeIdNotInURL  =
     Set.fromList [(Entity "AdCreative", Deleting)]
 
 -- function return type
-entityModeRetType =
-    Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
-                  ((Entity "AdImage", Deleting), "Success"),
-                  ((Entity "AdCampaign", Deleting), "Success"),
+entityModeRetType = -- FIXME!
+    Map.fromList [((Entity "AdImage", Creating), "(Either FacebookException SetImgs)"),
+                  ((Entity "AdImage", Deleting), "(Either FacebookException Success)"),
+                  ((Entity "AdCampaign", Deleting), "(Either FacebookException Success)"),
+                  ((Entity "AdCampaign", Updating), "(Either FacebookException r)"),
                   ((Entity "AdCreative", Deleting), "Success"),
-                  ((Entity "AdSet", Creating), "CreateAdSetId"),
-                  ((Entity "AdCreative", Creating), "CreateAdCreativeId"),
-                  ((Entity "Ad", Creating), "CreateAdId"),
-                  ((Entity "AdCampaign", Creating), "CreateCampaignId")]
+                  ((Entity "AdSet", Creating), "(Either FacebookException CreateAdSetId)"),
+                  ((Entity "AdSet", Deleting), "(Either FacebookException r)"),
+                  ((Entity "AdSet", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCreative", Creating), "(Either FacebookException CreateAdCreativeId)"),
+                  ((Entity "AdCreative", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCreative", Deleting), "(Either FacebookException r)"),
+                  ((Entity "Ad", Creating), "(Either FacebookException CreateAdId)"),
+                  ((Entity "Ad", Deleting), "(Either FacebookException r)"),
+                  ((Entity "Ad", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdAccount", Creating), "(Either FacebookException r)"),
+                  ((Entity "AdAccount", Deleting), "(Either FacebookException r)"),
+                  ((Entity "AdAccount", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCampaign", Creating), "(Either FacebookException CreateCampaignId)")]
 
 idTypeMap =
     Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),

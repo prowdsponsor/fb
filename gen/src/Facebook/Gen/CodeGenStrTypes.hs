@@ -126,9 +126,9 @@ adCreativeLinkData =
     \\t  object [ \"caption\" .= c,\n\
     \\t           \"image_hash\" .= i,\n\
     \\t           \"link\" .= l,\n\
-    \\t           \"message\" .= m,\n\
-    \\t           \"description\" .= d,\n\
-    \\t           \"call_to_action\" .= cta]\n"
+    \\t           \"message\" .= m]\n\
+    \\t           --\"description\" .= d,\n\
+    \\t           --\"call_to_action\" .= cta]\n"
     <>
     "instance FromJSON AdCreativeLinkData where\n\
     \\tparseJSON (Object v) =\n\

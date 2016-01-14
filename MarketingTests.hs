@@ -111,7 +111,6 @@ main = do
     let oss = ObjectStorySpecADT link (FBPageId pageId) $ Just $ IgId igId
     let adcreative = (Name, Name_ "Test AdCreative")
                     :*: (ObjectStorySpec, ObjectStorySpec_ oss) :*: Nil
-    liftIO $ print $ encode adcreative
     creativeRet' <- setAdCreative (id $ head adaccids) adcreative tok
     liftIO $ print creativeRet'
     let !creativeRet = either (error . show) P.id creativeRet'
