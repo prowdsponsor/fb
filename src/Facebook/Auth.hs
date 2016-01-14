@@ -135,7 +135,7 @@ getUserAccessTokenStep2 redirectUrl query =
                      ["error", "error_reason", "error_description"]
              errorType = T.concat [t error_, " (", t errorReason, ")"]
              t = TE.decodeUtf8With TE.lenientDecode
-         in E.throw $ FacebookException errorType (t errorDescr)
+         in E.throw $ FacebookAuthException errorType (t errorDescr)
 
 
 -- | Attoparsec parser for user access tokens returned by

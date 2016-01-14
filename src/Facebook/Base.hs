@@ -13,7 +13,7 @@ module Facebook.Base
 
 import Control.Applicative
 import Control.Monad (mzero)
-import Control.Monad.IO.Class (MonadIO)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.ByteString.Char8 (ByteString)
 import Data.Default (def)
 import Data.Text (Text)
@@ -125,15 +125,32 @@ data FacebookException =
     -- | An exception coming from Facebook.
     FacebookException { fbeType    :: Text
                       , fbeMessage :: Text
+                      , fbeCode, fbeErrorSubcode :: Int
+                      , fbeIsTransient :: Bool
+                      , fbeErrorUserTitle, fbeErrorUserMsg, fbTraceId :: Text
                       }
     -- | An exception coming from the @fb@ package's code.
   | FbLibraryException { fbeMessage :: Text }
+  | FacebookAuthException { fbeTypeAuth    :: Text
+                          , fbeMessageAuth :: Text
+                          }
+
     deriving (Eq, Ord, Show, Read, Typeable)
 
 instance A.FromJSON FacebookException where
-    parseJSON (A.Object v) =
-        FacebookException <$> v A..: "type"
-                          <*> v A..: "message"
+    parseJSON (A.Object v) = do
+        val <- v A..:? "error"
+        case val of
+            Nothing -> fail "..."
+            Just v' ->
+                FacebookException <$> v' A..: "type"
+                                  <*> v' A..: "message"
+                                  <*> v' A..: "code"
+                                  <*> v' A..: "error_subcode"
+                                  <*> v' A..: "is_transient"
+                                  <*> v' A..: "error_user_title"
+                                  <*> v' A..: "error_user_msg"
+                                  <*> v' A..: "fbtrace_id"
     parseJSON _ = mzero
 
 instance E.Exception FacebookException where
@@ -164,7 +181,7 @@ fbhttpHelper manager req = do
 #if DEBUG
   _ <- liftIO $ printf "fbhttp response status: %s\n" (show status)
 #endif
-  if isOkay status
+  if True || isOkay status -- FIXME
     then return response
     else do
       let statusexc = H.StatusCodeException status headers cookies
@@ -181,11 +198,11 @@ fbhttpHelper manager req = do
 -- | Try to parse the @WWW-Authenticate@ header of a Facebook
 -- response.
 wwwAuthenticateParser :: AT.Parser FacebookException
-wwwAuthenticateParser =
-    FacebookException <$  AT.string "OAuth \"Facebook Platform\" "
-                      <*> text
-                      <*  AT.char ' '
-                      <*> text
+wwwAuthenticateParser = -- FIXME???
+    FacebookAuthException <$  AT.string "OAuth \"Facebook Platform\" "
+                         <*> text
+                         <*  AT.char ' '
+                         <*> text
     where
       text  = T.pack <$ AT.char '"' <*> many tchar <* AT.char '"'
       tchar = (AT.char '\\' *> AT.anyChar) <|> AT.notChar '"'

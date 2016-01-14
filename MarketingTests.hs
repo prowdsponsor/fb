@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, ScopedTypeVariables, BangPatterns #-}
 
 import System.Environment
 import Network.HTTP.Conduit
@@ -31,6 +31,9 @@ import Facebook.Object.Marketing.Utility hiding (toBS)
 import Facebook.Object.Marketing.Insights
 import Prelude hiding (id)
 import qualified Data.Map.Strict as Map
+import Data.Aeson
+import Data.Either
+import qualified Prelude as P
 
 main = do
   appId <- getEnv "FB_APP_ID"
@@ -39,6 +42,8 @@ main = do
   fbUid <- getEnv "FB_USER_ID"
   pageId <- liftM T.pack $ getEnv "FB_PAGE_ID"
   igId <- liftM T.pack $ getEnv "IG_ID"
+  --pageId <- liftM (read :: String -> Int) $ getEnv "FB_PAGE_ID"
+  --igId <- liftM (read :: String -> Int) $ getEnv "IG_ID"
   fbUrl <- liftM T.pack $ getEnv "FB_URL"
   man <- newManager conduitManagerSettings
   now <- getCurrentTime
@@ -55,11 +60,11 @@ main = do
                 (Balance ::: AmountSpent ::: Age ::: Nil)
                 (Just tok)
     liftIO $ print adAcc
-    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Nil) tok
-    liftIO $ print adCamps
-    Pager adSets _ _ <- getAdSet (id $ head adCamps) (ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
-    liftIO $ print adSets
-    let (Id_ idText) = id $ head adSets
+    --Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Nil) tok
+    --liftIO $ print adCamps
+    --Pager adSets _ _ <- getAdSet (id $ head adCamps) (ConfiguredStatus ::: EffectiveStatus ::: DailyBudget ::: Nil) tok
+    --liftIO $ print adSets
+    --let (Id_ idText) = id $ head adSets
     --Pager insights _ _ <- getInsights (FB.Id idText) [] tok
     --liftIO $ print (insights:: [WithJSON Insights])
     --Pager images _ _ <- getAdImage (id $ head adaccids)
@@ -67,7 +72,8 @@ main = do
     --liftIO $ print $ (id $ head adaccids)
     --liftIO $ print $ length images
     let rec = (Filename, Filename_ "/home/alex/code/fb/bridge.jpg") :*: Nil
-    adImg <- setAdImage (id $ head adaccids) rec tok
+    adImg' <- setAdImage (id $ head adaccids) rec tok
+    let adImg = either (error . show) P.id adImg'
     --liftIO $ print adImg
     --Pager images' _ _ <- getAdImage (id $ head adaccids)
     --    (Id ::: Nil) tok
@@ -79,42 +85,43 @@ main = do
     --liftIO $ print $ length images''
     let campaign = (Name, Name_ "Test Campaign API") :*: (Objective, Objective_ OBJ_LINK_CLICKS)
                    :*: (AdC.Status, AdC.Status_ PAUSED_) :*: (BuyingType, BuyingType_ AUCTION) :*: Nil
-    ret <- setAdCampaign (id $ head adaccids) campaign tok
-    liftIO $ print ret
+    ret' <- setAdCampaign (id $ head adaccids) campaign tok
+    liftIO $ print ret'
+    let ret = either (error . show) P.id ret'
     let location = TargetLocation ["US", "GB"]
     let demo = Demography Female (Just $ mkAge 20) $ Just $ mkAge 35
-    let target = TargetingSpecs location (Just demo) $ Just [InstagramStream] -- required IG ID, InstagramStream]
+    let target = TargetingSpecs location (Just demo) $ Just [InstagramStream]
     let adset = (IsAutobid, IsAutobid_ True) :*: (AdS.Status, AdS.Status_ PAUSED_) :*: (Name, Name_ "Test AdSet API")
                 :*: (CampaignId, CampaignId_ $ campaignId ret) :*: (Targeting, Targeting_ target)
                 :*: (OptimizationGoal, OptimizationGoal_ REACH)
                 :*: (BillingEvent, BillingEvent_ IMPRESSIONS_) :*: (DailyBudget, DailyBudget_ 500) :*: Nil
-    adsetRet <- setAdSet (id $ head adaccids) adset tok
-    liftIO $ print adsetRet
+    adsetRet' <- setAdSet (id $ head adaccids) adset tok
+    liftIO $ print adsetRet'
+    let adsetRet = either (error . show) P.id adsetRet'
     --Pager adCr _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStoryId ::: Nil) $ Just tok
     --liftIO $ print adCr
     --let pageId = unObjectStoryId_ $ object_story_id $ head adCr
-    Pager adSets _ _ <- getAdSet (id $ head adaccids) (Name ::: BillingEvent ::: OptimizationGoal ::: Targeting ::: Nil) tok
+    --Pager adSets _ _ <- getAdSet (id $ head adaccids) (Name ::: BillingEvent ::: OptimizationGoal ::: Targeting ::: Nil) tok
     --liftIO $ print adSets
     let imgHash = AdI.hash $ AdI.images adImg Map.! "bridge.jpg"
-    let cta_value = CallToActionValue fbUrl "This is the link caption"
+    let cta_value = CallToActionValue fbUrl "FIXME"
     let call_to_action = Just $ CallToActionADT LEARN_MORE cta_value
-    let link = AdCreativeLinkData "Test Caption API" (Hash_ imgHash) fbUrl "This is my caption!"
+    let link = AdCreativeLinkData "This is a caption" (Hash_ imgHash) fbUrl "This is my message!"
                     (Just ("This is a description" :: T.Text)) call_to_action
     let oss = ObjectStorySpecADT link (FBPageId pageId) $ Just $ IgId igId
     let adcreative = (Name, Name_ "Test AdCreative")
                     :*: (ObjectStorySpec, ObjectStorySpec_ oss) :*: Nil
-    creativeRet <- setAdCreative (id $ head adaccids) adcreative tok
-    liftIO $ print creativeRet
-    Pager cre _ _ <- getAdCreative (id $ head adaccids) (Name ::: ObjectStorySpec ::: Nil) tok
-    liftIO $ print cre
-    Pager adCamps _ _ <- getAdCampaign (id $ head adaccids) (Name ::: Objective ::: BuyingType ::: Nil) tok
-    liftIO $ print adCamps
+    liftIO $ print $ encode adcreative
+    creativeRet' <- setAdCreative (id $ head adaccids) adcreative tok
+    liftIO $ print creativeRet'
+    let !creativeRet = either (error . show) P.id creativeRet'
     let ad = (Creative, Creative_ $ creativeToCreative creativeRet) :*: (AdsetId, AdsetId_ $ adsetIdToInt adsetRet)
             :*: (Name, Name_ "Another Test Ad! API") :*: (Ad.Status, Ad.Status_ PAUSED_) :*: Nil
     Pager ads _ _ <- getAd (id $ head adaccids) (Name ::: BidType ::: Nil) tok
     liftIO $ print ads
-    adId <- setAd (id $ head adaccids) ad tok
-    liftIO $ print adId
+    adId' <- setAd (id $ head adaccids) ad tok
+    liftIO $ print adId'
+    let adId = either (error "haha") P.id adId'
     --let delId = (Id, Id_ $ campaignId ret) :*: Nil
     --delCampaign <- delAdCampaign ret delId tok -- (id $ head adaccids) delId tok
     --liftIO $ print delCampaign

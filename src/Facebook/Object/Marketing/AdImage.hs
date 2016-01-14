@@ -11,13 +11,16 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -29,97 +32,116 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Control.Monad.Trans.Resource as R
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Facebook.Object.Marketing.Types
-import Control.Applicative
 
 data Filename = Filename
 newtype Filename_ = Filename_ Text deriving (Show, Generic)
-instance A.FromJSON Filename_
-instance A.ToJSON Filename_
 instance Field Filename where
 	type FieldValue Filename = Filename_
 	fieldName _ = "filename"
 	fieldLabel = Filename
+unFilename_ :: Filename_ -> Text
+unFilename_ (Filename_ x) = x
 
 data Creatives = Creatives
 newtype Creatives_ = Creatives_ (Vector Text) deriving (Show, Generic)
-instance A.FromJSON Creatives_
-instance A.ToJSON Creatives_
 instance Field Creatives where
 	type FieldValue Creatives = Creatives_
 	fieldName _ = "creatives"
 	fieldLabel = Creatives
+unCreatives_ :: Creatives_ -> Vector Text
+unCreatives_ (Creatives_ x) = x
 
 data Height = Height
-newtype Height_ = Height_ Word32 deriving (Show, Generic)
-instance A.FromJSON Height_
-instance A.ToJSON Height_
+newtype Height_ = Height_ Int deriving (Show, Generic)
 instance Field Height where
 	type FieldValue Height = Height_
 	fieldName _ = "height"
 	fieldLabel = Height
+unHeight_ :: Height_ -> Int
+unHeight_ (Height_ x) = x
 
 data PermalinkUrl = PermalinkUrl
 newtype PermalinkUrl_ = PermalinkUrl_ Text deriving (Show, Generic)
-instance A.FromJSON PermalinkUrl_
-instance A.ToJSON PermalinkUrl_
 instance Field PermalinkUrl where
 	type FieldValue PermalinkUrl = PermalinkUrl_
 	fieldName _ = "permalink_url"
 	fieldLabel = PermalinkUrl
+unPermalinkUrl_ :: PermalinkUrl_ -> Text
+unPermalinkUrl_ (PermalinkUrl_ x) = x
 
 data Url128 = Url128
 newtype Url128_ = Url128_ Text deriving (Show, Generic)
-instance A.FromJSON Url128_
-instance A.ToJSON Url128_
 instance Field Url128 where
 	type FieldValue Url128 = Url128_
 	fieldName _ = "url_128"
 	fieldLabel = Url128
+unUrl128_ :: Url128_ -> Text
+unUrl128_ (Url128_ x) = x
 
 data OriginalHeight = OriginalHeight
-newtype OriginalHeight_ = OriginalHeight_ Word32 deriving (Show, Generic)
-instance A.FromJSON OriginalHeight_
-instance A.ToJSON OriginalHeight_
+newtype OriginalHeight_ = OriginalHeight_ Int deriving (Show, Generic)
 instance Field OriginalHeight where
 	type FieldValue OriginalHeight = OriginalHeight_
 	fieldName _ = "original_height"
 	fieldLabel = OriginalHeight
+unOriginalHeight_ :: OriginalHeight_ -> Int
+unOriginalHeight_ (OriginalHeight_ x) = x
 
 data Url = Url
 newtype Url_ = Url_ Text deriving (Show, Generic)
-instance A.FromJSON Url_
-instance A.ToJSON Url_
 instance Field Url where
 	type FieldValue Url = Url_
 	fieldName _ = "url"
 	fieldLabel = Url
+unUrl_ :: Url_ -> Text
+unUrl_ (Url_ x) = x
 
 data Status = Status
 newtype Status_ = Status_ Bool deriving (Show, Generic)
-instance A.FromJSON Status_
-instance A.ToJSON Status_
 instance Field Status where
 	type FieldValue Status = Status_
 	fieldName _ = "status"
 	fieldLabel = Status
+unStatus_ :: Status_ -> Bool
+unStatus_ (Status_ x) = x
 
 data OriginalWidth = OriginalWidth
-newtype OriginalWidth_ = OriginalWidth_ Word32 deriving (Show, Generic)
-instance A.FromJSON OriginalWidth_
-instance A.ToJSON OriginalWidth_
+newtype OriginalWidth_ = OriginalWidth_ Int deriving (Show, Generic)
 instance Field OriginalWidth where
 	type FieldValue OriginalWidth = OriginalWidth_
 	fieldName _ = "original_width"
 	fieldLabel = OriginalWidth
+unOriginalWidth_ :: OriginalWidth_ -> Int
+unOriginalWidth_ (OriginalWidth_ x) = x
 
 data Width = Width
-newtype Width_ = Width_ Word32 deriving (Show, Generic)
-instance A.FromJSON Width_
-instance A.ToJSON Width_
+newtype Width_ = Width_ Int deriving (Show, Generic)
 instance Field Width where
 	type FieldValue Width = Width_
 	fieldName _ = "width"
 	fieldLabel = Width
+unWidth_ :: Width_ -> Int
+unWidth_ (Width_ x) = x
+instance A.FromJSON Filename_
+instance A.ToJSON Filename_
+instance A.FromJSON Creatives_
+instance A.ToJSON Creatives_
+instance A.FromJSON Height_
+instance A.ToJSON Height_
+instance A.FromJSON PermalinkUrl_
+instance A.ToJSON PermalinkUrl_
+instance A.FromJSON Url128_
+instance A.ToJSON Url128_
+instance A.FromJSON OriginalHeight_
+instance A.ToJSON OriginalHeight_
+instance A.FromJSON Url_
+instance A.ToJSON Url_
+instance A.FromJSON Status_
+instance A.ToJSON Status_
+instance A.FromJSON OriginalWidth_
+instance A.ToJSON OriginalWidth_
+instance A.FromJSON Width_
+instance A.ToJSON Width_
 
 instance ToBS Filename_ where
 	toBS (Filename_ a) = toBS a
@@ -213,7 +235,7 @@ setAdImage :: (R.MonadResource m, MonadBaseControl IO m, AdImageSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m SetImgs
+	-> FacebookT Auth m (Either FacebookException SetImgs)
 setAdImage (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adimages") (toForm r) mtoken
 
 
@@ -228,5 +250,6 @@ delAdImage :: (R.MonadResource m, MonadBaseControl IO m, AdImageDel r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m Success
+	-> FacebookT Auth m (Either FacebookException Success)
 delAdImage (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adimages") (toForm r) mtoken
+

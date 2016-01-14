@@ -11,13 +11,16 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
 import Data.Aeson hiding (Value)
+import Control.Applicative
 import Data.Text (Text)
+import Data.Text.Read (decimal)
+import Data.Scientific (toBoundedInteger)
 import qualified Data.Text.Encoding as TE
-import Data.Word (Word32)
 import GHC.Generics (Generic)
 import qualified Data.Map.Strict as Map
 import Data.Vector (Vector)
@@ -32,51 +35,75 @@ import Facebook.Object.Marketing.Types
 
 data ObjectCount = ObjectCount
 newtype ObjectCount_ = ObjectCount_ Integer deriving (Show, Generic)
-instance A.FromJSON ObjectCount_
-instance A.ToJSON ObjectCount_
 instance Field ObjectCount where
 	type FieldValue ObjectCount = ObjectCount_
 	fieldName _ = "object_count"
 	fieldLabel = ObjectCount
+unObjectCount_ :: ObjectCount_ -> Integer
+unObjectCount_ (ObjectCount_ x) = x
+
+data DeleteStrategy = DeleteStrategy
+newtype DeleteStrategy_ = DeleteStrategy_ DeleteStrategyADT deriving (Show, Generic)
+instance Field DeleteStrategy where
+	type FieldValue DeleteStrategy = DeleteStrategy_
+	fieldName _ = "delete_strategy"
+	fieldLabel = DeleteStrategy
+unDeleteStrategy_ :: DeleteStrategy_ -> DeleteStrategyADT
+unDeleteStrategy_ (DeleteStrategy_ x) = x
 
 data BeforeDate = BeforeDate
 newtype BeforeDate_ = BeforeDate_ UTCTime deriving Generic
-instance A.FromJSON BeforeDate_
-instance A.ToJSON BeforeDate_
 instance Field BeforeDate where
 	type FieldValue BeforeDate = BeforeDate_
 	fieldName _ = "before_date"
 	fieldLabel = BeforeDate
+unBeforeDate_ :: BeforeDate_ -> UTCTime
+unBeforeDate_ (BeforeDate_ x) = x
 
 data Status = Status
 newtype Status_ = Status_ ConfigureStatusADT deriving (Show, Generic)
-instance A.FromJSON Status_
-instance A.ToJSON Status_
 instance Field Status where
 	type FieldValue Status = Status_
 	fieldName _ = "status"
 	fieldLabel = Status
+unStatus_ :: Status_ -> ConfigureStatusADT
+unStatus_ (Status_ x) = x
 
 data CanUseSpendCap = CanUseSpendCap
 newtype CanUseSpendCap_ = CanUseSpendCap_ Bool deriving (Show, Generic)
-instance A.FromJSON CanUseSpendCap_
-instance A.ToJSON CanUseSpendCap_
 instance Field CanUseSpendCap where
 	type FieldValue CanUseSpendCap = CanUseSpendCap_
 	fieldName _ = "can_use_spend_cap"
 	fieldLabel = CanUseSpendCap
+unCanUseSpendCap_ :: CanUseSpendCap_ -> Bool
+unCanUseSpendCap_ (CanUseSpendCap_ x) = x
 
 data StopTime = StopTime
 newtype StopTime_ = StopTime_ UTCTime deriving Generic
-instance A.FromJSON StopTime_
-instance A.ToJSON StopTime_
 instance Field StopTime where
 	type FieldValue StopTime = StopTime_
 	fieldName _ = "stop_time"
 	fieldLabel = StopTime
+unStopTime_ :: StopTime_ -> UTCTime
+unStopTime_ (StopTime_ x) = x
+instance A.FromJSON ObjectCount_
+instance A.ToJSON ObjectCount_
+instance A.FromJSON DeleteStrategy_
+instance A.ToJSON DeleteStrategy_
+instance A.FromJSON BeforeDate_
+instance A.ToJSON BeforeDate_
+instance A.FromJSON Status_
+instance A.ToJSON Status_
+instance A.FromJSON CanUseSpendCap_
+instance A.ToJSON CanUseSpendCap_
+instance A.FromJSON StopTime_
+instance A.ToJSON StopTime_
 
 instance ToBS ObjectCount_ where
 	toBS (ObjectCount_ a) = toBS a
+
+instance ToBS DeleteStrategy_ where
+	toBS (DeleteStrategy_ a) = toBS a
 
 instance ToBS BeforeDate_ where
 	toBS (BeforeDate_ a) = toBS a
@@ -91,6 +118,7 @@ instance ToBS StopTime_ where
 	toBS (StopTime_ a) = toBS a
 
 object_count r = r `Rec.get` ObjectCount
+delete_strategy r = r `Rec.get` DeleteStrategy
 before_date r = r `Rec.get` BeforeDate
 status r = r `Rec.get` Status
 can_use_spend_cap r = r `Rec.get` CanUseSpendCap
@@ -140,13 +168,19 @@ instance IsAdCampaignSetField SpendCap
 instance IsAdCampaignSetField Name
 instance IsAdCampaignSetField PageId
 instance IsAdCampaignSetField Objective
+data CreateCampaignId = CreateCampaignId {
+	campaignId :: Text
+	} deriving Show
+instance FromJSON CreateCampaignId where
+		parseJSON (Object v) =
+		   CreateCampaignId <$> v .: "id"
 
 type AdCampaignSet r = (A.FromJSON r, IsAdCampaignSetField r, ToForm r)
 setAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m SuccessId
+	-> FacebookT Auth m (Either FacebookException CreateCampaignId)
 setAdCampaign (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
 
 
@@ -165,7 +199,7 @@ updAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignUpd r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
+	-> FacebookT Auth m (Either FacebookException r)
 updAdCampaign (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
 
 
@@ -174,14 +208,15 @@ class IsAdCampaignDelField r
 instance (IsAdCampaignDelField h, IsAdCampaignDelField t) => IsAdCampaignDelField (h :*: t)
 instance IsAdCampaignDelField Nil
 instance IsAdCampaignDelField ObjectCount
+instance IsAdCampaignDelField DeleteStrategy
 instance IsAdCampaignDelField Id
 instance IsAdCampaignDelField BeforeDate
 
-type AdCampaignDel r = (Has Id r, A.FromJSON r, IsAdCampaignDelField r, ToForm r)
+type AdCampaignDel r = (Has DeleteStrategy r, Has Id r, A.FromJSON r, IsAdCampaignDelField r, ToForm r)
 delAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignDel r) =>
-	Id_    -- ^ Ad Account Id
+	CreateCampaignId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-delAdCampaign (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+delAdCampaign (CreateCampaignId id) r mtoken = deleteForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
 
