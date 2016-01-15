@@ -14,7 +14,7 @@ import Facebook.Graph
 import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
-import Data.Time.Format hiding (defaultTimeLocale, rfc822DateFormat)
+import Data.Time.Format
 import Data.Aeson hiding (Value)
 import Control.Applicative
 import Data.Text (Text)
@@ -37,7 +37,7 @@ import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
-import System.Locale
+import System.Locale hiding (defaultTimeLocale, rfc822DateFormat)
 import Control.Monad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -45,9 +45,6 @@ import qualified Data.Text.Encoding as TE
 import Facebook.Object.Marketing.Utility hiding (toBS)
 import Facebook.Object.Marketing.TargetingSpecs
 import Text.Read (readMaybe)
-import System.Locale
-
-
 newtype Money = Money {getMoneyInPennies :: Int} deriving (Eq, Ord, Show, Read, Typeable, Generic, Num)
 
 instance FromJSON Money where

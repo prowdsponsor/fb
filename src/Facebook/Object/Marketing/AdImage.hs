@@ -251,5 +251,5 @@ delAdImage :: (R.MonadResource m, MonadBaseControl IO m, AdImageDel r) =>
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m (Either FacebookException Success)
-delAdImage (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adimages") (toForm r) mtoken
+delAdImage (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 

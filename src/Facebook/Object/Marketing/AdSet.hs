@@ -249,11 +249,11 @@ instance IsAdSetUpdField Id
 
 type AdSetUpd r = (A.FromJSON r, IsAdSetUpdField r, ToForm r)
 updAdSet :: (R.MonadResource m, MonadBaseControl IO m, AdSetUpd r) =>
-	Id_    -- ^ Ad Account Id
+	CreateAdSetId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m (Either FacebookException r)
-updAdSet (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adsets") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+updAdSet (CreateAdSetId id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:AdSet, mode:Deleting
@@ -269,5 +269,5 @@ delAdSet :: (R.MonadResource m, MonadBaseControl IO m, AdSetDel r) =>
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m (Either FacebookException r)
-delAdSet (CreateAdSetId id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adsets") (toForm r) mtoken
+delAdSet (CreateAdSetId id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 

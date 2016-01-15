@@ -689,7 +689,7 @@ updAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeUpd r) =>
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m (Either FacebookException r)
-updAdCreative (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adcreatives") (toForm r) mtoken
+updAdCreative (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:AdCreative, mode:Deleting
@@ -707,5 +707,5 @@ delAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeDel r) =>
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m (Either FacebookException r)
-delAdCreative (CreateAdCreativeId id) r mtoken = deleteForm ("/v2.5/" <> "/adcreatives") (toForm r) mtoken
+delAdCreative (CreateAdCreativeId id) r mtoken = deleteForm ("/v2.5/" <> "") (toForm r) mtoken
 

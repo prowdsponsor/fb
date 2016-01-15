@@ -177,19 +177,18 @@ instance IsAdUpdField DisplaySequence
 instance IsAdUpdField CampaignGroupId
 instance IsAdUpdField Redownload
 instance IsAdUpdField Status
-instance IsAdUpdField Id
 instance IsAdUpdField Creative
 instance IsAdUpdField BidAmount
 instance IsAdUpdField AdsetId
 instance IsAdUpdField Name
 
-type AdUpd r = (Has Id r, A.FromJSON r, IsAdUpdField r, ToForm r)
+type AdUpd r = (A.FromJSON r, IsAdUpdField r, ToForm r)
 updAd :: (R.MonadResource m, MonadBaseControl IO m, AdUpd r) =>
-	Id_    -- ^ Ad Account Id
+	CreateAdId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m (Either FacebookException r)
-updAd (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/ads") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+updAd (CreateAdId id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:Ad, mode:Deleting
@@ -204,5 +203,5 @@ delAd :: (R.MonadResource m, MonadBaseControl IO m, AdDel r) =>
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
 	-> FacebookT Auth m (Either FacebookException r)
-delAd (CreateAdId id) r mtoken = deleteForm ("/v2.5/" <> id <> "/ads") (toForm r) mtoken
+delAd (CreateAdId id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
