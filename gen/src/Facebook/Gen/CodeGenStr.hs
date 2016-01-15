@@ -51,12 +51,17 @@ langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts"
 
 -- What to add after /id to the URL
 entityUrlPostfixMap =
-    Map.fromList [(Entity "AdCampaign", "/campaigns"),
-                  (Entity "Insights", "/insights"),
-                  (Entity "AdImage", "/adimages"),
-                  (Entity "Ad", "/ads"),
-                  (Entity "AdCreative", "/adcreatives"),
-                  (Entity "AdSet", "/adsets")]
+    Map.fromList [((Entity "AdCampaign", Reading), "/campaigns"),
+                  ((Entity "AdCampaign", Creating), "/campaigns"),
+                  ((Entity "Insights", Reading), "/insights"),
+                  ((Entity "AdImage", Reading), "/adimages"),
+                  ((Entity "AdImage", Creating), "/adimages"),
+                  ((Entity "Ad", Reading), "/ads"),
+                  ((Entity "Ad", Creating), "/ads"),
+                  ((Entity "AdCreative", Reading), "/adcreatives"),
+                  ((Entity "AdCreative", Creating), "/adcreatives"),
+                  ((Entity "AdSet", Reading), "/adsets"),
+                  ((Entity "AdSet", Creating), "/adsets")]
 
 -- Does the generated function return a Pager?
 entityModePagerSet =
@@ -75,17 +80,17 @@ entityModeRetType = -- FIXME!
     Map.fromList [((Entity "AdImage", Creating), "(Either FacebookException SetImgs)"),
                   ((Entity "AdImage", Deleting), "(Either FacebookException Success)"),
                   ((Entity "AdCampaign", Deleting), "(Either FacebookException Success)"),
-                  ((Entity "AdCampaign", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCampaign", Updating), "(Either FacebookException Success)"),
                   ((Entity "AdCreative", Deleting), "Success"),
                   ((Entity "AdSet", Creating), "(Either FacebookException CreateAdSetId)"),
                   ((Entity "AdSet", Deleting), "(Either FacebookException r)"),
-                  ((Entity "AdSet", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdSet", Updating), "(Either FacebookException Success)"),
                   ((Entity "AdCreative", Creating), "(Either FacebookException CreateAdCreativeId)"),
                   ((Entity "AdCreative", Updating), "(Either FacebookException r)"),
                   ((Entity "AdCreative", Deleting), "(Either FacebookException r)"),
                   ((Entity "Ad", Creating), "(Either FacebookException CreateAdId)"),
                   ((Entity "Ad", Deleting), "(Either FacebookException r)"),
-                  ((Entity "Ad", Updating), "(Either FacebookException r)"),
+                  ((Entity "Ad", Updating), "(Either FacebookException Success)"),
                   ((Entity "AdAccount", Creating), "(Either FacebookException r)"),
                   ((Entity "AdAccount", Deleting), "(Either FacebookException r)"),
                   ((Entity "AdAccount", Updating), "(Either FacebookException r)"),
@@ -93,8 +98,11 @@ entityModeRetType = -- FIXME!
 
 idTypeMap =
     Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),
+                  ((Entity "AdCampaign", Updating), "CreateCampaignId"),
                   ((Entity "AdCreative", Deleting), "CreateAdCreativeId"),
                   ((Entity "Ad", Deleting), "CreateAdId"),
+                  ((Entity "Ad", Updating), "CreateAdId"),
+                  ((Entity "AdSet", Updating), "CreateAdSetId"),
                   ((Entity "AdSet", Deleting), "CreateAdSetId")]
 
 -- Does the generated function return a Pager?
@@ -561,7 +569,7 @@ getFctType ent mode =
 genFct :: Entity -> InteractionMode -> Text -> Text
 genFct ent mode defFields =
     let fctName = genFctName ent mode
-        url  = Map.findWithDefault "" ent entityUrlPostfixMap
+        url  = Map.findWithDefault "" (ent,mode) entityUrlPostfixMap
         maybeToken = if Set.member (ent, mode) isTokenNecessarySet && mode == Reading
                         then "$ Just "
                         else ""
