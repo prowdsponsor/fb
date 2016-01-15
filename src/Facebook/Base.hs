@@ -123,14 +123,14 @@ asBS response = lift $ H.responseBody response C.$$+- fmap B.concat CL.consume
 -- package.  Includes any information provided by Facebook.
 data FacebookException =
     -- | An exception coming from Facebook.
-    FacebookException { fbeType    :: Text
-                      , fbeMessage :: Text
-                      , fbeCode, fbeErrorSubcode :: Int
-                      , fbeIsTransient :: Bool
-                      , fbeErrorUserTitle, fbeErrorUserMsg, fbTraceId :: Text
+    FacebookException { fbeType    :: Maybe Text
+                      , fbeMessage :: Maybe Text
+                      , fbeCode, fbeErrorSubcode :: Maybe Int
+                      , fbeIsTransient :: Maybe Bool
+                      , fbeErrorUserTitle, fbeErrorUserMsg, fbTraceId :: Maybe Text
                       }
     -- | An exception coming from the @fb@ package's code.
-  | FbLibraryException { fbeMessage :: Text }
+  | FbLibraryException { fbeMessageL :: Text }
   | FacebookAuthException { fbeTypeAuth    :: Text
                           , fbeMessageAuth :: Text
                           }
@@ -143,14 +143,14 @@ instance A.FromJSON FacebookException where
         case val of
             Nothing -> fail "..."
             Just v' ->
-                FacebookException <$> v' A..: "type"
-                                  <*> v' A..: "message"
-                                  <*> v' A..: "code"
-                                  <*> v' A..: "error_subcode"
-                                  <*> v' A..: "is_transient"
-                                  <*> v' A..: "error_user_title"
-                                  <*> v' A..: "error_user_msg"
-                                  <*> v' A..: "fbtrace_id"
+                FacebookException <$> v' A..:? "type"
+                                  <*> v' A..:? "message"
+                                  <*> v' A..:? "code"
+                                  <*> v' A..:? "error_subcode"
+                                  <*> v' A..:? "is_transient"
+                                  <*> v' A..:? "error_user_title"
+                                  <*> v' A..:? "error_user_msg"
+                                  <*> v' A..:? "fbtrace_id"
     parseJSON _ = mzero
 
 instance E.Exception FacebookException where
