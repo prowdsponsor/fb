@@ -11,6 +11,7 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
@@ -716,7 +717,7 @@ setAdAccount :: (R.MonadResource m, MonadBaseControl IO m, AdAccountSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
+	-> FacebookT Auth m (Either FacebookException r)
 setAdAccount (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
@@ -740,7 +741,7 @@ updAdAccount :: (R.MonadResource m, MonadBaseControl IO m, AdAccountUpd r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
+	-> FacebookT Auth m (Either FacebookException r)
 updAdAccount (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
@@ -757,6 +758,6 @@ delAdAccount :: (R.MonadResource m, MonadBaseControl IO m, AdAccountDel r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
+	-> FacebookT Auth m (Either FacebookException r)
 delAdAccount (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 

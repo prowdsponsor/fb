@@ -11,6 +11,7 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
@@ -190,17 +191,23 @@ instance IsAdSetSetField TimeStop
 instance IsAdSetSetField PageId
 data CreateAdSetId = CreateAdSetId {
 	adsetId :: Text
-	} deriving (Show, Generic)
+	} deriving Show
 instance FromJSON CreateAdSetId where
 		parseJSON (Object v) =
 		   CreateAdSetId <$> v .: "id"
 
-type AdSetSet r = (Has IsAutobid r, Has BillingEvent r, Has CampaignId r, Has Name r, Has Targeting r, A.FromJSON r, IsAdSetSetField r, ToForm r)
+adsetIdToInt :: CreateAdSetId -> Int
+adsetIdToInt (CreateAdSetId id) =
+	    case decimal id of
+	      Right (num, _) -> num
+	      Left err -> error $ "Could not convert CreateAdSetId to Int:" ++ show err
+
+type AdSetSet r = (Has OptimizationGoal r, Has IsAutobid r, Has BillingEvent r, Has CampaignId r, Has Name r, Has DailyBudget r, Has Targeting r, A.FromJSON r, IsAdSetSetField r, ToForm r)
 setAdSet :: (R.MonadResource m, MonadBaseControl IO m, AdSetSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m CreateAdSetId
+	-> FacebookT Auth m (Either FacebookException CreateAdSetId)
 setAdSet (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adsets") (toForm r) mtoken
 
 
@@ -242,11 +249,11 @@ instance IsAdSetUpdField Id
 
 type AdSetUpd r = (A.FromJSON r, IsAdSetUpdField r, ToForm r)
 updAdSet :: (R.MonadResource m, MonadBaseControl IO m, AdSetUpd r) =>
-	Id_    -- ^ Ad Account Id
+	CreateAdSetId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-updAdSet (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adsets") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+updAdSet (CreateAdSetId id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:AdSet, mode:Deleting
@@ -261,6 +268,6 @@ delAdSet :: (R.MonadResource m, MonadBaseControl IO m, AdSetDel r) =>
 	CreateAdSetId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-delAdSet (CreateAdSetId id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adsets") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException r)
+delAdSet (CreateAdSetId id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 

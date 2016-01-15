@@ -11,6 +11,7 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
@@ -330,12 +331,12 @@ unAdvancedData_ :: AdvancedData_ -> A.Value
 unAdvancedData_ (AdvancedData_ x) = x
 
 data CallToActionType = CallToActionType
-newtype CallToActionType_ = CallToActionType_ CallActionType deriving (Show, Generic)
+newtype CallToActionType_ = CallToActionType_ CallToActionTypeADT deriving (Show, Generic)
 instance Field CallToActionType where
 	type FieldValue CallToActionType = CallToActionType_
 	fieldName _ = "call_to_action_type"
 	fieldLabel = CallToActionType
-unCallToActionType_ :: CallToActionType_ -> CallActionType
+unCallToActionType_ :: CallToActionType_ -> CallToActionTypeADT
 unCallToActionType_ (CallToActionType_ x) = x
 
 data InstagramPermalinkUrl = InstagramPermalinkUrl
@@ -571,6 +572,7 @@ instance IsAdCreativeGetField ObjectStoryId
 instance IsAdCreativeGetField ObjectUrl
 instance IsAdCreativeGetField LinkUrl
 instance IsAdCreativeGetField InstagramActorId
+instance IsAdCreativeGetField ObjectStorySpec
 instance IsAdCreativeGetField ActorImageUrl
 instance IsAdCreativeGetField RunStatus
 instance IsAdCreativeGetField ProductSetId
@@ -586,13 +588,13 @@ instance IsAdCreativeGetField Body
 instance IsAdCreativeGetField Id
 
 type AdCreativeGet fl r = (A.FromJSON r, IsAdCreativeGetField r, FieldListToRec fl r)
-type AdCreativeGetRet r = r -- Default fields
+type AdCreativeGetRet r = Id :*: r -- Default fields
 getAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeGet fl r) =>
 	Id_    -- ^ Ad Account Id
 	-> fl     -- ^ Arguments to be passed to Facebook.
-	-> Maybe UserAccessToken -- ^ Optional user access token.
-	-> FacebookT anyAuth m (AdCreativeGetRet r)
-getAdCreative (Id_ id) fl mtoken = getObject ("/v2.5/" <> id <> "/adcreatives") [("fields", textListToBS $ fieldNameList $ fl)] mtoken
+	->  UserAccessToken -- ^ Optional user access token.
+	-> FacebookT anyAuth m (Pager (AdCreativeGetRet r))
+getAdCreative (Id_ id) fl mtoken = getObject ("/v2.5/" <> id <> "/adcreatives") [("fields", textListToBS $ fieldNameList $ Id ::: fl)] $ Just mtoken
 
 
 -- Entity:AdCreative, mode:Creating
@@ -616,6 +618,7 @@ instance IsAdCreativeSetField ActorId
 instance IsAdCreativeSetField ThumbnailUrl
 instance IsAdCreativeSetField TemplateUrl
 instance IsAdCreativeSetField LinkUrl
+instance IsAdCreativeSetField ObjectStorySpec
 instance IsAdCreativeSetField ObjectStoryId
 instance IsAdCreativeSetField UrlTags
 instance IsAdCreativeSetField Name
@@ -653,13 +656,21 @@ instance IsAdCreativeSetField LandingPageCta
 instance IsAdCreativeSetField LinkTitle
 instance IsAdCreativeSetField Id
 instance IsAdCreativeSetField AdvancedData
+data CreateAdCreativeId = CreateAdCreativeId {
+	adcreativeId :: Text
+	} deriving Show
+instance FromJSON CreateAdCreativeId where
+		parseJSON (Object v) =
+		   CreateAdCreativeId <$> v .: "id"
+creativeToCreative :: CreateAdCreativeId -> AdCreativeADT
+creativeToCreative (CreateAdCreativeId id) = AdCreativeADT id
 
-type AdCreativeSet r = (Has Id r, A.FromJSON r, IsAdCreativeSetField r, ToForm r)
+type AdCreativeSet r = (Has ObjectStorySpec r, Has Name r, A.FromJSON r, IsAdCreativeSetField r, ToForm r)
 setAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
+	-> FacebookT Auth m (Either FacebookException CreateAdCreativeId)
 setAdCreative (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adcreatives") (toForm r) mtoken
 
 
@@ -677,8 +688,8 @@ updAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeUpd r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-updAdCreative (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/adcreatives") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException r)
+updAdCreative (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:AdCreative, mode:Deleting
@@ -692,9 +703,9 @@ instance IsAdCreativeDelField AccountId
 
 type AdCreativeDel r = (Has Id r, A.FromJSON r, IsAdCreativeDelField r, ToForm r)
 delAdCreative :: (R.MonadResource m, MonadBaseControl IO m, AdCreativeDel r) =>
-	Id_    -- ^ Ad Account Id
+	CreateAdCreativeId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-delAdCreative (Id_ id) r mtoken = deleteForm ("/v2.5/" <> id <> "/adcreatives") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException r)
+delAdCreative (CreateAdCreativeId id) r mtoken = deleteForm ("/v2.5/" <> "") (toForm r) mtoken
 

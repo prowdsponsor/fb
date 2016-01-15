@@ -26,6 +26,7 @@ imports =
                 "import Facebook.Pager",
                 "import Facebook.Monad",
                 "import Facebook.Graph",
+                "import Facebook.Base (FacebookException(..))",
                 "import qualified Data.Aeson as A",
                 "import Data.Time.Clock",
                 "import Data.Time.Format",
@@ -48,33 +49,60 @@ imports =
 langExts = V.fromList ["DeriveDataTypeable", "DeriveGeneric", "FlexibleContexts", "OverloadedStrings",
                        "ConstraintKinds"]
 
--- What do add after /id to the URL
+-- What to add after /id to the URL
 entityUrlPostfixMap =
-    Map.fromList [(Entity "AdCampaign", "/campaigns"),
-                  (Entity "Insights", "/insights"),
-                  (Entity "AdImage", "/adimages"),
-                  (Entity "Ad", "/ads"),
-                  (Entity "AdCreative", "/adcreatives"),
-                  (Entity "AdSet", "/adsets")]
+    Map.fromList [((Entity "AdCampaign", Reading), "/campaigns"),
+                  ((Entity "AdCampaign", Creating), "/campaigns"),
+                  ((Entity "Insights", Reading), "/insights"),
+                  ((Entity "AdImage", Reading), "/adimages"),
+                  ((Entity "AdImage", Creating), "/adimages"),
+                  ((Entity "Ad", Reading), "/ads"),
+                  ((Entity "Ad", Creating), "/ads"),
+                  ((Entity "AdCreative", Reading), "/adcreatives"),
+                  ((Entity "AdCreative", Creating), "/adcreatives"),
+                  ((Entity "AdSet", Reading), "/adsets"),
+                  ((Entity "AdSet", Creating), "/adsets")]
 
 -- Does the generated function return a Pager?
 entityModePagerSet =
     Set.fromList [(Entity "AdCampaign", Reading),
                   (Entity "Insights", Reading),
                   (Entity "AdImage", Reading),
+                  (Entity "AdCreative", Reading),
                   (Entity "Ad", Reading),
                   (Entity "AdSet", Reading)]
 
--- Does the generated function return a Pager?
-entityModeRetType =
-    Map.fromList [((Entity "AdImage", Creating), "SetImgs"),
-                  ((Entity "AdImage", Deleting), "Success"),
-                  ((Entity "AdCampaign", Deleting), "Success"),
-                  ((Entity "AdSet", Creating), "CreateAdSetId"),
-                  ((Entity "AdCampaign", Creating), "CreateCampaignId")]
+entityModeIdNotInURL  =
+    Set.fromList [(Entity "AdCreative", Deleting)]
+
+-- function return type
+entityModeRetType = -- FIXME!
+    Map.fromList [((Entity "AdImage", Creating), "(Either FacebookException SetImgs)"),
+                  ((Entity "AdImage", Deleting), "(Either FacebookException Success)"),
+                  ((Entity "AdCampaign", Deleting), "(Either FacebookException Success)"),
+                  ((Entity "AdCampaign", Updating), "(Either FacebookException Success)"),
+                  ((Entity "AdCreative", Deleting), "Success"),
+                  ((Entity "AdSet", Creating), "(Either FacebookException CreateAdSetId)"),
+                  ((Entity "AdSet", Deleting), "(Either FacebookException r)"),
+                  ((Entity "AdSet", Updating), "(Either FacebookException Success)"),
+                  ((Entity "AdCreative", Creating), "(Either FacebookException CreateAdCreativeId)"),
+                  ((Entity "AdCreative", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCreative", Deleting), "(Either FacebookException r)"),
+                  ((Entity "Ad", Creating), "(Either FacebookException CreateAdId)"),
+                  ((Entity "Ad", Deleting), "(Either FacebookException r)"),
+                  ((Entity "Ad", Updating), "(Either FacebookException Success)"),
+                  ((Entity "AdAccount", Creating), "(Either FacebookException r)"),
+                  ((Entity "AdAccount", Deleting), "(Either FacebookException r)"),
+                  ((Entity "AdAccount", Updating), "(Either FacebookException r)"),
+                  ((Entity "AdCampaign", Creating), "(Either FacebookException CreateCampaignId)")]
 
 idTypeMap =
     Map.fromList [((Entity "AdCampaign", Deleting), "CreateCampaignId"),
+                  ((Entity "AdCampaign", Updating), "CreateCampaignId"),
+                  ((Entity "AdCreative", Deleting), "CreateAdCreativeId"),
+                  ((Entity "Ad", Deleting), "CreateAdId"),
+                  ((Entity "Ad", Updating), "CreateAdId"),
+                  ((Entity "AdSet", Updating), "CreateAdSetId"),
                   ((Entity "AdSet", Deleting), "CreateAdSetId")]
 
 -- Does the generated function return a Pager?
@@ -82,6 +110,8 @@ entityModeRetDefs :: Map.Map (Entity, InteractionMode) Text
 entityModeRetDefs =
     Map.fromList [((Entity "AdImage", Creating), imgCreate),
                   ((Entity "AdCampaign", Creating), campaignCreate),
+                  ((Entity "AdCreative", Creating), adcreativeCreate),
+                  ((Entity "Ad", Creating), adCreate),
                   ((Entity "AdSet", Creating), adsetCreate)]
 
 imgCreate = "data SetImgs = SetImgs { -- as seen when using curl\n\
@@ -104,7 +134,7 @@ imgDelete =  "data Success = Success {\n\
 campaignCreate =
     "data CreateCampaignId = CreateCampaignId {\n\
      \\tcampaignId :: Text\n\
-     \\t} deriving (Show, Generic)\n\
+     \\t} deriving Show\n\
      \instance FromJSON CreateCampaignId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateCampaignId <$> v .: \"id\"\n"
@@ -112,10 +142,28 @@ campaignCreate =
 adsetCreate =
     "data CreateAdSetId = CreateAdSetId {\n\
      \\tadsetId :: Text\n\
-     \\t} deriving (Show, Generic)\n\
+     \\t} deriving Show\n\
      \instance FromJSON CreateAdSetId where\n\
      \\t\tparseJSON (Object v) =\n\
      \\t\t   CreateAdSetId <$> v .: \"id\"\n"
+     <> hackSet
+
+adcreativeCreate =
+    "data CreateAdCreativeId = CreateAdCreativeId {\n\
+     \\tadcreativeId :: Text\n\
+     \\t} deriving Show\n\
+     \instance FromJSON CreateAdCreativeId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateAdCreativeId <$> v .: \"id\"\n"
+     <> hackCreative
+
+adCreate =
+    "data CreateAdId = CreateAdId {\n\
+     \\tadId :: Text\n\
+     \\t} deriving Show\n\
+     \instance FromJSON CreateAdId where\n\
+     \\t\tparseJSON (Object v) =\n\
+     \\t\t   CreateAdId <$> v .: \"id\"\n"
 
 -- Doees the API call need a token?
 isTokenNecessarySet =
@@ -132,6 +180,8 @@ isTokenNecessarySet =
                   (Entity "Ad", Deleting),
                   (Entity "Ad", Updating),
                   (Entity "Ad", Creating),
+                  (Entity "Ad", Reading),
+                  (Entity "AdCreative", Reading),
                   (Entity "AdCreative", Deleting),
                   (Entity "AdCreative", Updating),
                   (Entity "AdCreative", Creating),
@@ -152,13 +202,29 @@ toBsInstances = -- FIXME, look at old SimpleType class for instances
   \\ttoBS = B8.singleton\n\
   \instance ToBS Integer\n\
   \instance ToBS Int\n\
-  \instance ToBS Bool\n\
-  \instance ToBS A.Value\n\
+  \instance ToBS Bool where\n\
+  \\ttoBS True = toBS (\"true\" :: String)\n\
+  \\ttoBS False = toBS (\"false\" :: String)\n\
+  \--instance ToBS Value where\n\
+  \--\ttoBS = BSL.toStrict . encode\n\
   \instance ToBS Float\n\
   \instance ToBS a => ToBS (Vector a) where\n\
   \\ttoBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs\n\
   \instance ToBS UTCTime where\n\
   \\ttoBS t = B8.pack $ formatTime defaultTimeLocale rfc822DateFormat t\n"
+
+hackSet :: Text
+hackSet =
+    "\nadsetIdToInt :: CreateAdSetId -> Int\n\
+    \adsetIdToInt (CreateAdSetId id) =\n\
+    \\t    case decimal id of\n\
+    \\t      Right (num, _) -> num\n\
+    \\t      Left err -> error $ \"Could not convert CreateAdSetId to Int:\" ++ show err\n"
+
+hackCreative :: Text
+hackCreative =
+    "creativeToCreative :: CreateAdCreativeId -> AdCreativeADT\n\
+    \creativeToCreative (CreateAdCreativeId id) = AdCreativeADT id\n"
 
 genFiles :: Env -> Vector (FilePath, Text)
 genFiles (Env env) =
@@ -355,6 +421,12 @@ typesToJsonInstances (nt, "Int", "Text") =
         \\t   Left err -> error err\n\
         \\t   Right (num, _) -> " <> create <> "\n" <> -- FIXME
         "instance A.ToJSON " <> nt <> "\n"
+typesToJsonInstances (nt, "AdCreativeADT", "Text") =
+    let create = "pure $ " <> nt <> " creativeId"
+    in "instance A.FromJSON " <> nt <> " where\n\
+        \\tparseJSON (Object v) = " <> nt <> " <$> AdCreativeADT <$>\n\
+        \\t v .: \"id\" <|> v .: \"creative_id\"\n" <>
+        "instance A.ToJSON " <> nt <> "\n"
 typesToJsonInstances x = error $ show x
 
 dataAndFieldInstance :: FieldInfo -> Text
@@ -497,7 +569,7 @@ getFctType ent mode =
 genFct :: Entity -> InteractionMode -> Text -> Text
 genFct ent mode defFields =
     let fctName = genFctName ent mode
-        url  = Map.findWithDefault "" ent entityUrlPostfixMap
+        url  = Map.findWithDefault "" (ent,mode) entityUrlPostfixMap
         maybeToken = if Set.member (ent, mode) isTokenNecessarySet && mode == Reading
                         then "$ Just "
                         else ""
@@ -509,7 +581,10 @@ genFct ent mode defFields =
         idConstr = case Map.lookup (ent, mode) idTypeMap of
                     Just x -> x
                     Nothing -> "Id_"
-    in fctName <> " (" <> idConstr <> " id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\" <> id <> \"" <> url
+        idUrl = if Set.member (ent, mode) entityModeIdNotInURL
+                    then ""
+                    else " <> id"
+    in fctName <> " (" <> idConstr <> " id) " <> argName <> " mtoken = " <> httpMethod <> " (\"/v2.5/\"" <> idUrl <> " <> \"" <> url
        <> "\") " <> args defFields <> maybeToken <> "mtoken\n\n"
 
 modeToArgs Types _ = ""

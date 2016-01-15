@@ -11,6 +11,7 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format

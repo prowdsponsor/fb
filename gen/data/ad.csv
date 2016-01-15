@@ -1,5 +1,5 @@
 Entity,InteractionMode,FieldName,FieldType,Description,Required,InResponse
-Ad,Creating,adset_id,unsigned int32,The ID of the ad set.,,
+Ad,Creating,adset_id,unsigned int32,The ID of the ad set.,y,
 Ad,Creating,date_format,string,The format of the date.,,
 Ad,Deleting,id,numeric string,The ID of this ad.Required,y,
 Ad,Updating,name,string,Name of the ad.,,
@@ -10,7 +10,6 @@ Ad,Reading,campaign,AdCampaignGroup,Ad campaign that contains this ad,,
 Ad,Updating,creative,AdCreativeId,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",,
 Ad,Reading,created_time,datetime,Created time,,
 Ad,Creating,bid_amount,integer,Bid amount for this ad,,
-Ad,Updating,id,string,The ID of this ad.Required,y,
 Ad,Reading,name,string,Name of the ad.,,
 Ad,Reading,updated_time,datetime,Updated time,,
 Ad,Creating,tracking_specs,Object,Tracking specs,,
@@ -19,7 +18,7 @@ Ad,Creating,status,ConfigureStatus,"Only ACTIVE and PAUSED are valid during crea
         ad review, and will have the ad status PENDING_REVIEW before it
         finishes review and reverts back to your selected status of ACTIVE
         or PAUSED. During testing, it is recommended to set ads to a PAUSED
-        status so as to not incur accidental spend.",,
+        status so as to not incur accidental spend.",y,
 Ad,Reading,ad_review_feedback,AdgroupReviewFeedback,"The review feedback for
         this ad after it is reviewed.",,
 Ad,Updating,status,ConfigureStatus,"Only ACTIVE and PAUSED are valid during creation. Other statuses
@@ -31,14 +30,13 @@ Ad,Updating,status,ConfigureStatus,"Only ACTIVE and PAUSED are valid during crea
 Ad,Reading,bid_amount,integer,Bid amount for this ad,,
 Ad,Updating,redownload,boolean,Set this value to true and the API will respond with all fields instead of just id.,,
 Ad,Reading,last_updated_by_app_id,id,Last Updated By App ID,,
-Ad,Creating,name,string,Name of the ad.,,
+Ad,Creating,name,string,Name of the ad.,y,
 Ad,Reading,conversion_specs,list<ConversionActionQuery>,Conversion specs,,
 Ad,Creating,creative,AdCreativeId,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",y,
 Ad,Creating,redownload,boolean,Set this value to true and the API will respond with all fields instead of just id.,,
 Ad,Reading,id,numeric string,The ID of this ad.Default,y,
 Ad,Reading,bid_type,BidType,Bid type,,
 Ad,Reading,adset,AdCampaign,Ad set that contains this ad,,
-Ad,Creating,id,string,The ID of this ad.Required,y,
 Ad,Reading,configured_status,ConfigureStatus,The configured status of the ad.,,
 Ad,Reading,campaign_id,numeric string,ID of the ad campaign that contains this ad,,
 Ad,Updating,adlabels,list<Object>,Ad labels associated with this ad,,
@@ -50,7 +48,7 @@ Ad,Updating,display_sequence,unsigned int32,The sequence of the ad within the sa
 Ad,Creating,adlabels,list<Objec>,Ad labels associated with this ad,,
 Ad,Reading,account_id,numeric string,The ID of the ad account that this ad belongs to.,,
 Ad,Updating,execution_options,list<ExecOption>,"Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. synchronous_ad_review: this option should not be used by itself. It should always be specified with validate_only. When these options are specified, the API call will perform Ads Integrity validations, which include message language checking, image 20% text rule, and so on, as well as the validation logics.If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
-Ad,Reading,creative_id,string,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",y,
+Ad,Reading,creative,string,"This field is required for create. The ID of the ad creative to be used by this ad. You can read more about creatives here. You should supply the ID within an object as follows:{""creative_id"": }",y,
 Ad,Creating,display_sequence,unsigned int32,The sequence of the ad within the same campaign,,
 Ad,Creating,execution_options,list<ExecOption>,"Default value: SetAn execution settingvalidate_only: when this option is specified, the API call will not perform the mutation but will run through the validation rules against values of each field. synchronous_ad_review: this option should not be used by itself. It should always be specified with validate_only. When these options are specified, the API call will perform Ads Integrity validations, which include message language checking, image 20% text rule, and so on, as well as the validation logics.If the call passes validation or review, response will be {""success"": true}. If the call does not pass, an error will be returned with more details. These options can be used to improve any UI to display errors to the user much sooner, e.g. as soon as a new value is typed into any field corresponding to this ad object, rather than at the upload/save stage, or after review.",,
 Ad,Creating,campaign_group_id,unsigned int32,The ID of the campaign.,,

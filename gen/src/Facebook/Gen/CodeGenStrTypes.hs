@@ -44,16 +44,111 @@ newTypes =
     \instance FromJSON EffectiveStatusADT\n\
     \instance ToJSON EffectiveStatusADT\n\
     \instance ToBS EffectiveStatusADT\n"
-    <> execOption <> optGoal <> bidType <> callActionType
+    <> execOption <> optGoal <> bidType <> callToActionType
     <> runStatus <> objective <> buyingType <> deleteStrategy
-    <> billingEvent <> genericRetType <> genericIdRetType
-    -- <> runStatus <> genericRetType
+    <> billingEvent <> objectStorySpec <> adCreativeLinkData
+    <> creativeADT <> callToAction <> genericRetType <> genericIdRetType
+
+creativeADT =
+    "data AdCreativeADT = AdCreativeADT {\n\
+    \\tcreative_id  :: Text\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance FromJSON AdCreativeADT\n\
+    \instance ToJSON AdCreativeADT\n"
+    <>
+    "instance ToBS AdCreativeADT where\n\
+    \\ttoBS = toBS . toJSON\n"
+
+objectStorySpec =
+    "data ObjectStorySpecADT = ObjectStorySpecADT {\n\
+    \\t\tlinkData  :: AdCreativeLinkData,\n\
+    \\t\tstoryPageId  :: FBPageId,\n\
+    \\t\tigId  :: Maybe IgId\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "newtype FBPageId = FBPageId Text deriving (Show, Generic)\n\
+    \instance FromJSON FBPageId\n\
+    \newtype IgId = IgId Text deriving (Show, Generic)\n\
+    \instance FromJSON IgId\n"
+    <>
+    "instance ToJSON ObjectStorySpecADT where\n\
+    \\ttoJSON (ObjectStorySpecADT ld (FBPageId pi) Nothing) =\n\
+    \\t  object [ \"link_data\" .= ld,\n\
+    \\t           \"page_id\" .= pi] \n\
+    \\ttoJSON (ObjectStorySpecADT ld (FBPageId pi) (Just (IgId ig))) =\n\
+    \\t  object [ \"link_data\" .= ld,\n\
+    \\t           \"page_id\" .= pi, \n\
+    \\t           \"instagram_actor_id\" .= ig] \n"
+    <>
+    "instance FromJSON ObjectStorySpecADT where\n\
+    \\tparseJSON (Object v) =\n\
+    \\t ObjectStorySpecADT <$> v .: \"link_data\"\n\
+    \\t                    <*> v .: \"page_id\"\n\
+    \\t                    <*> v .:? \"instagram_actor_id\"\n"
+    <>
+    "instance ToBS ObjectStorySpecADT where\n\
+    \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
+
+callToAction =
+    "data CallToActionValue = CallToActionValue {\n\
+    \\tctav_link, ctav_link_caption :: Text\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance ToJSON CallToActionValue where\n\
+    \\ttoJSON = genericToJSON defaultOptions {fieldLabelModifier = drop $ length (\"ctav_\" :: String)}\n"
+    <>
+    "instance FromJSON CallToActionValue where\n\
+    \\tparseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop $ length (\"ctav_\" :: String)}\n"
+    <>
+    "data CallToActionADT = CallToActionADT {\n\
+    \\t\tcta_type :: CallToActionTypeADT,\n\
+    \\t\tcta_value :: CallToActionValue\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance ToJSON CallToActionADT where\n\
+    \\ttoJSON = genericToJSON defaultOptions {fieldLabelModifier = drop $ length (\"cta_\" :: String)}\n"
+    <>
+    "instance FromJSON CallToActionADT where\n\
+    \\tparseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop $ length (\"cta_\" :: String)}\n"
+
+adCreativeLinkData =
+    "data AdCreativeLinkData = AdCreativeLinkData {\n\
+    \\t\tcaption  :: Text,\n\
+    \\t\timageHash ::  Hash_,\n\
+    \\t\tlink, message :: Text,\n\
+    \\tdescription  :: Maybe Text,\n\
+    \\t\tcall_to_action :: Maybe CallToActionADT\n\
+    \\t} deriving (Show, Generic)\n"
+    <>
+    "instance ToJSON AdCreativeLinkData where\n\
+    \\ttoJSON (AdCreativeLinkData c i l m (Just d) (Just cta)) =\n\
+    \\t  object [ \"caption\" .= c,\n\
+    \\t           \"image_hash\" .= i,\n\
+    \\t           \"link\" .= l,\n\
+    \\t           \"message\" .= m]\n\
+    \\t           --\"description\" .= d,\n\
+    \\t           --\"call_to_action\" .= cta]\n"
+    <>
+    "instance FromJSON AdCreativeLinkData where\n\
+    \\tparseJSON (Object v) =\n\
+    \\t AdCreativeLinkData <$> v .: \"caption\"\n\
+    \\t                    <*> v .: \"image_hash\"\n\
+    \\t                    <*> v .: \"link\"\n\
+    \\t                    <*> v .: \"message\"\n\
+    \\t                    <*> v .:? \"description\"\n\
+    \\t                    <*> v .:? \"call_to_action\"\n"
+    <>
+    "instance ToBS AdCreativeLinkData where\n\
+    \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
 
 billingEvent =
-    "data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \
+    "data BillingEventADT = APP_INSTALLS_ | CLICKS_ | IMPRESSIONS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | \
     \POST_ENGAGEMENT_ | VIDEO_VIEWS_\n" <>
     "instance Show BillingEventADT where\n\
     \\t show APP_INSTALLS_ = \"APP_INSTALLS\"\n\
+    \\t show CLICKS_ = \"CLICKS\"\n\
+    \\t show IMPRESSIONS_ = \"IMPRESSIONS\"\n\
     \\t show LINK_CLICKS_ = \"LINK_CLICKS\"\n\
     \\t show OFFER_CLAIMS_ = \"OFFER_CLAIMS\"\n\
     \\t show PAGE_LIKES_ = \"PAGE_LIKES\"\n\
@@ -65,6 +160,8 @@ billingEvent =
     \\ttoJSON = toJSON . show\n\
     \instance FromJSON BillingEventADT where\n\
     \\tparseJSON (String \"APP_INSTALLS\") = pure APP_INSTALLS_\n\
+    \\tparseJSON (String \"IMPRESSIONS\") = pure IMPRESSIONS_\n\
+    \\tparseJSON (String \"CLICKS\") = pure CLICKS_\n\
     \\tparseJSON (String \"LINK_CLICKS\") = pure LINK_CLICKS_\n\
     \\tparseJSON (String \"OFFER_CLAIMS\") = pure OFFER_CLAIMS_\n\
     \\tparseJSON (String \"PAGE_LIKES\") = pure PAGE_LIKES_\n\
@@ -87,7 +184,7 @@ objective =
     "data ObjectiveADT = OBJ_BRAND_AWARENESS | OBJ_CANVAS_APP_ENGAGEMENT | OBJ_CANVAS_APP_INSTALLS | \
     \OBJ_CONVERSIONS | OBJ_EVENT_RESPONSES | OBJ_EXTERNAL | OBJ_LEAD_GENERATION | OBJ_LINK_CLICKS | OBJ_LOCAL_AWARENESS | \
     \OBJ_MOBILE_APP_ENGAGEMENT | OBJ_MOBILE_APP_INSTALLS | OBJ_OFFER_CLAIMS | OBJ_PAGE_LIKES | OBJ_POST_ENGAGEMENT | \
-    \OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS\n"
+    \OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS | OBJ_NONE\n"
     <>
     "instance Show ObjectiveADT where\n\
     \\tshow OBJ_BRAND_AWARENESS = \"BRAND_AWARENESS\"\n\
@@ -105,6 +202,7 @@ objective =
     \\tshow OBJ_PAGE_LIKES = \"PAGE_LIKES\"\n\
     \\tshow OBJ_POST_ENGAGEMENT = \"POST_ENGAGEMENT\"\n\
     \\tshow OBJ_PRODUCT_CATALOG_SALES = \"PRODUCT_CATALOG_SALES\"\n\
+    \\tshow OBJ_NONE = \"NONE\"\n\
     \\tshow OBJ_VIDEO_VIEWS = \"VIDEO_VIEWS\"\n"
     <>
     "instance ToBS ObjectiveADT\n"
@@ -127,6 +225,7 @@ objective =
     \\tparseJSON (String \"PAGE_LIKES\") = pure OBJ_PAGE_LIKES\n\
     \\tparseJSON (String \"POST_ENGAGEMENT\") = pure OBJ_POST_ENGAGEMENT\n\
     \\tparseJSON (String \"PRODUCT_CATALOG_SALES\") = pure OBJ_PRODUCT_CATALOG_SALES\n\
+    \\tparseJSON (String \"NONE\") = pure OBJ_NONE\n\
     \\tparseJSON (String \"VIDEO_VIEWS\") = pure OBJ_VIDEO_VIEWS\n"
 
 runStatus =
@@ -139,14 +238,14 @@ runStatus =
     \\tparseJSON (String \"DELETED\") = pure RS_DELETED\n\
     \instance ToBS RunStatusADT\n"
 
-callActionType =
-    "data CallActionType = OPEN_LINK | LIKE_PAGE | SHOP_NOW | PLAY_GAME | INSTALL_APP | USE_APP |\
+callToActionType =
+    "data CallToActionTypeADT = OPEN_LINK | LIKE_PAGE | SHOP_NOW | PLAY_GAME | INSTALL_APP | USE_APP |\
     \INSTALL_MOBILE_APP | USE_MOBILE_APP | BOOK_TRAVEL | LISTEN_MUSIC | WATCH_VIDEO | LEARN_MORE |\
     \SIGN_UP | DOWNLOAD | WATCH_MORE | NO_BUTTON | CALL_NOW | BUY_NOW | GET_OFFER | GET_DIRECTIONS |\
     \MESSAGE_PAGE | SUBSCRIBE | DONATE_NOW | GET_QUOTE | CONTACT_US | RECORD_NOW | OPEN_MOVIES deriving (Show, Generic)\n\
-    \instance FromJSON CallActionType\n\
-    \instance ToJSON CallActionType\n\
-    \instance ToBS CallActionType\n"
+    \instance FromJSON CallToActionTypeADT\n\
+    \instance ToJSON CallToActionTypeADT\n\
+    \instance ToBS CallToActionTypeADT\n"
 
 bidType =
     "\ndata BidTypeADT = CPC | CPM | MULTI_PREMIUM | ABSOLUTE_OCPM | CPA deriving (Show, Generic)\n\

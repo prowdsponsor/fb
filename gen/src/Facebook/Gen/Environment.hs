@@ -49,18 +49,20 @@ typesMap =
                 , ("Targeting object", "TargetingSpecs")
                 , ("Targeting", "TargetingSpecs")
                 , ("BidType", "BidTypeADT")
+                , ("ObjectType", "ObjectTypeADT")
                 , ("DeleteStrategy", "DeleteStrategyADT")
                 , ("Objective", "ObjectiveADT")
                 , ("BuyingType", "BuyingTypeADT")
                 , ("BillingEvent", "BillingEventADT")
-                , ("CallActionType", "CallActionType")
+                , ("AdCreativeObjectStorySpec", "ObjectStorySpecADT")
+                , ("CallActionType", "CallToActionTypeADT")
                 , ("URL", "Text")
                 , ("post id", "Text")
                 , ("Post ID", "Text")
                 , ("post_id", "Text")
                 , ("id", "Text")
                 , ("AdAccount", "AdAccount") -- FIXME
-                , ("AdCreativeId", "Text")
+                , ("AdCreativeId", "AdCreativeADT")
                 , ("RunStatus", "RunStatusADT")
                 , ("map<string, int32>", "Map.Map Text Int")
                 , ("map<string, unsigned int32>", "Map.Map Text Int")
@@ -82,11 +84,11 @@ buildEnv csvs = do
                               ++
                               ["adlabels"] -- Campaign
                               ++
-                              ["adset_schedule", "promoted_object", "campaign",
+                              ["adset_schedule", "object_type", "promoted_object", "campaign",
                               "product_ad_behavior", "rf_prediction_id", "pacing_type"]
                               ++ ["copy_from", "bytes", "zipbytes"] -- AdImage Create
                               ++ ["capabilities", "tos_accepted", "line_numbers", "bid_info"]
-                              ++ ["image_crops", "object_story_spec", "object_type", "applink_treatment", "tracking_specs",
+                              ++ ["image_crops", "applink_treatment", "tracking_specs",
                                   "adset", "conversion_specs", "ad_review_feedback"]
                               ++ ["custom_event_type"]
                               ++ ["type", "dynamic_ad_voice", "annotations", "info_fields"]

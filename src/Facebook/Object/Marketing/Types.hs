@@ -11,9 +11,10 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
-import Data.Time.Format
+import Data.Time.Format hiding (defaultTimeLocale, rfc822DateFormat)
 import Data.Aeson hiding (Value)
 import Control.Applicative
 import Data.Text (Text)
@@ -112,10 +113,10 @@ data BidTypeADT = CPC | CPM | MULTI_PREMIUM | ABSOLUTE_OCPM | CPA deriving (Show
 instance FromJSON BidTypeADT
 instance ToJSON BidTypeADT
 instance ToBS BidTypeADT
-data CallActionType = OPEN_LINK | LIKE_PAGE | SHOP_NOW | PLAY_GAME | INSTALL_APP | USE_APP |INSTALL_MOBILE_APP | USE_MOBILE_APP | BOOK_TRAVEL | LISTEN_MUSIC | WATCH_VIDEO | LEARN_MORE |SIGN_UP | DOWNLOAD | WATCH_MORE | NO_BUTTON | CALL_NOW | BUY_NOW | GET_OFFER | GET_DIRECTIONS |MESSAGE_PAGE | SUBSCRIBE | DONATE_NOW | GET_QUOTE | CONTACT_US | RECORD_NOW | OPEN_MOVIES deriving (Show, Generic)
-instance FromJSON CallActionType
-instance ToJSON CallActionType
-instance ToBS CallActionType
+data CallToActionTypeADT = OPEN_LINK | LIKE_PAGE | SHOP_NOW | PLAY_GAME | INSTALL_APP | USE_APP |INSTALL_MOBILE_APP | USE_MOBILE_APP | BOOK_TRAVEL | LISTEN_MUSIC | WATCH_VIDEO | LEARN_MORE |SIGN_UP | DOWNLOAD | WATCH_MORE | NO_BUTTON | CALL_NOW | BUY_NOW | GET_OFFER | GET_DIRECTIONS |MESSAGE_PAGE | SUBSCRIBE | DONATE_NOW | GET_QUOTE | CONTACT_US | RECORD_NOW | OPEN_MOVIES deriving (Show, Generic)
+instance FromJSON CallToActionTypeADT
+instance ToJSON CallToActionTypeADT
+instance ToBS CallToActionTypeADT
 data RunStatusADT = RS_ACTIVE | RS_DELETED
 instance Show RunStatusADT where
 	show RS_ACTIVE = "ACTIVE"
@@ -124,7 +125,7 @@ instance FromJSON RunStatusADT where
 	parseJSON (String "ACTIVE") = pure RS_ACTIVE
 	parseJSON (String "DELETED") = pure RS_DELETED
 instance ToBS RunStatusADT
-data ObjectiveADT = OBJ_BRAND_AWARENESS | OBJ_CANVAS_APP_ENGAGEMENT | OBJ_CANVAS_APP_INSTALLS | OBJ_CONVERSIONS | OBJ_EVENT_RESPONSES | OBJ_EXTERNAL | OBJ_LEAD_GENERATION | OBJ_LINK_CLICKS | OBJ_LOCAL_AWARENESS | OBJ_MOBILE_APP_ENGAGEMENT | OBJ_MOBILE_APP_INSTALLS | OBJ_OFFER_CLAIMS | OBJ_PAGE_LIKES | OBJ_POST_ENGAGEMENT | OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS
+data ObjectiveADT = OBJ_BRAND_AWARENESS | OBJ_CANVAS_APP_ENGAGEMENT | OBJ_CANVAS_APP_INSTALLS | OBJ_CONVERSIONS | OBJ_EVENT_RESPONSES | OBJ_EXTERNAL | OBJ_LEAD_GENERATION | OBJ_LINK_CLICKS | OBJ_LOCAL_AWARENESS | OBJ_MOBILE_APP_ENGAGEMENT | OBJ_MOBILE_APP_INSTALLS | OBJ_OFFER_CLAIMS | OBJ_PAGE_LIKES | OBJ_POST_ENGAGEMENT | OBJ_PRODUCT_CATALOG_SALES | OBJ_VIDEO_VIEWS | OBJ_NONE
 instance Show ObjectiveADT where
 	show OBJ_BRAND_AWARENESS = "BRAND_AWARENESS"
 	show OBJ_CANVAS_APP_ENGAGEMENT = "CANVAS_APP_ENGAGEMENT"
@@ -141,6 +142,7 @@ instance Show ObjectiveADT where
 	show OBJ_PAGE_LIKES = "PAGE_LIKES"
 	show OBJ_POST_ENGAGEMENT = "POST_ENGAGEMENT"
 	show OBJ_PRODUCT_CATALOG_SALES = "PRODUCT_CATALOG_SALES"
+	show OBJ_NONE = "NONE"
 	show OBJ_VIDEO_VIEWS = "VIDEO_VIEWS"
 instance ToBS ObjectiveADT
 instance ToJSON ObjectiveADT where
@@ -161,6 +163,7 @@ instance FromJSON ObjectiveADT where
 	parseJSON (String "PAGE_LIKES") = pure OBJ_PAGE_LIKES
 	parseJSON (String "POST_ENGAGEMENT") = pure OBJ_POST_ENGAGEMENT
 	parseJSON (String "PRODUCT_CATALOG_SALES") = pure OBJ_PRODUCT_CATALOG_SALES
+	parseJSON (String "NONE") = pure OBJ_NONE
 	parseJSON (String "VIDEO_VIEWS") = pure OBJ_VIDEO_VIEWS
 data BuyingTypeADT = AUCTION | RESERVED deriving (Show, Generic)
 instance FromJSON BuyingTypeADT
@@ -170,9 +173,11 @@ data DeleteStrategyADT = DELETE_ANY | DELETE_OLDEST | DELETE_ARCHIVED_BEFORE der
 instance FromJSON DeleteStrategyADT
 instance ToJSON DeleteStrategyADT
 instance ToBS DeleteStrategyADT
-data BillingEventADT = APP_INSTALLS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | POST_ENGAGEMENT_ | VIDEO_VIEWS_
+data BillingEventADT = APP_INSTALLS_ | CLICKS_ | IMPRESSIONS_ | LINK_CLICKS_ | OFFER_CLAIMS_ | PAGE_LIKES_ | POST_ENGAGEMENT_ | VIDEO_VIEWS_
 instance Show BillingEventADT where
 	 show APP_INSTALLS_ = "APP_INSTALLS"
+	 show CLICKS_ = "CLICKS"
+	 show IMPRESSIONS_ = "IMPRESSIONS"
 	 show LINK_CLICKS_ = "LINK_CLICKS"
 	 show OFFER_CLAIMS_ = "OFFER_CLAIMS"
 	 show PAGE_LIKES_ = "PAGE_LIKES"
@@ -183,11 +188,84 @@ instance ToJSON BillingEventADT where
 	toJSON = toJSON . show
 instance FromJSON BillingEventADT where
 	parseJSON (String "APP_INSTALLS") = pure APP_INSTALLS_
+	parseJSON (String "IMPRESSIONS") = pure IMPRESSIONS_
+	parseJSON (String "CLICKS") = pure CLICKS_
 	parseJSON (String "LINK_CLICKS") = pure LINK_CLICKS_
 	parseJSON (String "OFFER_CLAIMS") = pure OFFER_CLAIMS_
 	parseJSON (String "PAGE_LIKES") = pure PAGE_LIKES_
 	parseJSON (String "POST_ENGAGEMENT") = pure POST_ENGAGEMENT_
 	parseJSON (String "VIDEO_VIEWS") = pure VIDEO_VIEWS_
+data ObjectStorySpecADT = ObjectStorySpecADT {
+		linkData  :: AdCreativeLinkData,
+		storyPageId  :: FBPageId,
+		igId  :: Maybe IgId
+	} deriving (Show, Generic)
+newtype FBPageId = FBPageId Text deriving (Show, Generic)
+instance FromJSON FBPageId
+newtype IgId = IgId Text deriving (Show, Generic)
+instance FromJSON IgId
+instance ToJSON ObjectStorySpecADT where
+	toJSON (ObjectStorySpecADT ld (FBPageId pi) Nothing) =
+	  object [ "link_data" .= ld,
+	           "page_id" .= pi] 
+	toJSON (ObjectStorySpecADT ld (FBPageId pi) (Just (IgId ig))) =
+	  object [ "link_data" .= ld,
+	           "page_id" .= pi, 
+	           "instagram_actor_id" .= ig] 
+instance FromJSON ObjectStorySpecADT where
+	parseJSON (Object v) =
+	 ObjectStorySpecADT <$> v .: "link_data"
+	                    <*> v .: "page_id"
+	                    <*> v .:? "instagram_actor_id"
+instance ToBS ObjectStorySpecADT where
+	toBS a = toBS $ toJSON a
+data AdCreativeLinkData = AdCreativeLinkData {
+		caption  :: Text,
+		imageHash ::  Hash_,
+		link, message :: Text,
+	description  :: Maybe Text,
+		call_to_action :: Maybe CallToActionADT
+	} deriving (Show, Generic)
+instance ToJSON AdCreativeLinkData where
+	toJSON (AdCreativeLinkData c i l m (Just d) (Just cta)) =
+	  object [ "caption" .= c,
+	           "image_hash" .= i,
+	           "link" .= l,
+	           "message" .= m]
+	           --"description" .= d,
+	           --"call_to_action" .= cta]
+instance FromJSON AdCreativeLinkData where
+	parseJSON (Object v) =
+	 AdCreativeLinkData <$> v .: "caption"
+	                    <*> v .: "image_hash"
+	                    <*> v .: "link"
+	                    <*> v .: "message"
+	                    <*> v .:? "description"
+	                    <*> v .:? "call_to_action"
+instance ToBS AdCreativeLinkData where
+	toBS a = toBS $ toJSON a
+data AdCreativeADT = AdCreativeADT {
+	creative_id  :: Text
+	} deriving (Show, Generic)
+instance FromJSON AdCreativeADT
+instance ToJSON AdCreativeADT
+instance ToBS AdCreativeADT where
+	toBS = toBS . toJSON
+data CallToActionValue = CallToActionValue {
+	ctav_link, ctav_link_caption :: Text
+	} deriving (Show, Generic)
+instance ToJSON CallToActionValue where
+	toJSON = genericToJSON defaultOptions {fieldLabelModifier = drop $ length ("ctav_" :: String)}
+instance FromJSON CallToActionValue where
+	parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop $ length ("ctav_" :: String)}
+data CallToActionADT = CallToActionADT {
+		cta_type :: CallToActionTypeADT,
+		cta_value :: CallToActionValue
+	} deriving (Show, Generic)
+instance ToJSON CallToActionADT where
+	toJSON = genericToJSON defaultOptions {fieldLabelModifier = drop $ length ("cta_" :: String)}
+instance FromJSON CallToActionADT where
+	parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop $ length ("cta_" :: String)}
 
 data Success = Success {
 	success :: Bool
@@ -197,7 +275,7 @@ instance FromJSON Success
 data SuccessId = SuccessId {
 	   id_ :: Text
 	} deriving (Show, Generic)
-instance FromJSON SuccessId where
+instance FromJSON SuccessId where 
 	parseJSON (Object v) =
 			SuccessId <$> v .: "id"
 
@@ -207,8 +285,11 @@ instance ToBS Char where
 	toBS = B8.singleton
 instance ToBS Integer
 instance ToBS Int
-instance ToBS Bool
-instance ToBS A.Value
+instance ToBS Bool where
+	toBS True = toBS ("true" :: String)
+	toBS False = toBS ("false" :: String)
+--instance ToBS Value where
+--	toBS = BSL.toStrict . encode
 instance ToBS Float
 instance ToBS a => ToBS (Vector a) where
 	toBS xs = V.foldl' BS.append BS.empty $ V.map toBS xs
@@ -638,6 +719,15 @@ instance Field LinkUrl where
 unLinkUrl_ :: LinkUrl_ -> Text
 unLinkUrl_ (LinkUrl_ x) = x
 
+data ObjectStorySpec = ObjectStorySpec
+newtype ObjectStorySpec_ = ObjectStorySpec_ ObjectStorySpecADT deriving (Show, Generic)
+instance Field ObjectStorySpec where
+	type FieldValue ObjectStorySpec = ObjectStorySpec_
+	fieldName _ = "object_story_spec"
+	fieldLabel = ObjectStorySpec
+unObjectStorySpec_ :: ObjectStorySpec_ -> ObjectStorySpecADT
+unObjectStorySpec_ (ObjectStorySpec_ x) = x
+
 data ObjectStoryId = ObjectStoryId
 newtype ObjectStoryId_ = ObjectStoryId_ Text deriving (Show, Generic)
 instance Field ObjectStoryId where
@@ -791,15 +881,6 @@ instance Field CampaignGroupId where
 unCampaignGroupId_ :: CampaignGroupId_ -> Int
 unCampaignGroupId_ (CampaignGroupId_ x) = x
 
-data Creative = Creative
-newtype Creative_ = Creative_ Text deriving (Show, Generic)
-instance Field Creative where
-	type FieldValue Creative = Creative_
-	fieldName _ = "creative"
-	fieldLabel = Creative
-unCreative_ :: Creative_ -> Text
-unCreative_ (Creative_ x) = x
-
 data AdsetId = AdsetId
 newtype AdsetId_ = AdsetId_ Int deriving (Show, Generic)
 instance Field AdsetId where
@@ -902,6 +983,8 @@ instance A.FromJSON TemplateUrl_
 instance A.ToJSON TemplateUrl_
 instance A.FromJSON LinkUrl_
 instance A.ToJSON LinkUrl_
+instance A.FromJSON ObjectStorySpec_
+instance A.ToJSON ObjectStorySpec_
 instance A.FromJSON ObjectStoryId_
 instance A.ToJSON ObjectStoryId_
 instance A.FromJSON UrlTags_
@@ -936,8 +1019,6 @@ instance A.FromJSON DisplaySequence_
 instance A.ToJSON DisplaySequence_
 instance A.FromJSON CampaignGroupId_
 instance A.ToJSON CampaignGroupId_
-instance A.FromJSON Creative_
-instance A.ToJSON Creative_
 instance A.FromJSON AdsetId_
 instance A.ToJSON AdsetId_
 
@@ -1082,6 +1163,9 @@ instance ToBS TemplateUrl_ where
 instance ToBS LinkUrl_ where
 	toBS (LinkUrl_ a) = toBS a
 
+instance ToBS ObjectStorySpec_ where
+	toBS (ObjectStorySpec_ a) = toBS a
+
 instance ToBS ObjectStoryId_ where
 	toBS (ObjectStoryId_ a) = toBS a
 
@@ -1133,9 +1217,6 @@ instance ToBS DisplaySequence_ where
 instance ToBS CampaignGroupId_ where
 	toBS (CampaignGroupId_ a) = toBS a
 
-instance ToBS Creative_ where
-	toBS (Creative_ a) = toBS a
-
 instance ToBS AdsetId_ where
 	toBS (AdsetId_ a) = toBS a
 
@@ -1186,6 +1267,7 @@ actor_id r = r `Rec.get` ActorId
 thumbnail_url r = r `Rec.get` ThumbnailUrl
 template_url r = r `Rec.get` TemplateUrl
 link_url r = r `Rec.get` LinkUrl
+object_story_spec r = r `Rec.get` ObjectStorySpec
 object_story_id r = r `Rec.get` ObjectStoryId
 url_tags r = r `Rec.get` UrlTags
 image_hash r = r `Rec.get` ImageHash
@@ -1203,5 +1285,4 @@ partner r = r `Rec.get` Partner
 media_agency r = r `Rec.get` MediaAgency
 display_sequence r = r `Rec.get` DisplaySequence
 campaign_group_id r = r `Rec.get` CampaignGroupId
-creative r = r `Rec.get` Creative
 adset_id r = r `Rec.get` AdsetId

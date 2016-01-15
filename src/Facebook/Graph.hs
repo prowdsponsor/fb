@@ -17,6 +17,7 @@ module Facebook.Graph
 
 
 import Control.Applicative
+import qualified Control.Exception.Lifted as E
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.ByteString.Char8 (ByteString)
@@ -33,6 +34,7 @@ import System.Locale (defaultTimeLocale)
 
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Types as A
 import qualified Data.Aeson.Encode as AE (fromValue)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text.Encoding as TE
@@ -64,8 +66,6 @@ getObjectRec :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON rec, ToBS 
 getObjectRec path query mtoken =
     let query' = map (\(bs, rec) -> (bs, toBS rec)) query
     in trace (concat $ map show query') $ getObject path query' mtoken
-  --runResourceInFb $
-  --  asJson =<< fbhttp =<< fbreq path mtoken query
 
 -- | Make a raw @GET@ request to Facebook's Graph API.
 getObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
@@ -82,7 +82,7 @@ postForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
               Text                -- ^ Path (should begin with a slash @\/@)
            -> [Part]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
-           -> FacebookT Auth m a
+           -> FacebookT Auth m (Either FacebookException a)
 postForm = methodForm HT.methodPost
 
 -- | Make a raw @DELETE@ request to Facebook's Graph API.
@@ -90,8 +90,20 @@ deleteForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
                 Text                -- ^ Path (should begin with a slash @\/@)
              -> [Part]          -- ^ Arguments to be passed to Facebook
              -> AccessToken anyKind -- ^ Access token
-             -> FacebookT Auth m a
+             -> FacebookT Auth m (Either FacebookException a)
 deleteForm = methodForm HT.methodDelete
+
+
+instance A.FromJSON a => A.FromJSON (Either FacebookException a) where
+    parseJSON json@(A.Object v) = do
+        val <- v A..:? "error" :: A.Parser (Maybe A.Value)
+        case val of
+            Nothing -> do
+                rec <- A.parseJSON json
+                pure $ Right rec
+            Just _ -> do
+                rec <- A.parseJSON json
+                pure $ Left rec
 
 -- | Make a raw @POST@ request to Facebook's Graph API.
 methodForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
@@ -99,11 +111,20 @@ methodForm :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>
            -> Text                -- ^ Path (should begin with a slash @\/@)
            -> [Part]          -- ^ Arguments to be passed to Facebook
            -> AccessToken anyKind -- ^ Access token
-           -> FacebookT Auth m a
+           -> FacebookT Auth m (Either FacebookException a)
 methodForm method path parts token = runResourceInFb $ do
     req <- fbreq path (Just token) []
-    req' <- formDataBody parts req -- [partFile "filename" "bridge.jpg"] req
+    req' <- formDataBody parts req
     asJson =<< fbhttp req' { H.method = method}
+    --req'' <- fbhttp req' { H.method = method}
+    --val <- E.try $ asJson req''
+    --case val :: Either E.SomeException a of
+    --    Right json -> return $ Right json
+    --    Left _ -> do
+    --        val' <- E.try $ asJson req''
+    --        case val' :: Either E.SomeException FacebookException of
+    --            Right fbe -> return $ Left fbe
+    --            Left err -> error $ show err -- FIXME
 
 -- | Make a raw @POST@ request to Facebook's Graph API.
 postObject :: (R.MonadResource m, MonadBaseControl IO m, A.FromJSON a) =>

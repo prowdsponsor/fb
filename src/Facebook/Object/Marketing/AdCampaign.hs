@@ -11,6 +11,7 @@ import Facebook.Types hiding (Id)
 import Facebook.Pager
 import Facebook.Monad
 import Facebook.Graph
+import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
 import Data.Time.Format
@@ -169,7 +170,7 @@ instance IsAdCampaignSetField PageId
 instance IsAdCampaignSetField Objective
 data CreateCampaignId = CreateCampaignId {
 	campaignId :: Text
-	} deriving (Show, Generic)
+	} deriving Show
 instance FromJSON CreateCampaignId where
 		parseJSON (Object v) =
 		   CreateCampaignId <$> v .: "id"
@@ -179,7 +180,7 @@ setAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignSet r) =>
 	Id_    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m CreateCampaignId
+	-> FacebookT Auth m (Either FacebookException CreateCampaignId)
 setAdCampaign (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
 
 
@@ -195,11 +196,11 @@ instance IsAdCampaignUpdField Objective
 
 type AdCampaignUpd r = (A.FromJSON r, IsAdCampaignUpdField r, ToForm r)
 updAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignUpd r) =>
-	Id_    -- ^ Ad Account Id
+	CreateCampaignId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m r
-updAdCampaign (Id_ id) r mtoken = postForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+updAdCampaign (CreateCampaignId id) r mtoken = postForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
 
 -- Entity:AdCampaign, mode:Deleting
@@ -216,6 +217,6 @@ delAdCampaign :: (R.MonadResource m, MonadBaseControl IO m, AdCampaignDel r) =>
 	CreateCampaignId    -- ^ Ad Account Id
 	-> r     -- ^ Arguments to be passed to Facebook.
 	->  UserAccessToken -- ^ Optional user access token.
-	-> FacebookT Auth m Success
-delAdCampaign (CreateCampaignId id) r mtoken = deleteForm ("/v2.5/" <> id <> "/campaigns") (toForm r) mtoken
+	-> FacebookT Auth m (Either FacebookException Success)
+delAdCampaign (CreateCampaignId id) r mtoken = deleteForm ("/v2.5/" <> id <> "") (toForm r) mtoken
 
