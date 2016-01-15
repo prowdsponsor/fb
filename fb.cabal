@@ -48,6 +48,7 @@ library
   hs-source-dirs: src
   exposed-modules:
     Facebook
+    Facebook.Base
     Facebook.Records
     Facebook.Object.Marketing.Ad
     Facebook.Object.Marketing.AdUser
@@ -70,7 +71,6 @@ library
   other-modules:
     Facebook.Types
     Facebook.Monad
-    Facebook.Base
     Facebook.Auth
     Facebook.Pager
     Facebook.Graph
@@ -146,6 +146,8 @@ executable facebook-marketing-test
                      , mtl
                      , text
                      , time
+                     , aeson
+                     , containers
 
 
 test-suite runtests

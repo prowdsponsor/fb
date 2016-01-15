@@ -9,6 +9,7 @@ import Data.Maybe
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
 import Control.Monad
+import Control.Applicative (pure)
 
 -- | Demographics and events
 --   See https://developers.facebook.com/docs/marketing-api/reference/ad-campaign#demographics

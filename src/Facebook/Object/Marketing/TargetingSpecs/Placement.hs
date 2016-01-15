@@ -7,6 +7,7 @@ import Data.Aeson
 import Data.Aeson.Types
 import GHC.Generics (Generic)
 import Data.Char
+import Control.Applicative (pure)
 
 -- | Placement
 --   See https://developers.facebook.com/docs/marketing-api/reference/ad-campaign#location
