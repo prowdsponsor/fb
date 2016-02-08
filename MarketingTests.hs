@@ -127,12 +127,12 @@ main = do
     let adId = either (error "haha") P.id adId'
 
     -- in order to run an ad, we have to set the status of the campaign, adset, and ad to ACTIVE
-    aaa <- updAdCampaign campaign ((AdC.Status, AdC.Status_ ACTIVE_) :*: Nil) tok
-    liftIO $ print aaa
-    bbb <- updAdSet adsetRet ((AdS.Status, AdS.Status_ ACTIVE_) :*: (DailyBudget, DailyBudget_ 510) :*: Nil) tok
-    liftIO $ print bbb
-    ccc <- updAd adId ((Ad.Status, Ad.Status_ ACTIVE_) :*: Nil) tok
-    liftIO $ print ccc
+    --aaa <- updAdCampaign campaign ((AdC.Status, AdC.Status_ ACTIVE_) :*: Nil) tok
+    --liftIO $ print aaa
+    --bbb <- updAdSet adsetRet ((AdS.Status, AdS.Status_ ACTIVE_) :*: (DailyBudget, DailyBudget_ 510) :*: Nil) tok
+    --liftIO $ print bbb
+    --ccc <- updAd adId ((Ad.Status, Ad.Status_ ACTIVE_) :*: Nil) tok
+    --liftIO $ print ccc
     --let delId = (Id, Id_ $ campaignId ret) :*: Nil
     --delCampaign <- delAdCampaign ret delId tok -- (id $ head adaccids) delId tok
     --liftIO $ print delCampaign
