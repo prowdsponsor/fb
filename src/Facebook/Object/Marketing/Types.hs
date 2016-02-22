@@ -14,7 +14,7 @@ import Facebook.Graph
 import Facebook.Base (FacebookException(..))
 import qualified Data.Aeson as A
 import Data.Time.Clock
-import Data.Time.Format hiding (defaultTimeLocale, rfc822DateFormat)
+import Data.Time.Format
 import Data.Aeson hiding (Value)
 import Control.Applicative
 import Data.Text (Text)
@@ -37,7 +37,7 @@ import GHC.Generics
 import Data.Aeson
 import Data.Aeson.Types
 import Control.Applicative
-import System.Locale
+import System.Locale hiding (defaultTimeLocale, rfc822DateFormat)
 import Control.Monad
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -223,9 +223,13 @@ data AdCreativeLinkData = AdCreativeLinkData {
 		caption  :: Text,
 		imageHash ::  Hash_,
 		link, message :: Text,
-	description  :: Maybe Text,
-		call_to_action :: Maybe CallToActionADT
-	} deriving (Show, Generic)
+		description  :: Maybe Text,
+		call_to_action :: Maybe CallToActionADT}
+	| CreativeCarouselData {
+		caption_carousel, message_carousel :: Text,
+		child_attachments ::  CarouselChildren,
+		link :: Text }
+	deriving (Show, Generic)
 instance ToJSON AdCreativeLinkData where
 	toJSON (AdCreativeLinkData c i l m (Just d) (Just cta)) =
 	  object [ "caption" .= c,
@@ -234,15 +238,53 @@ instance ToJSON AdCreativeLinkData where
 	           "message" .= m]
 	           --"description" .= d,
 	           --"call_to_action" .= cta]
+	toJSON (CreativeCarouselData c m cs l) =
+	  object [ "caption" .= c,
+	           "message" .= m,
+	           "child_attachments" .= toJSON cs,
+	           "link" .= l]
 instance FromJSON AdCreativeLinkData where
-	parseJSON (Object v) =
+	parseJSON (Object v) = do
+	 typ <- v .:? "child_attachments" :: Parser (Maybe CarouselChildren)
+	 case typ of
+		 Nothing -> parseAdCreativeLinkData v
+		 Just _  -> parseCreativeCarouselData v
+
+parseAdCreativeLinkData v =
 	 AdCreativeLinkData <$> v .: "caption"
 	                    <*> v .: "image_hash"
 	                    <*> v .: "link"
 	                    <*> v .: "message"
 	                    <*> v .:? "description"
 	                    <*> v .:? "call_to_action"
+
+parseCreativeCarouselData v =
+	 CreativeCarouselData <$> v .: "caption"
+	                      <*> v .: "message"
+	                      <*> v .: "child_attachments"
+	                      <*> v .: "link"
 instance ToBS AdCreativeLinkData where
+	toBS a = toBS $ toJSON a
+type CarouselChildren = [CarouselChild]
+data CarouselChild = CarouselChild {
+		name_car_child :: Text,
+		imageHash_car_child ::  Hash_,
+		link_car_child :: Text,
+	description_car_child  :: Maybe Text}
+	deriving (Show, Generic)
+instance ToJSON CarouselChild where
+	toJSON (CarouselChild n i l (Just d)) =
+	  object [ "name" .= n,
+	           "image_hash" .= i,
+	           "link" .= l,
+	           "description" .= d]
+instance FromJSON CarouselChild where
+	parseJSON (Object v) =
+	 CarouselChild <$> v .: "name"
+	               <*> v .: "image_hash"
+	               <*> v .: "link"
+	               <*> v .:? "description"
+instance ToBS CarouselChild where
 	toBS a = toBS $ toJSON a
 data AdCreativeADT = AdCreativeADT {
 	creative_id  :: Text

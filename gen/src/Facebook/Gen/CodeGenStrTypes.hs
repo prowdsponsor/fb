@@ -46,7 +46,7 @@ newTypes =
     \instance ToBS EffectiveStatusADT\n"
     <> execOption <> optGoal <> bidType <> callToActionType
     <> runStatus <> objective <> buyingType <> deleteStrategy
-    <> billingEvent <> objectStorySpec <> adCreativeLinkData
+    <> billingEvent <> objectStorySpec <> adCreativeLinkData <> carouselChildren
     <> creativeADT <> callToAction <> genericRetType <> genericIdRetType
 
 creativeADT =
@@ -112,14 +112,45 @@ callToAction =
     "instance FromJSON CallToActionADT where\n\
     \\tparseJSON = genericParseJSON defaultOptions {fieldLabelModifier = drop $ length (\"cta_\" :: String)}\n"
 
+carouselChildren =
+    "type CarouselChildren = [CarouselChild]\n"
+    <>
+    "data CarouselChild = CarouselChild {\n\
+    \\t\tname_car_child :: Text,\n\
+    \\t\timageHash_car_child ::  Hash_,\n\
+    \\t\tlink_car_child :: Text,\n\
+    \\tdescription_car_child  :: Maybe Text}\n\
+    \\tderiving (Show, Generic)\n"
+    <>
+    "instance ToJSON CarouselChild where\n\
+    \\ttoJSON (CarouselChild n i l (Just d)) =\n\
+    \\t  object [ \"name\" .= n,\n\
+    \\t           \"image_hash\" .= i,\n\
+    \\t           \"link\" .= l,\n\
+    \\t           \"description\" .= d]\n"
+    <>
+    "instance FromJSON CarouselChild where\n\
+    \\tparseJSON (Object v) =\n\
+    \\t CarouselChild <$> v .: \"name\"\n\
+    \\t               <*> v .: \"image_hash\"\n\
+    \\t               <*> v .: \"link\"\n\
+    \\t               <*> v .:? \"description\"\n"
+    <>
+    "instance ToBS CarouselChild where\n\
+    \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
+
 adCreativeLinkData =
     "data AdCreativeLinkData = AdCreativeLinkData {\n\
     \\t\tcaption  :: Text,\n\
     \\t\timageHash ::  Hash_,\n\
     \\t\tlink, message :: Text,\n\
-    \\tdescription  :: Maybe Text,\n\
-    \\t\tcall_to_action :: Maybe CallToActionADT\n\
-    \\t} deriving (Show, Generic)\n"
+    \\t\tdescription  :: Maybe Text,\n\
+    \\t\tcall_to_action :: Maybe CallToActionADT}\n\
+    \\t| CreativeCarouselData {\n\
+    \\t\tcaption_carousel, message_carousel :: Text,\n\
+    \\t\tchild_attachments ::  CarouselChildren,\n\
+    \\t\tlink :: Text }\n\
+    \\tderiving (Show, Generic)\n"
     <>
     "instance ToJSON AdCreativeLinkData where\n\
     \\ttoJSON (AdCreativeLinkData c i l m (Just d) (Just cta)) =\n\
@@ -128,16 +159,33 @@ adCreativeLinkData =
     \\t           \"link\" .= l,\n\
     \\t           \"message\" .= m]\n\
     \\t           --\"description\" .= d,\n\
-    \\t           --\"call_to_action\" .= cta]\n"
+    \\t           --\"call_to_action\" .= cta]\n\
+    \\ttoJSON (CreativeCarouselData c m cs l) =\n\
+    \\t  object [ \"caption\" .= c,\n\
+    \\t           \"message\" .= m,\n\
+    \\t           \"child_attachments\" .= toJSON cs,\n\
+    \\t           \"link\" .= l]\n"
     <>
     "instance FromJSON AdCreativeLinkData where\n\
-    \\tparseJSON (Object v) =\n\
+    \\tparseJSON (Object v) = do\n\
+    \\t typ <- v .:? \"child_attachments\" :: Parser (Maybe CarouselChildren)\n\
+    \\t case typ of\n\
+    \\t\t Nothing -> parseAdCreativeLinkData v\n\
+    \\t\t Just _  -> parseCreativeCarouselData v\n"
+    <>
+    "\nparseAdCreativeLinkData v =\n\
     \\t AdCreativeLinkData <$> v .: \"caption\"\n\
     \\t                    <*> v .: \"image_hash\"\n\
     \\t                    <*> v .: \"link\"\n\
     \\t                    <*> v .: \"message\"\n\
     \\t                    <*> v .:? \"description\"\n\
     \\t                    <*> v .:? \"call_to_action\"\n"
+    <>
+    "\nparseCreativeCarouselData v =\n\
+    \\t CreativeCarouselData <$> v .: \"caption\"\n\
+    \\t                      <*> v .: \"message\"\n\
+    \\t                      <*> v .: \"child_attachments\"\n\
+    \\t                      <*> v .: \"link\"\n"
     <>
     "instance ToBS AdCreativeLinkData where\n\
     \\ttoBS a = toBS $ toJSON a\n" -- FIXME Maybe this should be the default implementation?
