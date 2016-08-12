@@ -27,6 +27,7 @@ description:
   (<https://github.com/prowdsponsor/fb/issues>).
 
 extra-source-files:
+  README.md
   tests/Main.hs
   tests/tryIt.hs
   example.hs
