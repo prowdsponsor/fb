@@ -50,45 +50,46 @@ library
   exposed-modules:
     Facebook
   other-modules:
-    Facebook.Types
-    Facebook.Monad
-    Facebook.Base
     Facebook.Auth
-    Facebook.Pager
-    Facebook.Graph
-    Facebook.Object.Action
-    Facebook.Object.FriendList
-    Facebook.Object.Checkin
-    Facebook.Object.User
-    Facebook.Object.Page
-    Facebook.Object.Order
-    Facebook.RealTime
+    Facebook.Base
     Facebook.FQL
+    Facebook.Graph
+    Facebook.Monad
+    Facebook.Object.Action
+    Facebook.Object.Checkin
+    Facebook.Object.FriendList
+    Facebook.Object.Order
+    Facebook.Object.Page
+    Facebook.Object.User
+    Facebook.Pager
+    Facebook.RealTime
     Facebook.TestUsers
+    Facebook.Types
   build-depends:
       base                 >= 4       && < 5
-    , lifted-base          >= 0.1     && < 0.3
-    , bytestring           >= 0.9     && < 0.11
-    , text                 >= 0.11    && < 1.3
-    , transformers         >= 0.2     && < 0.6
-    , transformers-base
-    , monad-control
-    , resourcet
-    , data-default
-    , http-types
-    , http-conduit         >= 2.0     && < 2.2
-    , attoparsec           >= 0.10.4  && < 0.14
-    , unordered-containers
     , aeson                >= 0.5
+    , attoparsec           >= 0.10.4  && < 0.14
     , base16-bytestring    >= 0.1
     , base64-bytestring    >= 0.1.1
-    , time                 >= 1.2     && < 1.7
-    , old-locale
+    , bytestring           >= 0.9     && < 0.11
     , cereal               >= 0.3     && < 0.6
     , crypto-api           >= 0.11    && < 0.14
     , cryptohash           >= 0.7
     , cryptohash-cryptoapi == 0.1.*
+    , data-default
+    , exceptions
+    , http-conduit         >= 2.0     && < 2.2
+    , http-types
+    , lifted-base          >= 0.1     && < 0.3
+    , monad-control
     , monad-logger         >= 0.3
+    , old-locale
+    , resourcet
+    , text                 >= 0.11    && < 1.3
+    , time                 >= 1.2     && < 1.7
+    , transformers         >= 0.2     && < 0.6
+    , transformers-base
+    , unordered-containers
   if flag(conduit11)
     build-depends:
         conduit              >= 1.1   && < 1.3
@@ -100,14 +101,14 @@ library
   extensions:
     DeriveDataTypeable
     EmptyDataDecls
-    OverloadedStrings
-    GADTs
-    StandaloneDeriving
-    ScopedTypeVariables
-    GeneralizedNewtypeDeriving
-    TypeFamilies
     FlexibleInstances
+    GADTs
+    GeneralizedNewtypeDeriving
     MultiParamTypeClasses
+    OverloadedStrings
+    ScopedTypeVariables
+    StandaloneDeriving
+    TypeFamilies
   if flag(debug)
     cpp-options: -DDEBUG
 

@@ -6,9 +6,7 @@ module Facebook.FQL
     , FQLObject(..)
     ) where
 
-import Control.Applicative((<$>))
 import Control.Monad.Trans.Control (MonadBaseControl)
-import Data.Monoid (mempty)
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)

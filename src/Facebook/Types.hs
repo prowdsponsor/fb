@@ -19,16 +19,14 @@ module Facebook.Types
     , FbUTCTime(..)
     ) where
 
-import Control.Applicative ((<$>), (<*>), pure)
 import Control.Monad (mzero)
 import Data.ByteString (ByteString)
 import Data.Int (Int64)
-import Data.Monoid (Monoid, mappend)
 import Data.String (IsString)
 import Data.Text (Text)
-import Data.Time (UTCTime, parseTime)
+import Data.Time (UTCTime, parseTimeM)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
-import Data.Typeable (Typeable, Typeable1)
+import Data.Typeable (Typeable)
 #if MIN_VERSION_time(1,5,0)
 import Data.Time (defaultTimeLocale)
 #else
@@ -93,7 +91,7 @@ type AppAccessToken = AccessToken AppKind
 deriving instance Eq   (AccessToken kind)
 deriving instance Ord  (AccessToken kind)
 deriving instance Show (AccessToken kind)
-deriving instance Typeable1 AccessToken
+deriving instance Typeable AccessToken
 
 
 -- | The access token data that is passed to Facebook's API
@@ -222,7 +220,7 @@ newtype FbUTCTime = FbUTCTime { unFbUTCTime :: UTCTime }
 
 instance A.FromJSON FbUTCTime where
   parseJSON (A.String t) =
-    case parseTime defaultTimeLocale "%FT%T%z" (T.unpack t) of
+    case parseTimeM True defaultTimeLocale "%FT%T%z" (T.unpack t) of
       Just d -> return (FbUTCTime d)
       _      -> fail $ "could not parse FbUTCTime string " ++ show t
   parseJSON (A.Number n) =

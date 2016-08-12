@@ -24,7 +24,7 @@ import Control.Monad.Trans.Class (MonadTrans)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as A
-import qualified Data.Attoparsec.Char8 as AT
+import qualified Data.Attoparsec.ByteString.Char8 as AT
 import qualified Data.ByteString as B
 import qualified Data.Conduit as C
 import qualified Data.Conduit.Attoparsec as C

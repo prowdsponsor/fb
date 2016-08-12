@@ -7,7 +7,6 @@ module Facebook.Object.Order
     , getOrder
     ) where
 
-import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Text (Text)
