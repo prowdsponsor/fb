@@ -68,7 +68,7 @@ library
     Facebook.Types
   build-depends:
       base                 >= 4       && < 5
-    , aeson                >= 0.5
+    , aeson                >= 0.7
     , attoparsec           >= 0.10.4  && < 0.14
     , base16-bytestring    >= 0.1
     , base64-bytestring    >= 0.1.1
