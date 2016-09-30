@@ -11,7 +11,6 @@ module Facebook.TestUsers
     ) where
 
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad (unless, mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Default

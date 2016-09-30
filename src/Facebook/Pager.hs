@@ -1,4 +1,4 @@
-{-# LANGUAGE ConstraintKinds, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE CPP, ConstraintKinds, DeriveDataTypeable, FlexibleContexts, OverloadedStrings #-}
 module Facebook.Pager
     ( Pager(..)
     , fetchNextPage
@@ -7,9 +7,8 @@ module Facebook.Pager
     , fetchAllPreviousPages
     ) where
 
-
-import Control.Applicative
 import Control.Monad (mzero)
+import Control.Monad.Catch (MonadThrow)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Resource (MonadResourceBase)
@@ -87,7 +86,7 @@ fetchHelper pagerRef pager =
   case pagerRef pager of
     Nothing  -> return Nothing
     Just url -> do
-      req <- liftIO (H.parseUrl url)
+      req <- liftIO (parseUrl url)
       Just <$> (asJson =<< fbhttp req { H.redirectCount = 3 })
 
 
@@ -120,8 +119,16 @@ fetchAllHelper pagerRef pager = do
   let go (x:xs) mnext   = C.yield x >> go xs mnext
       go [] Nothing     = return ()
       go [] (Just next) = do
-        req <- liftIO (H.parseUrl next)
+        req <- liftIO (parseUrl next)
         let get = fbhttpHelper manager req { H.redirectCount = 3 }
         start =<< lift (R.runResourceT $ asJsonHelper =<< get)
       start p = go (pagerData p) $! pagerRef p
   return (start pager)
+
+parseUrl :: MonadThrow m => String -> m H.Request
+parseUrl =
+#if MIN_VERSION_http_conduit(2,1,11)
+     H.parseUrlThrow
+#else
+     H.parseUrl
+#endif

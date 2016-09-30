@@ -13,7 +13,6 @@ module Facebook.RealTime
     , RealTimeUpdateNotificationUserEntry(..)
     ) where
 
-import Control.Applicative ((<$>), (<*>))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad (liftM, mzero, void)
 import Crypto.Hash.CryptoAPI (SHA1)

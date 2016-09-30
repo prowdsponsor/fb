@@ -27,7 +27,7 @@ module Facebook.Monad
     , lift
     ) where
 
-import Control.Applicative (Applicative, Alternative)
+import Control.Applicative (Alternative)
 import Control.Monad (MonadPlus, liftM)
 import Control.Monad.Base (MonadBase(..))
 import Control.Monad.Fix (MonadFix)

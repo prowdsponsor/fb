@@ -6,7 +6,6 @@ module Facebook.Object.Checkin
    , createCheckin
    ) where
 
-import Control.Applicative
 import Control.Monad (mzero)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson ((.:), (.:?))

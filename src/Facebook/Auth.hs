@@ -15,7 +15,6 @@ module Facebook.Auth
     , DebugToken(..)
     ) where
 
-import Control.Applicative
 import Control.Monad (guard, join, liftM, mzero)
 import Control.Monad.IO.Class (MonadIO(liftIO))
 import Control.Monad.Trans.Control (MonadBaseControl)
@@ -35,7 +34,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Control.Monad.Trans.Resource as R
 import qualified Data.Aeson as AE
 import qualified Data.Aeson.Types as AE
-import qualified Data.Attoparsec.Char8 as AB
+import qualified Data.Attoparsec.ByteString.Char8 as AB
 import qualified Data.Attoparsec.Text as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64.URL as Base64URL
